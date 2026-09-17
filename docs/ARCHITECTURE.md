@@ -59,13 +59,14 @@ Barbatos.Pallas/
           Solvers        Spreadsheet        Graphing (→ Solvers)        Data
              └───────────────┴─────────────────┬─────────────────────────┘
                                                ▼
-                                            Engine
-                       ┌───────────────────────┼───────────────────────┐
-                       ▼                       ▼                       ▼
-                  Expressions            LinearAlgebra             Statistics
-                       └───────────────────────┼───────────────────────┘
-                                               ▼
-                                           Numerics   (no dependencies)
+                                            Engine ──────────────────────────────┐
+                       ┌───────────────────────┼───────────────────────┐         │
+                       ▼                       ▼                       ▼         │
+                  Expressions            LinearAlgebra             Statistics    │
+               (no dependencies)               └───────────┬───────────┘         │
+                                                           ▼                     │
+                                                       Numerics ◄────────────────┘
+                                                   (no dependencies)
 ```
 
 `ArchitectureMap` in `Barbatos.Pallas.Architecture.Tests` holds the same graph as data. The tests fail when:
@@ -84,7 +85,7 @@ Change the map and this diagram together.
 | **Numerics** | Only the calculator math .NET does not provide (PRECISION.md §3): `Trigonometry` (sin, cos, tan and inverses in degrees, radians and gradians, on `double.SinPi` and `System.Math`); `IntegerFunctions` (factorial, nPr, nCr, LCM, prime factors on `BigInteger`); `Fractions` (display-time fraction recognition); `Sexagesimal`; `AngleUnit` |
 | **LinearAlgebra** | Matrices and vectors of `decimal`; determinant, inverse; dot, cross, angle, unit vector; row-parallel multiplication for large sizes |
 | **Statistics** | One- and two-variable summaries (eight Σ sums, mean, σ, s); quartiles; min/max; seven regressions with x̂/ŷ; P( Q( R( ▶t; binomial, normal and Poisson PD/CD; inverse normal |
-| **Expressions** | Span-based lexer; Pratt parser with the reference calculator precedence table; immutable AST; diagnostics with source spans; linear and LaTeX printers |
+| **Expressions** | `ExpressionLexer` (allocation-free, context-aware: Base-N digits, Spreadsheet cells); `ExpressionParser` (Pratt, the calculator's priority levels, implicit multiplication, Verify chains, first error with its span); immutable syntax tree with `SyntaxEquivalence`; `SyntaxVocabulary` (the reference calculator names, extensible by plugins); `LinearPrinter` (Canonical Linear Syntax that parses back) and `LatexPrinter`. No dependencies, no `double` |
 | **Engine** | Binder; function/constant/unit registry (plugin API); RPN bytecode compiler and evaluator; `Value` model; settings and profiles; calculator memory (Ans, PreAns, A-F, x, y, z, MatA-D, VctA-D, f and g); CALC; formatter (the FORMAT menu); automatic differentiation, ∫, Σ, Π; ÷R; Verify; Base-N; session snapshot contracts |
 | **Solvers** | Simultaneous linear equations; polynomials of degree 2-4; Newton Solver; polynomial inequalities; ratios |
 | **Spreadsheet** | Cell grid; relative and absolute references; dependency graph; topological recalculation; circular-reference detection; Fill; the Table application |
@@ -120,9 +121,9 @@ On-screen keypad / hardware keys ─► InputCommandRouter ─► MathInput (tem
                                                                │ serialize
 Web API / tests / history ─────────────────────────► Canonical Linear Syntax (docs/LINEAR-SYNTAX.md)
                                                                ▼
-Lexer      ref struct over ReadOnlySpan<char>; tokens are (Kind, Start, Length) - no allocation
-Parser     Pratt; the calculator's precedence (13 levels); implicit multiplication; bounded depth; SourceSpan
-AST        immutable ─► linear/LaTeX printers · automatic differentiation · exact-form analysis
+Lexer      ref struct over ReadOnlySpan<char>; tokens are (Kind, Span, Symbol); no allocation (measured)
+Parser     Pratt; the calculator's priority (13 levels + Verify); implicit multiplication; 128-level depth; first error + span
+AST        immutable; numbers kept as text ─► linear/LaTeX printers · automatic differentiation · exact-form analysis
 Binder     frozen function table; arity and type checks; constants, variables, f(x), g(x)
 Lowering   RPN bytecode (array of structs; no recursion)
 Evaluator  explicit stack · CancellationToken · EngineBudget ─► Value | CalcError(kind, span)
@@ -223,10 +224,11 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without 
 
 ## 9. Performance
 
-1. **Allocation-free lexing.**
-   - Literals parse with `decimal.TryParse(ReadOnlySpan<char>, NumberStyles.Float, CultureInfo.InvariantCulture)`,
-     with no intermediate string.
-   - Function names are looked up through `GetAlternateLookup<ReadOnlySpan<char>>` on .NET 9+.
+1. **Allocation-free lexing** (measured by `LexerTests` on all three runtimes).
+   - Vocabulary symbols are grouped by first character and matched with `ReadOnlySpan<char>.StartsWith`, so no
+     lookup key is allocated and no `GetAlternateLookup` (.NET 9+) is needed.
+   - Number literals stay text in the tree; the engine parses them with
+     `decimal.TryParse(ReadOnlySpan<char>, NumberStyles.Float, CultureInfo.InvariantCulture)`.
 2. **Value types, no allocation per operation.** `decimal` (16 bytes) and `double` are structs with hardware or
    runtime-optimized arithmetic. `BigInteger` appears only in integer functions such as `69!`.
 3. **Compile once, evaluate many.** RPN bytecode for Table, Graph, Σ/Π, integration nodes, Solver iterations and
@@ -278,7 +280,7 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without 
 |---|---|---|
 | **0 Foundation** ✅ | Repository, build, analyzers, both floating-point locks, project skeletons, conformance data (164 cases) and domain table, docs, CI | Build and tests green on three TFMs |
 | **1 Numerics** ✅ | The calculator math .NET lacks: trigonometry in angle units, integer functions, fraction recognition, sexagesimal. Everything .NET has (`System.Math`, `System.Double`, `System.Decimal`, `BigInteger`, `System.Numerics.Complex`, `System.Random`) is used directly by the engine instead | Every branch covered or the exception documented; accuracy tests against PeterO.Numbers on Windows and Linux (x64, ARM64); mutation score ≥ 90% |
-| 2 Expressions | Lexer, Pratt parser, precedence, spans, printers; Canonical Linear Syntax final | Grammar tests; fuzzing never crashes |
+| **2 Expressions** ✅ | Lexer, Pratt parser, syntax tree, diagnostics with spans, vocabulary, linear and LaTeX printers; Canonical Linear Syntax final (docs/LINEAR-SYNTAX.md) | Every conformance input parses in its application; print-and-reparse property in 7 application contexts; fuzzing never throws or hangs; lexing allocates nothing; every branch covered but one documented; mutation score ≥ 90% |
 | 3 Engine | Binder, plugins, evaluator, formatter, memory, calculus, Verify, Base-N, Data, DI | Calculate, Complex and Base-N conformance cases pass |
 | 4 Domain apps | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Their conformance cases pass |
 | 5 WPF | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
@@ -300,4 +302,7 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without 
 | 17 Sep 2026 | Mutation-score gate for Numerics: ≥ 90%. Enforced in CI with Stryker.NET (`stryker-config.json`, break at 90); string mutations of exception messages are ignored. |
 | 17 Sep 2026 | Tests run on Microsoft.Testing.Platform: xunit.v3 4.x refuses VSTest on the .NET 10 SDK. |
 | 17 Sep 2026 | **Built-in numeric types instead of a custom number tower.** The first Phase 1 implementation (`BigRational`, `BigDecimal`, `RoundingMode`, `MathContext`, a number parser, planned certified reals) was deleted. The maintainer's direction: the reference calculator is a functional reference, not an implementation model, and .NET already provides the types and rounding. Now: `decimal` for arithmetic, `Math.Round` with `MidpointRounding`, `double` with `System.Math` for transcendental functions, `BigInteger` for integer functions, `int` for Base-N, `System.Numerics.Complex` for complex numbers; fractions, surds and π forms recognized at display time. Accepted cost: about 15 significant digits for transcendental results instead of certified digits, and no arbitrary precision. `double` and `Complex` are confined to Numerics (amended below); `float`, `Half` and `MathF` are banned (PRECISION.md §7). |
+| 17 Sep 2026 | Phase 2 plan approved as proposed. Text cannot tell some calculator keys apart, so: `^` is left-associative (level 3, manual p. 168); `C` between two operands is the combination operator, elsewhere the variable C; `°` followed by minutes or seconds is sexagesimal, alone the degree unit; scientific constants take `@`; in a Verify chain inequalities point one way and `≠` does not combine with them (U10); names live in a vocabulary the engine can extend; parsing stops at the first error; nesting deeper than 128 is a Stack ERROR (U11). Details in docs/LINEAR-SYNTAX.md §5. |
+| 17 Sep 2026 | Expressions has no dependencies: the parser keeps numbers as text and uses nothing from Numerics. |
+| 17 Sep 2026 | Mutation-score gate extended to Expressions (≥ 90%, enforced in CI). `StandardVocabulary.cs` is excluded from mutation: it only builds the static `SyntaxVocabulary.Standard`, and the MTP runner cannot switch mutants in static initialization, so all 98 of them were reported as survivors although deleting a line by hand fails 13 to 18 tests. First score with the exclusion: 100% (738 killed, 108 timeouts, no survivors); a timeout is a failing CsCheck property still shrinking. |
 | 17 Sep 2026 | **No wrappers around the BCL.** The maintainer's review of Numerics: remove every piece of code that `Math`, `MathF` or `System.Double` already provide. Deleted `MathConstants` (use `double.Pi`, `double.E`), `DecimalArithmetic` (use `decimal` operators, `decimal.TryParse`, `(decimal)value`, `Math.Round` and format strings; the 10⁻¹⁴ precision rule moves to the engine) and `ScientificMath` (the engine calls `System.Math` directly and turns NaN or ∞ into Math ERROR in one place). The special-angle table became `double.SinPi`, `double.CosPi` and `double.TanPi`. Complex and random numbers use `System.Numerics.Complex` and `System.Random` in the engine rather than Phase 1 code. `double` is therefore allowed per assembly: Numerics now, Engine from Phase 3. |

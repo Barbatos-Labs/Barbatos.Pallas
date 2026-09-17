@@ -42,6 +42,7 @@
     <File Path="tests/Directory.Build.props" />
     <Project Path="tests/Barbatos.Pallas.Architecture.Tests/Barbatos.Pallas.Architecture.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Conformance.Tests/Barbatos.Pallas.Conformance.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Expressions.Tests/Barbatos.Pallas.Expressions.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Numerics.Tests/Barbatos.Pallas.Numerics.Tests.csproj" />
   </Folder>
 </Solution>

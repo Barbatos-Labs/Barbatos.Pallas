@@ -111,6 +111,15 @@ dropping an expectation.
 Until an application's engine exists, every one of its cases is reported as **skipped**, naming the phase that
 implements it. A case is never reported as passed before the code it describes exists.
 
+**Syntax checks (Phase 2).** `ConformanceSyntaxTests` parses every input of every case in its application, with
+relations allowed when the case sets `"verify": "On"`:
+
+- an input must parse, unless the case expects `SyntaxError`, in which case it must fail with a syntax error code;
+- printing the tree and parsing it again must give an equivalent tree;
+- `equivalentTo` must parse to the same tree as `input`.
+
+These tests do not change a case's status: parsing an expression is not computing the calculator's result.
+
 ## 5. How derived values were computed
 
 Statistics, regressions and several decimals were computed on 17 Sep 2026:
@@ -161,6 +170,10 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 | U7 | Exact display of cubic and quartic roots | Surd form only when the polynomial factors over Q into factors of degree ≤ 2 and the forms fit the display bounds; decimals otherwise | The manufacturer's official emulator |
 | U8 | Matrices of Examples 3-9 (p. 137, images) | Equal to the matrices entered in Examples 1-2 | Visual check of p. 137 |
 | U9 | Operator of the second Ans example (p. 37, key icons) | `789 − Ans` | Visual check of p. 37 |
+| U10 | Which relational operators may not combine in a Verify chain (p. 75 lists them in an image) | `≠` does not combine with `< > ≤ ≥`; the manual's example is `4<6≠8` | Visual check of p. 75, or the manufacturer's official emulator |
+| U11 | Stack size behind Stack ERROR (not stated in the manual) | 128 nested parentheses, functions or signs | The manufacturer's official emulator |
+
+Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3).
 
 ## 7. Deliberate deviations from the calculator
 

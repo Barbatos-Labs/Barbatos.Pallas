@@ -10,4 +10,9 @@
     <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Phase 2: every input is parsed in its application (ConformanceSyntaxTests). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -19,7 +19,7 @@ internal static class ArchitectureMap
         ["Barbatos.Pallas.Numerics"] = [],
         ["Barbatos.Pallas.LinearAlgebra"] = ["Barbatos.Pallas.Numerics"],
         ["Barbatos.Pallas.Statistics"] = ["Barbatos.Pallas.Numerics"],
-        ["Barbatos.Pallas.Expressions"] = ["Barbatos.Pallas.Numerics"],
+        ["Barbatos.Pallas.Expressions"] = [],
         ["Barbatos.Pallas.Engine"] = ["Barbatos.Pallas.Numerics", "Barbatos.Pallas.Expressions", "Barbatos.Pallas.LinearAlgebra", "Barbatos.Pallas.Statistics"],
         ["Barbatos.Pallas.Solvers"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.Spreadsheet"] = ["Barbatos.Pallas.Engine"],

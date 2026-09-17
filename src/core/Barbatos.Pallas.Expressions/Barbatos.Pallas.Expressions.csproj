@@ -7,8 +7,5 @@
     <Description>Lexer, Pratt parser and abstract syntax tree for calculator expressions, following the operator precedence of a reference scientific calculator, with implicit multiplication, precise error spans, and linear and LaTeX printers.</Description>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
-  </ItemGroup>
 
 </Project>

@@ -22,19 +22,26 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`) and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references, CsCheck properties, manual values |
+| `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
 | `docs/CALCULATOR-CATALOG.md` | Everything the calculator does, with manual pages |
-| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors (U1-U9), deliberate deviations (D1-D7) |
-| `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax (draft until Phase 2) |
+| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors (U1-U11), deliberate deviations (D1-D7) |
+| `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
 
 ## Current phase
 
-**Phase 1 - Numerics is complete** (roadmap in docs/ARCHITECTURE.md §11). Numerics holds only what .NET lacks:
-`Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal` and `AngleUnit`. Next: **Phase 2 - Expressions**. The
-other core packages are empty skeletons; their conformance cases are skipped with the phase that implements them.
+**Phase 2 - Expressions is complete** (roadmap in docs/ARCHITECTURE.md §11).
+
+- Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal` and
+  `AngleUnit`.
+- Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
+  It evaluates nothing.
+
+Next: **Phase 3 - Engine**. The other core packages are empty skeletons; their conformance cases are skipped with the
+phase that implements them.
 
 ## Build and test
 
@@ -61,10 +68,10 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 3 test projects × 3 frameworks = 9 assemblies.
+  (a net8.0-only compile error). A full run is 4 test projects × 3 frameworks = 12 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
   Packing one project does not pack its project references.
-- **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90%, 96.55% on 17 Sep 2026):
+- **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
 
   ```bash
   dotnet tool restore
@@ -74,11 +81,16 @@ Things that will save time:
   dotnet stryker --skip-version-check
   ```
 
-  Run both from `tests/Barbatos.Pallas.Numerics.Tests`, whose `stryker-config.json` selects the MTP runner and ignores
-  string mutations (exception messages are not results). Two traps:
+  Run both from `tests/Barbatos.Pallas.Numerics.Tests` or `tests/Barbatos.Pallas.Expressions.Tests`, whose
+  `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Three
+  traps:
   - a `while (true)` makes Stryker skip every mutant in the method, because `while (false)` does not compile; write
     `for (;;)`;
-  - a domain check that `System.Math` would also reject survives unless the test asserts `WithParameterName`.
+  - a domain check that `System.Math` would also reject survives unless the test asserts `WithParameterName`;
+  - the MTP runner cannot switch mutants inside static initialization, so they are all reported as survivors.
+    `StandardVocabulary.cs` is data built once for `SyntaxVocabulary.Standard` and is excluded from mutation.
+    Deleting one of its lines by hand fails 13 to 18 tests (17 Sep 2026); the vocabulary tests and the conformance
+    inputs are what guard it.
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
 
@@ -125,6 +137,18 @@ Things that will save time:
 - **Accuracy claims are measured.** A function on `double` gets an accuracy test against PeterO.Numbers
   (`tests/Barbatos.Pallas.Numerics.Tests/Support/Reference.cs`). Mind the three PeterO 1.8.2 defects documented there.
 
+### Expressions
+
+- **Canonical Linear Syntax is a stored format.** History and sessions keep expressions as CLS text, so a spelling or
+  priority change is a decision-log entry with a plan for text already saved. The text-vs-keys decisions are in
+  docs/LINEAR-SYNTAX.md §5.
+- **Numbers stay text in the tree.** Expressions has no dependencies and no `double`; turning a literal into a value is
+  the engine's job (PRECISION.md §3).
+- **A new spelling goes into `SyntaxVocabulary`,** never into the lexer as a special case, and must not make an
+  existing input read differently under longest match. The print-and-reparse property in `LinearPrinterTests` and the
+  fuzz tests are what catch that; keep them passing rather than narrowing their generators.
+- **Parsing never throws for input.** Errors are a `SyntaxErrorCode` with a span; only null arguments throw.
+
 ### Architecture
 
 - **`ArchitectureMap` is the dependency graph.** A new `ProjectReference` means updating the map *and* the diagram
@@ -140,7 +164,7 @@ Things that will save time:
 - **Derived expected values are computed exactly** (rationals, integer square roots), never with `double`.
   Transcendental values (`expectationSource: reference`) come from PeterO.Numbers series at 60 digits, cross-checked
   against a known constant (docs/CONFORMANCE.md §5), never from `System.Math` or the code under test.
-- **An assumption is a `note`,** listed under U1-U9 in docs/CONFORMANCE.md. A deliberate difference from the
+- **An assumption is a `note`,** listed under U1-U11 in docs/CONFORMANCE.md. A deliberate difference from the
   calculator is a D-entry there, never a silent engine change.
 
 ### Build and style

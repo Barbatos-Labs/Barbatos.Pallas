@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Expressions is checked by:
+      * the precedence examples of the manual (pp. 28-29, 75, 168-169), as tree shapes;
+      * CsCheck properties: printing a generated tree and parsing it back gives an equivalent tree, in every
+        application context;
+      * fuzzing: arbitrary text never throws, never hangs, and every error span lies inside the text;
+      * an allocation measurement of the lexer;
+      * mutation testing (stryker-config.json), with StandardVocabulary.cs excluded because the MTP runner cannot
+        switch mutants in static initialization (CLAUDE.md, "Mutation testing").
+    The conformance inputs themselves are parsed in Barbatos.Pallas.Conformance.Tests.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
+  </ItemGroup>
+
+</Project>

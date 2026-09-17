@@ -48,25 +48,30 @@ jobs:
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
-          $expected = 9   # 3 test projects x 3 target frameworks
+          $expected = 12   # 4 test projects x 3 target frameworks
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
 
-      # Roadmap gate: a mutation score of at least 90% for Numerics. stryker-config.json sets break = 90, so a lower
-      # score fails this step. Stryker builds its own Debug output and does not touch the Release build packed below.
+      # Roadmap gate: a mutation score of at least 90% per package. Each stryker-config.json sets break = 90, so a lower
+      # score fails the step. Stryker builds its own Debug output and does not touch the Release build packed below.
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Mutation testing (Numerics)
         working-directory: tests/Barbatos.Pallas.Numerics.Tests
-        run: |
-          dotnet tool restore
-          dotnet stryker --skip-version-check --output ../../StrykerOutput
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Numerics
 
-      - name: Upload mutation report
+      - name: Mutation testing (Expressions)
+        working-directory: tests/Barbatos.Pallas.Expressions.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Expressions
+
+      - name: Upload mutation reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mutation-report
-          path: StrykerOutput/reports/*
+          name: mutation-reports
+          path: StrykerOutput/*/reports/*
           if-no-files-found: ignore
 
       - name: Pack core packages
@@ -115,3 +120,6 @@ jobs:
 
       - name: Numerics tests
         run: dotnet test --project tests/Barbatos.Pallas.Numerics.Tests --configuration Release
+
+      - name: Expressions tests
+        run: dotnet test --project tests/Barbatos.Pallas.Expressions.Tests --configuration Release

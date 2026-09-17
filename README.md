@@ -18,7 +18,7 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
 | Package | Purpose | Phase |
 |---|---|---|
 | `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds | 1 |
-| `Barbatos.Pallas.Expressions` | Lexer, Pratt parser, AST, linear and LaTeX printers | 2 |
+| `Barbatos.Pallas.Expressions` | Lexer, Pratt parser with the reference calculator's priority, syntax tree, error spans, linear and LaTeX printers | 2 |
 | `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N | 3 |
 | `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | 3 |
 | `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection | 3 |
@@ -34,7 +34,7 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
 - [Precision strategy](docs/PRECISION.md): what Pallas promises, which built-in type holds a value, rounding, where `double` may appear
 - [Calculator catalog](docs/CALCULATOR-CATALOG.md): the functional reference
 - [Conformance](docs/CONFORMANCE.md): test data format, assumptions, deliberate deviations
-- [Canonical Linear Syntax](docs/LINEAR-SYNTAX.md): the text form of expressions (draft)
+- [Canonical Linear Syntax](docs/LINEAR-SYNTAX.md): the text form of expressions
 
 ## Build
 
