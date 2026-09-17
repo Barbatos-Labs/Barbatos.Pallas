@@ -117,11 +117,11 @@ public sealed class BuiltInBehaviorTests
     }
 
     [Fact]
-    public void SystemMath_EdgeValuesThatScientificMathHandlesItself()
+    public void SystemMath_ReturnsValuesTheCalculatorRejectsOrComputesDifferently()
     {
-        Math.Pow(-8, 1.0 / 3).Should().Be(double.NaN);
-        Math.Pow(0, 0).Should().Be(1, "IEEE 754's convention, which ScientificMath.Pow does not follow");
-        Math.Log(1, 0).Should().Be(0, "-0 rather than NaN, which is why ScientificMath.Log checks base 0 itself");
+        Math.Pow(-8, 1.0 / 3).Should().Be(double.NaN, "the calculator gives -2, which is double.RootN(-8, 3)");
+        Math.Pow(0, 0).Should().Be(1, "IEEE 754's convention; 0^0 is a Math ERROR on the reference calculator (manual p. 171)");
+        Math.Log(1, 0).Should().Be(0, "-0 rather than NaN, so the engine's domain check must reject base 0 itself");
     }
 
     [Fact]
