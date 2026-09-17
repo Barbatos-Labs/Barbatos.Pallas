@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Numerics is checked against oracles that share none of its code (docs/PRECISION.md §12):
+      * PeterO.Numbers - an independent arbitrary-precision library: 40-digit references for the double-based
+        functions, and differential tests of significant-digit rounding;
+      * CsCheck property tests - algebraic laws over generated values, with shrinking;
+      * values printed in the manual.
+    Accuracy expectations never come from System.Math itself; a test comparing with System.Math only checks that a
+    wrapper delegates to it.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="PeterO.Numbers" />
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
+  </ItemGroup>
+
+</Project>

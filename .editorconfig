@@ -1,0 +1,150 @@
+# root = true stops the style search from walking into whatever directory encloses this repository.
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+tab_width = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{sln,slnx}]
+indent_style = tab
+
+[*.{json,jsonc,xml,yml,yaml,config,runsettings}]
+indent_size = 2
+
+[*.{slnf,props,targets,projitems,csproj,shproj}]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.cs]
+
+#### File header ####
+file_header_template = This Source Code Form is subject to the terms of the MIT License.\nIf a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.\nCopyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.\nAll Rights Reserved.
+dotnet_diagnostic.IDE0073.severity = error
+
+#### .NET coding conventions ####
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+dotnet_style_qualification_for_event = false:silent
+dotnet_style_qualification_for_field = false:silent
+dotnet_style_qualification_for_method = false:silent
+dotnet_style_qualification_for_property = false:silent
+
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning
+dotnet_style_predefined_type_for_member_access = true:warning
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+dotnet_style_readonly_field = true:warning
+dotnet_style_prefer_conditional_expression_over_assignment = true:silent
+dotnet_style_prefer_conditional_expression_over_return = true:silent
+
+#### C# coding conventions ####
+
+# A public numeric library is read far more than it is written: explicit types unless the type is
+# apparent from a `new` on the right-hand side. Same rule as Barbatos.i18n and Barbatos.Wpf.
+csharp_style_var_elsewhere = false:warning
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_when_type_is_apparent = false:none
+
+csharp_style_expression_bodied_methods = when_on_single_line:silent
+csharp_style_expression_bodied_properties = true:silent
+csharp_style_expression_bodied_operators = when_on_single_line:silent
+csharp_style_expression_bodied_lambdas = true:silent
+
+csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+
+csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async
+
+csharp_prefer_braces = true:warning
+csharp_using_directive_placement = outside_namespace:warning
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_unused_value_assignment_preference = discard_variable:silent
+csharp_style_unused_value_expression_statement_preference = discard_variable:silent
+csharp_style_allow_blank_lines_between_consecutive_braces_experimental = false:warning
+csharp_prefer_static_local_function = true:warning
+dotnet_diagnostic.IDE0058.severity = silent
+dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.IDE0290.severity = none
+
+#### C# formatting ####
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = no_change
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_around_binary_operators = before_and_after
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = false
+
+#### Naming ####
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, private_protected
+dotnet_naming_symbols.private_const_fields.applicable_kinds = field
+dotnet_naming_symbols.private_const_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_const_fields.required_modifiers = const
+dotnet_naming_symbols.private_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_fields.required_modifiers = static, readonly
+dotnet_naming_symbols.interface_types.applicable_kinds = interface
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.prefix_i.capitalization = pascal_case
+dotnet_naming_style.prefix_i.required_prefix = I
+
+dotnet_naming_rule.private_const_fields_pascal.symbols = private_const_fields
+dotnet_naming_rule.private_const_fields_pascal.style = pascal_case
+dotnet_naming_rule.private_const_fields_pascal.severity = warning
+dotnet_naming_rule.private_static_readonly_fields_pascal.symbols = private_static_readonly_fields
+dotnet_naming_rule.private_static_readonly_fields_pascal.style = pascal_case
+dotnet_naming_rule.private_static_readonly_fields_pascal.severity = warning
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel_case
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_rule.interfaces_prefix_i.symbols = interface_types
+dotnet_naming_rule.interfaces_prefix_i.style = prefix_i
+dotnet_naming_rule.interfaces_prefix_i.severity = warning
+
+#### Analyzers that guard correctness of a numeric library ####
+
+# Culture. A number formatted or parsed with the thread culture reads "1,5" on a Vietnamese machine and
+# "1.5" on an English one - for a calculator that is a wrong result, not a cosmetic issue.
+dotnet_diagnostic.CA1304.severity = error
+dotnet_diagnostic.CA1305.severity = error
+dotnet_diagnostic.CA1307.severity = warning
+dotnet_diagnostic.CA1309.severity = warning
+dotnet_diagnostic.CA1310.severity = error
+
+# Banned floating-point APIs (see build/BannedSymbols.FloatingPoint.txt and docs/PRECISION.md).
+dotnet_diagnostic.RS0030.severity = error
+
+# Public API must be documented: every public member is a permanent commitment once on nuget.org.
+dotnet_diagnostic.CS1591.severity = warning
+
+[tests/**.cs]
+# Pallas number types parse and format in the invariant culture unless a provider is passed, but CA1305 flags every
+# Parse(string) that has an IFormatProvider overload. Tests call the invariant overloads on purpose; library code
+# keeps the rule as an error.
+dotnet_diagnostic.CA1305.severity = none
+# Test method names use underscores (Method_Condition_Expectation) and tests are not public API.
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1861.severity = none

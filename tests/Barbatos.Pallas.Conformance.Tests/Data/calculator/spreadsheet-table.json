@@ -1,0 +1,63 @@
+{
+  "source": "User's guide of the reference calculator, Vietnamese edition (SA2207-A)",
+  "chapter": "Spreadsheet and Table applications (pp. 100-113)",
+  "cases": [
+    { "id": "sheet-constants-formula-001", "page": 102, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "7×5", "A2": "7×6", "A3": "A2+7", "B1": "=A1+7" } },
+      "expect": { "values": { "A1": "35", "A2": "42", "A3": "49", "B1": "42" } },
+      "expectationSource": "manual", "note": "A1-A3 are constants (fixed once entered); B1 is a formula. The manual states B1 = 42." },
+    { "id": "sheet-grab-001", "page": 103, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "7×5", "A2": "7×6", "A3": "A2+7", "B1": "=A1+7", "B2": "=A2+7" } },
+      "expect": { "values": { "B2": "49" } }, "expectationSource": "derived-exact" },
+    { "id": "sheet-copy-relative-001", "page": 103, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "B1": "=A1+7" }, "operations": [ "Copy B1", "Paste C3" ] },
+      "expect": { "formulas": { "C3": "=B3+7" } }, "expectationSource": "manual" },
+    { "id": "sheet-sum-001", "page": 105, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "7×5", "A2": "7×6", "A3": "A2+7", "A4": "=Sum(A1:A3)" } },
+      "expect": { "values": { "A4": "126" } }, "expectationSource": "derived-exact" },
+    { "id": "sheet-fill-formula-001", "page": 106, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "7×5", "A2": "7×6", "A3": "A2+7" }, "operations": [ "Fill Formula =2A1-3 B1:B3" ] },
+      "expect": {
+        "formulas": { "B1": "=2A1-3", "B2": "=2A2-3", "B3": "=2A3-3" },
+        "values": { "B1": "67", "B2": "81", "B3": "95" }
+      },
+      "expectationSource": "manual", "note": "Formulas are stated in the manual; values derived exactly." },
+    { "id": "sheet-fill-value-001", "page": 106, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": {
+        "cells": { "A1": "7×5", "A2": "7×6", "A3": "A2+7" },
+        "operations": [ "Fill Formula =2A1-3 B1:B3", "Fill Value B1×3 C1:C3" ]
+      },
+      "expect": { "values": { "C1": "201", "C2": "243", "C3": "285" }, "constants": [ "C1", "C2", "C3" ] },
+      "expectationSource": "derived-exact" },
+    { "id": "sheet-constant-significant-digits-001", "page": 101, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "12345678915" } },
+      "expect": { "values": { "A1": "1.234567892×10^10" } }, "expectationSource": "manual",
+      "note": "Standard profile: a constant with 11 or more significant digits is converted to 10 when confirmed." },
+    { "id": "sheet-circular-001", "page": 165, "app": "Spreadsheet", "kind": "spreadsheet", "status": "ready",
+      "given": { "cells": { "A1": "=A1" } },
+      "expect": { "error": "CircularError" }, "expectationSource": "manual" },
+
+    { "id": "table-001", "page": 108, "app": "Table", "kind": "table", "status": "ready",
+      "given": { "f": "x²+1⌟2", "g": "x²-1⌟2", "tableType": "f(x)/g(x)", "start": "-1", "end": "1", "step": "0.5" },
+      "expect": {
+        "rows": [
+          [ "-1", "3⌟2", "1⌟2" ],
+          [ "-1⌟2", "3⌟4", "-1⌟4" ],
+          [ "0", "1⌟2", "-1⌟2" ],
+          [ "1⌟2", "3⌟4", "-1⌟4" ],
+          [ "1", "3⌟2", "1⌟2" ]
+        ],
+        "variables": { "x": "1" }
+      },
+      "expectationSource": "derived-exact",
+      "note": "Columns x, f(x), g(x). Generating a table changes x (p. 109); the last generated value is assumed to remain." },
+    { "id": "table-verify-001", "page": 112, "app": "Table", "kind": "table", "status": "ready",
+      "settings": { "verify": "On" },
+      "given": { "f": "x²+1⌟2", "g": "x²-1⌟2", "tableType": "f(x)/g(x)", "start": "-1", "end": "1", "step": "0.5", "answers": { "f(x) row 1": "1.5" } },
+      "expect": { "verify": "True" }, "expectationSource": "derived-exact" },
+    { "id": "table-range-error-001", "page": 164, "app": "Table", "kind": "table", "status": "ready",
+      "given": { "f": "x", "g": "x", "tableType": "f(x)/g(x)", "start": "1", "end": "31", "step": "1" },
+      "expect": { "error": "RangeError" }, "expectationSource": "derived-exact",
+      "note": "31 rows exceed the 30-row limit for f(x)/g(x) (p. 109)." }
+  ]
+}

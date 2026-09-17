@@ -1,0 +1,10 @@
+// Types banned in every src/core package.
+//
+// Pallas computes with decimal (exact decimal arithmetic) and double (transcendental functions, and values outside
+// decimal's precise range); see docs/PRECISION.md. Single-precision types add nothing but lost digits, so they are banned
+// outright. Where double itself may appear is enforced separately by CoreFloatingPointTests in Architecture.Tests, which
+// also catches declarations - this analyzer was measured to catch member use but not a field, parameter, local or literal.
+
+T:System.Single;Single precision loses digits; use decimal, or double where docs/PRECISION.md allows it
+T:System.Half;Half precision loses digits; use decimal, or double where docs/PRECISION.md allows it
+T:System.MathF;Single-precision math; use System.Math with double where docs/PRECISION.md allows it

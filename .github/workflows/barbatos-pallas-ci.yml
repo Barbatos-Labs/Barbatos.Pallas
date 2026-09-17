@@ -1,0 +1,117 @@
+name: barbatos-pallas-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Build, test and pack (Windows, x64)
+    # The WPF application only builds on Windows; everything else is covered on Linux and ARM64 below.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore Barbatos.Pallas.slnx
+
+      - name: Build
+        run: dotnet build Barbatos.Pallas.slnx --configuration Release --no-restore
+
+      # Runs every test project on net8.0, net9.0 and net10.0 (Microsoft.Testing.Platform, see global.json).
+      - name: Test
+        run: dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build --report-xunit-trx --results-directory TestResults
+
+      # A test project that failed to build for one framework is silently absent from a --no-build run while the
+      # summary still reads "Passed!". Count the result files instead of trusting the summary.
+      - name: Verify every test assembly ran
+        shell: pwsh
+        run: |
+          $expected = 9   # 3 test projects x 3 target frameworks
+          $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
+          if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
+          Write-Host "$($trx.Count) test result files."
+
+      # Roadmap gate: a mutation score of at least 90% for Numerics. stryker-config.json sets break = 90, so a lower
+      # score fails this step. Stryker builds its own Debug output and does not touch the Release build packed below.
+      - name: Mutation testing (Numerics)
+        working-directory: tests/Barbatos.Pallas.Numerics.Tests
+        run: |
+          dotnet tool restore
+          dotnet stryker --skip-version-check --output ../../StrykerOutput
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: StrykerOutput/reports/*
+          if-no-files-found: ignore
+
+      - name: Pack core packages
+        run: dotnet pack Barbatos.Pallas.slnx --configuration Release --no-build --output artifacts/packages
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows
+          path: TestResults/**/*.trx
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/packages/*
+          if-no-files-found: error
+
+  portable:
+    name: Test (${{ matrix.os }})
+    # Invariant I5 (docs/PRECISION.md): results must agree on every OS and architecture. System.Math calls the platform C
+    # runtime (UCRT on Windows, glibc on Linux), so the Numerics accuracy tests matter most here. Every test project
+    # except the WPF host runs.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Architecture tests
+        run: dotnet test --project tests/Barbatos.Pallas.Architecture.Tests --configuration Release
+
+      - name: Conformance tests
+        run: dotnet test --project tests/Barbatos.Pallas.Conformance.Tests --configuration Release
+
+      - name: Numerics tests
+        run: dotnet test --project tests/Barbatos.Pallas.Numerics.Tests --configuration Release

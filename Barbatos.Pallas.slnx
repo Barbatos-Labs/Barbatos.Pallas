@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="nuget.config" />
+    <File Path=".github/workflows/barbatos-pallas-ci.yml" />
+    <File Path="README.md" />
+    <File Path="build/BannedSymbols.FloatingPoint.txt" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/ARCHITECTURE.md" />
+    <File Path="docs/CONFORMANCE.md" />
+    <File Path="docs/CALCULATOR-CATALOG.md" />
+    <File Path="docs/LINEAR-SYNTAX.md" />
+    <File Path="docs/PRECISION.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/core/">
+    <File Path="src/core/Directory.Build.props" />
+    <Project Path="src/core/Barbatos.Pallas.Numerics/Barbatos.Pallas.Numerics.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.LinearAlgebra/Barbatos.Pallas.LinearAlgebra.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Statistics/Barbatos.Pallas.Statistics.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Expressions/Barbatos.Pallas.Expressions.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Engine/Barbatos.Pallas.Engine.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Solvers/Barbatos.Pallas.Solvers.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Spreadsheet/Barbatos.Pallas.Spreadsheet.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Data/Barbatos.Pallas.Data.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.Graphing/Barbatos.Pallas.Graphing.csproj" />
+    <Project Path="src/core/Barbatos.Pallas.DependencyInjection/Barbatos.Pallas.DependencyInjection.csproj" />
+  </Folder>
+  <Folder Name="/src/app/">
+    <File Path="src/app/Directory.Build.props" />
+    <Project Path="src/app/Barbatos.Pallas.Presentation/Barbatos.Pallas.Presentation.csproj" />
+    <Project Path="src/app/Barbatos.Pallas.Rendering.Skia/Barbatos.Pallas.Rendering.Skia.csproj" />
+    <Project Path="src/app/Barbatos.Pallas.Wpf/Barbatos.Pallas.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/Barbatos.Pallas.Architecture.Tests/Barbatos.Pallas.Architecture.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Conformance.Tests/Barbatos.Pallas.Conformance.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Numerics.Tests/Barbatos.Pallas.Numerics.Tests.csproj" />
+  </Folder>
+</Solution>

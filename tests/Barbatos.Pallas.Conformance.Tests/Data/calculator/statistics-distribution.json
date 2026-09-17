@@ -1,0 +1,74 @@
+{
+  "source": "User's guide of the reference calculator, Vietnamese edition (SA2207-A)",
+  "chapter": "Statistics and Distribution applications (pp. 79-100)",
+  "cases": [
+    { "id": "stats-sort-001", "page": 83, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": {
+        "mode": "2-Variable",
+        "rows": [ [ "170", "66" ], [ "179", "75" ], [ "173", "68" ] ],
+        "operations": [ "Sort x Ascending" ]
+      },
+      "expect": { "rows": [ [ "170", "66" ], [ "173", "68" ], [ "179", "75" ] ] }, "expectationSource": "derived-exact" },
+    { "id": "stats-sort-002", "page": 83, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": {
+        "mode": "2-Variable",
+        "rows": [ [ "170", "66" ], [ "179", "75" ], [ "173", "68" ] ],
+        "operations": [ "Sort x Ascending", "Sort y Descending" ]
+      },
+      "expect": { "rows": [ [ "179", "75" ], [ "173", "68" ], [ "170", "66" ] ] }, "expectationSource": "derived-exact" },
+
+    { "id": "stats-1var-001", "page": 83, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "settings": { "frequency": "On" },
+      "given": {
+        "mode": "1-Variable",
+        "columns": [ "x", "Freq" ],
+        "rows": [ [ "1", "1" ], [ "2", "2" ], [ "3", "1" ], [ "4", "2" ], [ "5", "2" ], [ "6", "2" ], [ "7", "3" ], [ "8", "4" ], [ "9", "2" ], [ "10", "1" ] ]
+      },
+      "expect": {
+        "n": "20", "Σx": "119", "Σx²": "837", "x̄": "5.95",
+        "σ²x": "6.4475", "σx": "2.539192785", "s²x": "6.786842105", "sx": "2.605156829",
+        "min(x)": "1", "max(x)": "10"
+      },
+      "expectationSource": "derived-exact",
+      "note": "Derived with exact rational arithmetic and integer square roots. Q1, Med and Q3 are omitted until the reference calculator's quartile rule is confirmed (docs/CONFORMANCE.md, unverified behaviours)." },
+    { "id": "stats-1var-normdist-001", "page": 91, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": { "sameDataAs": "stats-1var-001", "inputs": [ "2▶t", "P(Ans)" ] },
+      "expect": { "values": { "2▶t": "-1.555612486", "P(Ans)": "0.05990013396" } }, "expectationSource": "reference",
+      "note": "t = (2 − 5.95)/√(2579/400) = −79/√2579 = −1.55561248564866246429…; P(t) = Φ(t) = 0.05990013396322900464…, Ans holding t unrounded." },
+
+    { "id": "stats-2var-001", "page": 84, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": {
+        "mode": "2-Variable",
+        "columns": [ "x", "y" ],
+        "rows": [ [ "1.0", "1.0" ], [ "1.2", "1.1" ], [ "1.5", "1.2" ], [ "1.6", "1.3" ], [ "1.9", "1.4" ],
+                  [ "2.1", "1.5" ], [ "2.4", "1.6" ], [ "2.5", "1.7" ], [ "2.7", "1.8" ], [ "3.0", "2.0" ] ]
+      },
+      "expect": {
+        "n": "10", "Σx": "19.9", "Σy": "14.6", "Σx²": "43.57", "Σy²": "22.24", "Σxy": "30.96",
+        "Σx³": "102.451", "Σx²y": "71.244", "Σx⁴": "253.5541",
+        "x̄": "1.99", "ȳ": "1.46", "σx": "0.63", "σy": "0.3039736831", "sx": "0.6640783086", "sy": "0.3204163958",
+        "min(x)": "1", "max(x)": "3", "min(y)": "1", "max(y)": "2"
+      },
+      "expectationSource": "derived-exact" },
+    { "id": "stats-regression-linear-001", "page": 86, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": { "sameDataAs": "stats-2var-001", "regression": "y=a+bx" },
+      "expect": { "a": "0.5043587805", "b": "0.4802217183", "r": "0.9952824846" },
+      "expectationSource": "derived-exact",
+      "note": "a = 10009/19845 and b = 1906/3969 exactly; r² = 908209/916839." },
+    { "id": "stats-regression-quadratic-001", "page": 86, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": { "sameDataAs": "stats-2var-001", "regression": "y=a+bx+cx²" },
+      "expect": { "a": "0.7028598638", "b": "0.2576384379", "c": "0.05610274153" },
+      "expectationSource": "derived-exact", "note": "Exact least-squares solution of the normal equations." },
+    { "id": "stats-estimate-001", "page": 92, "app": "Statistics", "kind": "statistics", "status": "ready",
+      "given": { "sameDataAs": "stats-2var-001", "regression": "y=a+bx", "inputs": [ "5.5ŷ" ] },
+      "expect": { "result": "3.145578231" }, "expectationSource": "derived-exact", "note": "Exactly 2312/735." },
+
+    { "id": "dist-binomial-cd-001", "page": 96, "app": "Distribution", "kind": "distribution", "status": "ready",
+      "given": { "distribution": "Binomial CD", "inputMethod": "List", "x": [ "2", "3", "4", "5" ], "N": "5", "p": "0.5" },
+      "expect": { "P": [ "0.5", "0.8125", "0.96875", "1" ] }, "expectationSource": "derived-exact" },
+    { "id": "dist-normal-pd-001", "page": 100, "app": "Distribution", "kind": "distribution", "status": "ready",
+      "given": { "distribution": "Normal PD", "inputMethod": "Variable", "x": "36", "μ": "35", "σ": "2" },
+      "expect": { "p": "0.1760326634" }, "expectationSource": "reference",
+      "note": "e^(−1/8) / (2√(2π)) = 0.17603266338214973888…" }
+  ]
+}

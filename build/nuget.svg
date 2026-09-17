@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <polyline points="70,250 110,225 165,345 230,110 440,110" fill="none" stroke="#2d3436" stroke-width="26" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="270" y1="215" x2="410" y2="215" stroke="#0984e3" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="340" cy="165" r="17" fill="#0984e3"/>
+  <circle cx="340" cy="265" r="17" fill="#0984e3"/>
+  <text x="256" y="445" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="600" fill="#2d3436">pallas</text>
+</svg>

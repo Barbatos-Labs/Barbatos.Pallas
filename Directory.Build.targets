@@ -1,0 +1,49 @@
+<Project>
+  <!--
+    This file has to exist even where it adds nothing for a given project: MSBuild looks for
+    Directory.Build.props and Directory.Build.targets in two independent walks up the tree, and without
+    it the targets walk leaves the repository and imports whatever encloses it.
+  -->
+
+  <PropertyGroup>
+    <PackageTags Condition="'$(PackageTags)' != ''">$(CommonTags);$(PackageTags)</PackageTags>
+    <PackageTags Condition="'$(PackageTags)' == ''">$(CommonTags)</PackageTags>
+  </PropertyGroup>
+
+  <!-- Everything below applies only to projects that ship to NuGet (src/core). -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DeterministicSourcePaths Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</DeterministicSourcePaths>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(BuildToolsDirectory)nuget.png" Pack="true" PackagePath="\Icon.png" Visible="false" />
+    <!-- Each package ships its own README.md, sitting beside its own .csproj. -->
+    <None Include="$(MSBuildProjectDirectory)\README.md" Pack="true" PackagePath="\README.md" />
+  </ItemGroup>
+
+  <!-- SourceLink only where it can work: CI and release builds (-p:SourceLinkEnabled=true). A local clone
+       without a remote or a commit would otherwise print three warnings per project per framework. -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true' AND ('$(SourceLinkEnabled)' == 'true' OR '$(ContinuousIntegrationBuild)' == 'true')">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Strong naming only when the release workflow has written the key (from the STRONG_NAME_KEY secret). -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' AND Exists('$(RepositoryDirectory)src\barbatos.snk')">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(RepositoryDirectory)src\barbatos.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <Target Name="AddCommitHashToAssemblyAttributes" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(SourceRevisionId)' != ''">
+        <_Parameter1>CommitHash</_Parameter1>
+        <_Parameter2>$(SourceRevisionId)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+</Project>

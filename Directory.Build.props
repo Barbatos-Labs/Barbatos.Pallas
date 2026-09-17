@@ -1,0 +1,60 @@
+<Project>
+  <!--
+    Root props for every project in the repository. src/core, src/app and tests each add a
+    Directory.Build.props of their own that imports this one first (GetPathOfFileAbove), so shared
+    settings live here exactly once and each tier only states what differs.
+
+    Target frameworks are deliberately NOT set here. A singular <TargetFramework> in a csproj does not
+    override an inherited plural <TargetFrameworks> - it silently builds the inherited set instead
+    (learned the hard way in Barbatos.PackagingEngine) - so each tier sets the plural form itself.
+  -->
+
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>preview.1</VersionSuffix>
+    <!-- Assembly and file versions take numeric parts only; the prerelease label lives in the package. -->
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <FileVersion>$(VersionPrefix)</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Barbatos Labs | Pham The Hung</Authors>
+    <Company>Barbatos Labs</Company>
+    <Product>Barbatos.Pallas</Product>
+    <Copyright>(c) 2026 Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors. All rights reserved.</Copyright>
+    <Description>Part of Barbatos.Pallas - an exact and arbitrary-precision scientific calculation engine for .NET.</Description>
+    <CommonTags>dotnet;math;calculator;scientific;arbitrary-precision;exact-arithmetic;rational;bigdecimal</CommonTags>
+    <PackageProjectUrl>https://github.com/Barbatos-Labs/Barbatos.Pallas</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Barbatos-Labs/Barbatos.Pallas</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>https://github.com/Barbatos-Labs/Barbatos.Pallas/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageIcon>Icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- A warning in a precision-critical engine is a defect report that nobody reads. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <Deterministic>true</Deterministic>
+    <CheckEolWorkloads>false</CheckEolWorkloads>
+    <SatelliteResourceLanguages>en;vi</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RepositoryDirectory>$(MSBuildThisFileDirectory)</RepositoryDirectory>
+    <BuildToolsDirectory>$(RepositoryDirectory)build\</BuildToolsDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">$(MSBuildProjectName.EndsWith('.Tests'))</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true' OR '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>

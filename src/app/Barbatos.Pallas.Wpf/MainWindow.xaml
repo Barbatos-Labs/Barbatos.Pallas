@@ -1,0 +1,13 @@
+<Window x:Class="Barbatos.Pallas.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Barbatos Pallas"
+        Width="420" Height="720"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="Barbatos Pallas" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
+            <TextBlock Text="Phase 0 - engine not yet implemented" Margin="0,8,0,0" Foreground="Gray" HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</Window>

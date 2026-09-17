@@ -1,0 +1,31 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    Tests run on all three runtimes the core packages target. Every calculation is integer-based, so the
+    results must be identical on net8.0, net9.0 and net10.0 - a single-TFM run proves a third of that.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!--
+    Microsoft.Testing.Platform, not VSTest: xunit.v3 4.x on the .NET 10 SDK refuses the VSTest path, and
+    global.json opts `dotnet test` into MTP for the whole repository. Coverage therefore comes from the MTP
+    code-coverage extension rather than coverlet.collector.
+  -->
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="AwesomeAssertions" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Barbatos.Pallas.Engine</PackageId>
+    <RootNamespace>Barbatos.Pallas.Engine</RootNamespace>
+    <PackageTags>evaluator;engine;calculator;formatting;calculus;plugin</PackageTags>
+    <Description>The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify and Base-N.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.LinearAlgebra\Barbatos.Pallas.LinearAlgebra.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Statistics\Barbatos.Pallas.Statistics.csproj" />
+  </ItemGroup>
+
+</Project>

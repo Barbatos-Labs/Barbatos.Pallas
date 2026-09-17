@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Math layout and graph rendering on SkiaSharp. One implementation drawn by SKElement in WPF and by
+    SKCanvasView in MAUI, so textbook-format display cannot differ between the two apps.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Barbatos.Pallas.Rendering.Skia</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

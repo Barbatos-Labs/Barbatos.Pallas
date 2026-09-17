@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Barbatos.Wpf.Core requires the SDK-versioned Windows moniker: the bare net10.0-windows form falls back
+         to the windows7.0 baseline, which has no WinRT projections, and restore fails with NU1201.
+         A single runtime is enough for an application; the libraries it consumes are the ones that
+         multi-target. -->
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Barbatos.Pallas.Wpf</RootNamespace>
+    <AssemblyName>Barbatos.Pallas</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Feeds AppInfo.Name and PublisherInfo. Together with AppInfo.AppId below, Company decides where
+         Preferences and user data live (%LocalAppData%\{Company}\{AppId}\): neither may change after the
+         first release, or every user's settings and history are stranded. -->
+    <Product>Barbatos Pallas</Product>
+    <Company>Barbatos Labs</Company>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Immutable after the first release. Barbatos.PackagingEngine's identity ledger will pin it. -->
+    <AssemblyMetadata Include="Barbatos.Wpf.ApplicationModel.AppInfo.AppId" Value="{5E50D3E6-0148-428F-88C9-F824709C75C4}" />
+    <AssemblyMetadata Include="Barbatos.Wpf.ApplicationModel.PublisherInfo.Website" Value="https://github.com/Barbatos-Labs/Barbatos.Pallas" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Barbatos.Wpf.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Rendering.Skia\Barbatos.Pallas.Rendering.Skia.csproj" />
+  </ItemGroup>
+
+</Project>

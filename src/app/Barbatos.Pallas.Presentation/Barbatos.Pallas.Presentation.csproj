@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Platform-neutral presentation layer shared by the WPF app and the future MAUI app: view models, the
+    on-screen keypad model, the structural math-input editor and the calculator-app registry.
+    It must never reference WPF, MAUI or SkiaSharp - Architecture.Tests enforces that.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Barbatos.Pallas.Presentation</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+  </ItemGroup>
+
+</Project>

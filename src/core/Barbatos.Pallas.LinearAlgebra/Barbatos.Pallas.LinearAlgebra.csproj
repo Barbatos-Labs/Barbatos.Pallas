@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Barbatos.Pallas.LinearAlgebra</PackageId>
+    <RootNamespace>Barbatos.Pallas.LinearAlgebra</RootNamespace>
+    <PackageTags>matrix;vector;linear-algebra;determinant;decimal</PackageTags>
+    <Description>Matrices and vectors for Barbatos.Pallas on decimal: determinants, inverses, dot and cross products, angles and unit vectors.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
+  </ItemGroup>
+
+</Project>

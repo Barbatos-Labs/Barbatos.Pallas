@@ -1,0 +1,25 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    src/core: the engine packages that ship to nuget.org. Platform-neutral on purpose - the same
+    assemblies serve the WPF app, a future MAUI app on Android/iOS and a Web API.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- iOS requires full AOT, so the engine takes no reflection-based shortcuts anywhere. -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <!-- Projects that legitimately need floating point for rendering (Graphing) set this to false in their
+         csproj and document why. Everything else is banned from touching it. -->
+    <PallasBanFloatingPoint Condition="'$(PallasBanFloatingPoint)' == ''">true</PallasBanFloatingPoint>
+  </PropertyGroup>
+
+  <!-- Items are evaluated after all properties, so a csproj override of PallasBanFloatingPoint is seen here. -->
+  <ItemGroup Condition="'$(PallasBanFloatingPoint)' == 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(BuildToolsDirectory)BannedSymbols.FloatingPoint.txt" Link="BannedSymbols.FloatingPoint.txt" Visible="false" />
+  </ItemGroup>
+</Project>

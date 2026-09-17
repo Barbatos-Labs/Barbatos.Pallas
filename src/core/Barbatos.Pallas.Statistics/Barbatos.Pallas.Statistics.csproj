@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Barbatos.Pallas.Statistics</PackageId>
+    <RootNamespace>Barbatos.Pallas.Statistics</RootNamespace>
+    <PackageTags>statistics;regression;distribution;quartile;normal;binomial;poisson</PackageTags>
+    <Description>Statistics for Barbatos.Pallas: one- and two-variable summaries with decimal sums, quartiles, seven regression models with estimators, and binomial, normal and Poisson distributions.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
+  </ItemGroup>
+
+</Project>

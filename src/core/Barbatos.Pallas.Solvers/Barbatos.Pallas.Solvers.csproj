@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Barbatos.Pallas.Solvers</PackageId>
+    <RootNamespace>Barbatos.Pallas.Solvers</RootNamespace>
+    <PackageTags>equation;polynomial;solver;inequality;newton</PackageTags>
+    <Description>Equation solving for Barbatos.Pallas: simultaneous linear equations, polynomials of degree 2 to 4 with exact surd roots for quadratics, a Newton solver and polynomial inequalities.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+  </ItemGroup>
+
+</Project>

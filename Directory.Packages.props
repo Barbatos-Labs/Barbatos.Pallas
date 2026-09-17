@@ -1,0 +1,41 @@
+<Project>
+  <!-- Central Package Management: this is the only place a version is ever written. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
+  </PropertyGroup>
+
+  <ItemGroup Label="Build">
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <!-- Bans single-precision types in src/core. See docs/PRECISION.md §7. -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Core">
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="App">
+    <!-- Barbatos.Wpf.Core 2.5.0 pulls Microsoft.Extensions.* >= 10.0.10; the Core pins above satisfy that floor. -->
+    <PackageVersion Include="Barbatos.Wpf.Core" Version="2.5.0" />
+    <PackageVersion Include="Barbatos.Wpf.Aquarius" Version="2.5.0" />
+    <PackageVersion Include="Barbatos.Wpf.AquariusRouter" Version="2.5.0" />
+    <PackageVersion Include="Barbatos.i18n.Wpf" Version="1.2.0" />
+    <PackageVersion Include="Barbatos.i18n.DependencyInjection" Version="1.2.0" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="SkiaSharp" Version="4.152.0" />
+    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.152.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <!-- Independent arbitrary-precision implementation (CC0), used ONLY as a differential test oracle. -->
+    <PackageVersion Include="PeterO.Numbers" Version="1.8.2" />
+    <PackageVersion Include="CsCheck" Version="4.9.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Guards the rules the compiler cannot: the dependency graph between packages, and that binary floating point
+    appears only in the allow-listed core assembly (docs/PRECISION.md §7, second lock).
+    References every project it inspects so their assemblies land in the output directory.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Numerics\Barbatos.Pallas.Numerics.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.LinearAlgebra\Barbatos.Pallas.LinearAlgebra.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Statistics\Barbatos.Pallas.Statistics.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Solvers\Barbatos.Pallas.Solvers.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.DependencyInjection\Barbatos.Pallas.DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Rendering.Skia\Barbatos.Pallas.Rendering.Skia.csproj" />
+  </ItemGroup>
+
+</Project>

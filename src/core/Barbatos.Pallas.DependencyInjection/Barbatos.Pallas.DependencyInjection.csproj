@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Barbatos.Pallas.DependencyInjection</PackageId>
+    <RootNamespace>Barbatos.Pallas.DependencyInjection</RootNamespace>
+    <PackageTags>dependencyinjection;di;microsoft-extensions</PackageTags>
+    <Description>Microsoft.Extensions.DependencyInjection integration for Barbatos.Pallas: AddPallas(), validated options, and registration of function, constant and unit modules.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Solvers\Barbatos.Pallas.Solvers.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
+  </ItemGroup>
+
+</Project>

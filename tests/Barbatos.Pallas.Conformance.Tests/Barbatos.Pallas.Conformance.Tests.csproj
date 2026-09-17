@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The conformance suite of the reference calculator: every worked example of the user's guide that carries enough data,
+    as JSON under Data/calculator (format: docs/CONFORMANCE.md). Until an application's engine exists its cases
+    are reported as skipped, never as passed.
+  -->
+
+  <ItemGroup>
+    <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
