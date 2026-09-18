@@ -23,6 +23,12 @@ public sealed class CoreFloatingPointTests
                 ("Barbatos.Pallas.Numerics.",
                     "Trigonometry in calculator angle units, on double.SinPi, double.CosPi, double.TanPi and System.Math (PRECISION.md §6)."),
             ],
+            ["Barbatos.Pallas.Engine"] =
+            [
+                ("Barbatos.Pallas.Engine.",
+                    "The engine calls System.Math and System.Numerics.Complex directly for transcendental and complex functions, "
+                    + "holds values decimal cannot keep to 15 significant digits as double, and integrates numerically (PRECISION.md §§3, 6, 7)."),
+            ],
         };
 
     public static TheoryData<string> CoreAssemblies => [.. ArchitectureMap.CoreProjects];

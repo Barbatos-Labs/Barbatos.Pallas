@@ -154,6 +154,28 @@ public sealed class TrigonometryTests
         Trigonometry.ConvertAngle(123.456, AngleUnit.Degree, AngleUnit.Degree).Should().Be(123.456);
     }
 
+    [Theory]
+    // The angle of a point, in the range the calculator displays for Pol( and complex arguments: (−180°, 180°].
+    [InlineData(1d, 1d, AngleUnit.Degree, 45d)]
+    [InlineData(1d, 0d, AngleUnit.Degree, 90d)]
+    [InlineData(0d, 1d, AngleUnit.Degree, 0d)]
+    [InlineData(0d, -1d, AngleUnit.Degree, 180d)]
+    [InlineData(-1d, 0d, AngleUnit.Degree, -90d)]
+    [InlineData(-1d, -1d, AngleUnit.Degree, -135d)]
+    [InlineData(1d, 1d, AngleUnit.Gradian, 50d)]
+    [InlineData(0d, -2d, AngleUnit.Gradian, 200d)]
+    public void Atan2_IsExactAtMultiplesOfARightAngle(double y, double x, AngleUnit unit, double expected)
+    {
+        Trigonometry.Atan2(y, x, unit).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Atan2_InRadians_IsSystemMath()
+    {
+        Trigonometry.Atan2(2, 3, AngleUnit.Radian).Should().Be(Math.Atan2(2, 3));
+        Trigonometry.Atan2(0, 0, AngleUnit.Degree).Should().Be(0);
+    }
+
     [Fact]
     public void UndefinedUnits_AreRejected()
     {
@@ -162,10 +184,12 @@ public sealed class TrigonometryTests
         Action[] inverse = [() => Trigonometry.Asin(0.5, undefined), () => Trigonometry.Acos(0.5, undefined), () => Trigonometry.Atan(0.5, undefined)];
         Action from = () => Trigonometry.ConvertAngle(1, undefined, AngleUnit.Degree);
         Action to = () => Trigonometry.ConvertAngle(1, AngleUnit.Degree, undefined);
+        Action atan2 = () => Trigonometry.Atan2(1, 1, undefined);
 
         sinCosTan.Should().AllSatisfy(act => act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("unit"));
         inverse.Should().AllSatisfy(act => act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("unit"));
         from.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("unit");
         to.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("unit");
+        atan2.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("unit");
     }
 }

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    AddPallas() is checked the way an application uses it: build a service provider, resolve the engine and a session,
+    and calculate. Options are validated when the engine is first resolved, not silently ignored.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.DependencyInjection\Barbatos.Pallas.DependencyInjection.csproj" />
+  </ItemGroup>
+
+</Project>

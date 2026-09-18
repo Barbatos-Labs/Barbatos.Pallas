@@ -41,6 +41,7 @@ public static class Sexagesimal
     /// resulting 60′ into the degrees, so 2.4999999999999999999999999999° becomes 2°30′0″ rather than 2°29′60″.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="secondsDecimals"/> is outside 0-28.</exception>
+    /// <exception cref="OverflowException">|<paramref name="value"/>| × 3600 is beyond <see cref="decimal"/>, from about 2.2×10²⁵°.</exception>
     public static (bool Negative, decimal Degrees, decimal Minutes, decimal Seconds) FromDegrees(decimal value, int secondsDecimals, MidpointRounding mode)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(secondsDecimals);

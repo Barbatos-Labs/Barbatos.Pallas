@@ -31,6 +31,7 @@ Trigonometry.Tan(90, AngleUnit.Degree);                   // +∞, the calculato
 Trigonometry.Sin(100, AngleUnit.Gradian);                 // 1
 (decimal)Trigonometry.Sin(30, AngleUnit.Degree);          // 0.5
 (decimal)Trigonometry.Asin(0.5, AngleUnit.Degree);        // 30
+Trigonometry.Atan2(1, 1, AngleUnit.Degree);               // 45, in (-180, 180]
 Trigonometry.ConvertAngle(Math.PI / 2, AngleUnit.Radian, AngleUnit.Degree); // 90
 
 // Exact integer functions.

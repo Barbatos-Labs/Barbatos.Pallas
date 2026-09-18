@@ -148,3 +148,6 @@ dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CS1591.severity = none
 dotnet_diagnostic.CA1515.severity = none
 dotnet_diagnostic.CA1861.severity = none
+# Engine calculations take an optional CancellationToken. A test calculation is bounded by the engine's own budget
+# (docs/PRECISION.md §11), so threading the test's token through every call adds noise, not safety.
+dotnet_diagnostic.xUnit1051.severity = none

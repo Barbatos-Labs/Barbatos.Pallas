@@ -10,9 +10,14 @@
     <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- Phase 2: every input is parsed in its application (ConformanceSyntaxTests). -->
+  <!--
+    Phase 2: every input is parsed in its application (ConformanceSyntaxTests).
+    Phase 3: Calculate, Complex and Base-N cases run against the engine (ConformanceRunner).
+  -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
   </ItemGroup>
 
 </Project>

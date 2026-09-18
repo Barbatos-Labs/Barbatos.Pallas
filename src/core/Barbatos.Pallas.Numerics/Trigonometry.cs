@@ -95,6 +95,25 @@ public static class Trigonometry
         };
     }
 
+    /// <summary>Returns the angle of the point (<paramref name="x"/>, <paramref name="y"/>) from the positive x-axis.</summary>
+    /// <param name="y">The y-coordinate.</param>
+    /// <param name="x">The x-coordinate.</param>
+    /// <param name="unit">The unit of the returned angle.</param>
+    /// <returns>
+    /// An angle in (−180°, 180°], the range the calculator displays for Pol( and complex arguments (pp. 62, 126); −180°
+    /// only for a negative zero <paramref name="y"/>.
+    /// </returns>
+    public static double Atan2(double y, double x, AngleUnit unit)
+    {
+        return unit switch
+        {
+            AngleUnit.Degree => double.Atan2Pi(y, x) * 180d,
+            AngleUnit.Radian => Math.Atan2(y, x),
+            AngleUnit.Gradian => double.Atan2Pi(y, x) * 200d,
+            _ => throw UndefinedUnit(unit),
+        };
+    }
+
     /// <summary>Converts an angle from one unit to another.</summary>
     /// <param name="angle">The angle.</param>
     /// <param name="from">The unit of <paramref name="angle"/>.</param>

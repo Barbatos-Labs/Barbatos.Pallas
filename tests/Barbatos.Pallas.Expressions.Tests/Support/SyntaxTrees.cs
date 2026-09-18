@@ -74,46 +74,65 @@ internal static class SyntaxTrees
 
     private static Gen<SyntaxNode> Composite(CalculatorApp app, Gen<SyntaxNode> sub)
     {
-        BinaryOperator[] binary =
-        [
-            BinaryOperator.Add, BinaryOperator.Subtract, BinaryOperator.Multiply, BinaryOperator.Divide, BinaryOperator.DivideWithRemainder,
-            BinaryOperator.ImplicitMultiply, BinaryOperator.Power, BinaryOperator.Root, BinaryOperator.Fraction, BinaryOperator.Permutation,
-            .. app switch
-            {
-                CalculatorApp.Complex => [BinaryOperator.Polar, BinaryOperator.Combination],
-                CalculatorApp.Vector => [BinaryOperator.DotProduct, BinaryOperator.Combination],
+        // Base-N has only the four operations and the logic operators (p. 51): no powers, roots, fractions or nPr, and
+        // C is a hexadecimal digit rather than the combination operator.
+        BinaryOperator[] binary = app == CalculatorApp.BaseN
+            ?
+            [
+                BinaryOperator.Add, BinaryOperator.Subtract, BinaryOperator.Multiply, BinaryOperator.Divide, BinaryOperator.ImplicitMultiply,
+                BinaryOperator.And, BinaryOperator.Or, BinaryOperator.Xor, BinaryOperator.Xnor,
+            ]
+            :
+            [
+                BinaryOperator.Add, BinaryOperator.Subtract, BinaryOperator.Multiply, BinaryOperator.Divide, BinaryOperator.DivideWithRemainder,
+                BinaryOperator.ImplicitMultiply, BinaryOperator.Power, BinaryOperator.Root, BinaryOperator.Fraction, BinaryOperator.Permutation,
+                .. app switch
+                {
+                    CalculatorApp.Complex => [BinaryOperator.Polar, BinaryOperator.Combination],
+                    CalculatorApp.Vector => [BinaryOperator.DotProduct, BinaryOperator.Combination],
+                    _ => (BinaryOperator[])[BinaryOperator.Combination],
+                },
+            ];
 
-                // In Base-N, C is a hexadecimal digit, so the combination operator cannot be written.
-                CalculatorApp.BaseN => [BinaryOperator.And, BinaryOperator.Or, BinaryOperator.Xor, BinaryOperator.Xnor],
-                _ => (BinaryOperator[])[BinaryOperator.Combination],
-            },
-        ];
-
-        PostfixOperator[] postfix =
-        [
-            PostfixOperator.Square, PostfixOperator.Cube, PostfixOperator.Reciprocal, PostfixOperator.Factorial, PostfixOperator.Percent,
-            PostfixOperator.Degrees, PostfixOperator.Radians, PostfixOperator.Gradians,
-            .. app == CalculatorApp.Statistics
-                ? (PostfixOperator[])[PostfixOperator.StandardizedVariate, PostfixOperator.EstimateX, PostfixOperator.EstimateY, PostfixOperator.EstimateX1, PostfixOperator.EstimateX2]
-                : [],
-        ];
+        PostfixOperator[] postfix = app == CalculatorApp.BaseN
+            ? []
+            :
+            [
+                PostfixOperator.Square, PostfixOperator.Cube, PostfixOperator.Reciprocal, PostfixOperator.Factorial, PostfixOperator.Percent,
+                PostfixOperator.Degrees, PostfixOperator.Radians, PostfixOperator.Gradians,
+                .. app == CalculatorApp.Statistics
+                    ? (PostfixOperator[])[PostfixOperator.StandardizedVariate, PostfixOperator.EstimateX, PostfixOperator.EstimateY, PostfixOperator.EstimateX1, PostfixOperator.EstimateX2]
+                    : [],
+            ];
 
         SyntaxSymbol[] commands = [.. Available(app).Where(symbol => symbol.Kind is SymbolKind.EngineeringSymbol or SymbolKind.UnitConversion)];
         SyntaxSymbol[] functions = [.. Available(app).Where(symbol => symbol.Kind == SymbolKind.Function && symbol.Text != "root(")];
         Gen<NumberLiteral?> part = Gen.OneOfConst<NumberLiteral?>(null, new NumberLiteral("0"), new NumberLiteral("20"), new NumberLiteral("10"));
 
-        return Gen.OneOf(
+        List<IGen<SyntaxNode>> composites =
+        [
             sub.Select(operand => (SyntaxNode)new NegationExpression(operand)),
-            Gen.Select(Gen.OneOfConst(postfix), sub, (op, operand) => (SyntaxNode)new PostfixExpression(op, operand)),
-            Gen.Select(Gen.OneOfConst(commands), sub, (command, operand) => (SyntaxNode)new SuffixCommandExpression(operand, command)),
             Gen.Select(Gen.OneOfConst(binary), sub, sub, (op, left, right) => (SyntaxNode)new BinaryExpression(op, left, right)),
             Gen.Select(Gen.OneOfConst(binary), sub, sub, (op, left, right) => (SyntaxNode)new BinaryExpression(op, left, right)),
-            Gen.Select(sub, sub, sub, (whole, numerator, denominator) => (SyntaxNode)new MixedFractionExpression(whole, numerator, denominator)),
-            Gen.Select(sub, part, part, (degrees, minutes, seconds) => minutes is null && seconds is null
+            sub.Select(inner => (SyntaxNode)new ParenthesizedExpression(inner)),
+        ];
+
+        if (functions.Length > 0)
+        {
+            composites.Add(Gen.Select(Gen.OneOfConst(functions), sub.Array[1, 3], (function, arguments) => (SyntaxNode)new FunctionCall(function, [.. arguments])));
+        }
+
+        if (app != CalculatorApp.BaseN)
+        {
+            composites.Add(Gen.Select(Gen.OneOfConst(postfix), sub, (op, operand) => (SyntaxNode)new PostfixExpression(op, operand)));
+            composites.Add(Gen.Select(Gen.OneOfConst(commands), sub, (command, operand) => (SyntaxNode)new SuffixCommandExpression(operand, command)));
+            composites.Add(Gen.Select(sub, sub, sub, (whole, numerator, denominator) => (SyntaxNode)new MixedFractionExpression(whole, numerator, denominator)));
+            composites.Add(Gen.Select(sub, part, part, (degrees, minutes, seconds) => minutes is null && seconds is null
                 ? new PostfixExpression(PostfixOperator.Degrees, degrees)
-                : (SyntaxNode)new SexagesimalExpression(degrees, minutes, seconds)),
-            Gen.Select(Gen.OneOfConst(functions), sub.Array[1, 3], (function, arguments) => (SyntaxNode)new FunctionCall(function, [.. arguments])),
-            sub.Select(inner => (SyntaxNode)new ParenthesizedExpression(inner)));
+                : (SyntaxNode)new SexagesimalExpression(degrees, minutes, seconds)));
+        }
+
+        return Gen.OneOf([.. composites]);
     }
 
     private static Gen<SyntaxNode> Chain(Gen<SyntaxNode> operand)

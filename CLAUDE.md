@@ -23,6 +23,9 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references, CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
+| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, plugins, integrals against PeterO.Numbers, evaluation properties |
+| `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
+| `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -33,15 +36,20 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 
 ## Current phase
 
-**Phase 2 - Expressions is complete** (roadmap in docs/ARCHITECTURE.md §11).
+**Phase 3 - Engine is complete** (roadmap in docs/ARCHITECTURE.md §11).
 
 - Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal` and
   `AngleUnit`.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
   It evaluates nothing.
+- Engine binds, compiles and evaluates that tree: `Value` with the precision rule, exact display forms, sessions and
+  memory, the formatter and the FORMAT conversions, calculus, Verify, Complex and Base-N, and the plugin API.
+- Data ships the CODATA 2022 constants, the NIST SP 811 unit conversions and the CIAAW atomic weights;
+  DependencyInjection ships `AddPallas()`.
 
-Next: **Phase 3 - Engine**. The other core packages are empty skeletons; their conformance cases are skipped with the
-phase that implements them.
+Next: **Phase 4 - domain applications** (Statistics, Distribution, Equation, Inequality, Matrix, Vector, Ratio,
+Spreadsheet, Table). Those packages are empty skeletons; their conformance cases are skipped with the phase that
+implements them.
 
 ## Build and test
 
@@ -68,7 +76,7 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 4 test projects × 3 frameworks = 12 assemblies.
+  (a net8.0-only compile error). A full run is 7 test projects × 3 frameworks = 21 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
   Packing one project does not pack its project references.
 - **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
@@ -81,16 +89,22 @@ Things that will save time:
   dotnet stryker --skip-version-check
   ```
 
-  Run both from `tests/Barbatos.Pallas.Numerics.Tests` or `tests/Barbatos.Pallas.Expressions.Tests`, whose
-  `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Three
-  traps:
+  Run both from `tests/Barbatos.Pallas.Numerics.Tests`, `tests/Barbatos.Pallas.Expressions.Tests`,
+  `tests/Barbatos.Pallas.Engine.Tests` or `tests/Barbatos.Pallas.DependencyInjection.Tests`, whose
+  `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Data
+  has no Stryker run: it is all static initialization (below). Stryker builds the test project it runs from, so a
+  `dotnet test` of that project during a run replaces the mutated assembly, and a deliberately failing scratch test
+  aborts the run. Four traps:
   - a `while (true)` makes Stryker skip every mutant in the method, because `while (false)` does not compile; write
     `for (;;)`;
   - a domain check that `System.Math` would also reject survives unless the test asserts `WithParameterName`;
   - the MTP runner cannot switch mutants inside static initialization, so they are all reported as survivors.
     `StandardVocabulary.cs` is data built once for `SyntaxVocabulary.Standard` and is excluded from mutation.
     Deleting one of its lines by hand fails 13 to 18 tests (17 Sep 2026); the vocabulary tests and the conformance
-    inputs are what guard it.
+    inputs are what guard it. A lookup table is written out rather than built by a loop (`DecimalDigits.PowersOfTen`);
+  - a mutant that cannot change a result (a guard `System.Math` already applies, a branch no input reaches) is a
+    reason to simplify the code, not to write a test that pins an implementation detail. The Engine went from 75% to
+    92.5% on 18 Sep 2026 that way and by edge tests, and three real bugs surfaced (docs/ARCHITECTURE.md §12).
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
 
@@ -136,6 +150,22 @@ Things that will save time:
   bounded domain (PRECISION.md §5). Round `decimal`, never `double`: `Math.Round(1.005, 2, AwayFromZero)` is 1.
 - **Accuracy claims are measured.** A function on `double` gets an accuracy test against PeterO.Numbers
   (`tests/Barbatos.Pallas.Numerics.Tests/Support/Reference.cs`). Mind the three PeterO 1.8.2 defects documented there.
+
+### Engine
+
+- **The precision rule lives in `Value` and `ValueMath`,** nowhere else: a literal is read into `decimal`; a
+  `double` result becomes a 15-digit `decimal` unless its magnitude is below 10⁻¹⁴ or beyond 7.9×10²⁸; a `decimal`
+  product or quotient that lands below 10⁻¹⁴ is recomputed from the operands in `double`.
+- **NaN, infinity and the profile's range are Math ERROR in one place** (`ValueMath.Real`). A function returns what
+  `System.Math` returns; it does not invent its own error.
+- **An exact form is display metadata, not a number type.** It is dropped, never guessed, when an operation leaves
+  what it can represent. A value that has one is converted to `double` through the form.
+- **Errors are values:** `EvalResult` carries a `CalcErrorKind`; nothing throws for calculator input, and every error
+  reaches the caller with the span the calculator would put the cursor at.
+- **Every long loop counts against the budget** (`EvaluationContext.TryIterate`): Σ, Π, ∫ and the integrator. A
+  budget that runs out is Time Out, never a hang.
+- **A behavior the manual does not state is an assumption**, listed as U12-U19 in docs/CONFORMANCE.md, not a quiet
+  choice in the code.
 
 ### Expressions
 
@@ -186,6 +216,10 @@ Things that will save time:
 
 ### Identity
 
+- **No brand or model name of the reference calculator anywhere in the repository** (maintainer, 18 Sep 2026: a
+  legal risk). Not in identifiers, file or folder names, comments, XML docs, READMEs, package metadata, docs or test
+  data. Write *the reference calculator*, *the manual*, or the neutral names in use: `CalculatorProfile.Standard`,
+  `SyntaxVocabulary.Standard`, `Data/calculator`, docs/CALCULATOR-CATALOG.md.
 - **The WPF app's `AppInfo.AppId` `{5E50D3E6-0148-428F-88C9-F824709C75C4}` and `Company` "Barbatos Labs" are
   immutable after the first release.** They name the user-data folder.
 

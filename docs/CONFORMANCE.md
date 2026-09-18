@@ -120,6 +120,13 @@ relations allowed when the case sets `"verify": "On"`:
 
 These tests do not change a case's status: parsing an expression is not computing the calculator's result.
 
+**Engine runs (Phase 3).** `CalculatorConformanceTests` runs every case whose application has an engine - Calculate,
+Complex and Base-N since Phase 3 - through a `CalculatorSession` with the case's settings and profile
+(`ConformanceRunner`). Each expectation is checked: the display, the FORMAT conversions, the variables after the
+calculation, the Verify result, the error kind, and the range and step of a random function. An expectation the
+runner does not know fails the case, so nothing passes because part of it was ignored. Cases of the other
+applications are still reported as skipped with the phase that implements them.
+
 ## 5. How derived values were computed
 
 Statistics, regressions and several decimals were computed on 17 Sep 2026:
@@ -172,8 +179,17 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 | U9 | Operator of the second Ans example (p. 37, key icons) | `789 − Ans` | Visual check of p. 37 |
 | U10 | Which relational operators may not combine in a Verify chain (p. 75 lists them in an image) | `≠` does not combine with `< > ≤ ≥`; the manual's example is `4<6≠8` | Visual check of p. 75, or the manufacturer's official emulator |
 | U11 | Stack size behind Stack ERROR (not stated in the manual) | 128 nested parentheses, functions or signs | The manufacturer's official emulator |
+| U12 | Base-N beyond the four operations and the logic operators (p. 51 says only that the CATALOG commands of pp. 51-69 are unavailable) | Base-N has numbers, base prefixes, `+ − × ÷`, `and or xor xnor`, `Not(`, `Neg(`, parentheses and the memories x, y, z and Ans (A to F are hex digits there, in every number mode; confirmed by the maintainer on 18 Sep 2026); a result outside the signed 32-bit range is a Math ERROR in every number mode, and division drops the fractional part toward zero | The manufacturer's official emulator |
+| U13 | `÷R` inside a larger expression, and what "too large" means (p. 56) | Only the quotient passes on, and nothing is stored in E or F; a dividend or divisor of 10¹⁰ or more divides normally | The manufacturer's official emulator |
+| U14 | `Pol(` and `Rec(` inside a larger expression, and what reaches Ans | They stand on their own, as the manual's examples show; Ans takes the first result (r, or x) | The manufacturer's official emulator |
+| U15 | The order of the terms of a two-term display form (p. 35 shows only `45√3+10√2`) | The rational part first, then square roots by decreasing radicand | The manufacturer's official emulator |
+| U16 | Whether a result is displayed in degrees-minutes-seconds (p. 49 shows the conversion, not the rule) | A sum or difference of sexagesimal values is displayed as one | The manufacturer's official emulator |
+| U17 | Which engineering symbol a result is displayed with (p. 64) | The one that leaves the mantissa in [1, 1000); outside f…E the result is displayed normally | The manufacturer's official emulator |
+| U18 | A result whose magnitude is below the calculation range, 10⁻⁹⁹ (p. 169) | It becomes 0, which the domain of xʸ (p. 171) implies by allowing y·log x down to −10¹⁰⁰. Both ends of the range are taken at ten significant digits: a result that displays as 1×10⁻⁹⁹ is in range, so a `double` one unit below 10⁻⁹⁹ is not lost | The manufacturer's official emulator |
+| U19 | The value of the scientific constant `t` (p. 66 lists it without a value) | The zero of the Celsius scale, 273.15 K | The manufacturer's official emulator |
 
-Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3).
+Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3), U11-U13 and U18 by the
+engine, U14-U17 by the formatter.
 
 ## 7. Deliberate deviations from the calculator
 
@@ -183,7 +199,7 @@ These are decisions, not bugs. They apply to both profiles unless stated.
 |---|---|---|
 | D1 | Arithmetic on decimal input has no rounding error at the 10th digit, and transcendental results carry about 15 significant digits instead of ±1 at the 10th | `decimal` and `System.Math` are more precise than the calculator ([PRECISION.md §1](PRECISION.md#1-what-pallas-promises)) |
 | D2 | Newest CODATA constants (the calculator ships CODATA 2018) | Decision of 17 Sep 2026 |
-| D3 | Newest CIAAW atomic weights (the calculator ships IUPAC 2019) | Same decision |
+| D3 | Newest CIAAW atomic weights (the calculator ships IUPAC 2019): scandium is 44.955907 rather than 44.955908 | Same decision |
 | D4 | Exact unit definitions where they exist (the calculator's rounding is unknown) | Decision of 17 Sep 2026 |
 | D5 | `d/dx` at a non-differentiable point is a Math ERROR; the calculator's numerical derivative returns a number | Automatic differentiation is exact and refuses rather than guesses |
 | D6 | *Withdrawn 17 Sep 2026.* Was: Verify of an undecidable irrational comparison is `Undetermined`. Without certified arithmetic nothing is undecidable; values compare at 15 significant digits ([PRECISION.md §9](PRECISION.md#9-equality-and-verify)) | The id stays reserved |

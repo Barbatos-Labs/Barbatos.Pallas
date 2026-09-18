@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Reference data is checked against what defines it, not against itself:
+      * the constants exact in the 2019 SI must carry their defining values;
+      * a derived constant must agree with the relation that derives it, within its published uncertainty;
+      * every unit conversion must round-trip, and the exact definitions must come out exact;
+      * every symbol the standard vocabulary knows must have data, and nothing else may.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+  </ItemGroup>
+
+</Project>

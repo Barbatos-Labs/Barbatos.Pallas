@@ -43,6 +43,12 @@ internal static class StandardVocabulary
         ("τ", "tau"), ("σ", "sigma"), ("∞", "inf"),
     ];
 
+    /// <summary>
+    /// Every application but Base-N, where the CATALOG commands of pp. 51-69 are not available: Base-N has numbers,
+    /// base prefixes, the four operations, the logic operators, Not(, Neg(, parentheses and the memories.
+    /// </summary>
+    private static readonly CalculatorApp[] ExceptBaseN = [.. Enum.GetValues<CalculatorApp>().Where(app => app != CalculatorApp.BaseN)];
+
     public static List<SyntaxSymbol> Create()
     {
         List<SyntaxSymbol> symbols = [];
@@ -67,11 +73,11 @@ internal static class StandardVocabulary
         Add(symbols, SyntaxSymbol.CreateBinary("-", BinaryOperator.Subtract), "−");
         Add(symbols, SyntaxSymbol.CreateBinary("×", BinaryOperator.Multiply), "*");
         Add(symbols, SyntaxSymbol.CreateBinary("÷", BinaryOperator.Divide), "/");
-        Add(symbols, SyntaxSymbol.CreateBinary("÷R", BinaryOperator.DivideWithRemainder));
-        Add(symbols, SyntaxSymbol.CreateBinary("^", BinaryOperator.Power));
-        Add(symbols, SyntaxSymbol.CreateBinary("ˣ√", BinaryOperator.Root));
-        Add(symbols, SyntaxSymbol.CreateBinary("⌟", BinaryOperator.Fraction));
-        Add(symbols, SyntaxSymbol.CreateBinary("P", BinaryOperator.Permutation));
+        Add(symbols, SyntaxSymbol.CreateBinary("÷R", BinaryOperator.DivideWithRemainder, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreateBinary("^", BinaryOperator.Power, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreateBinary("ˣ√", BinaryOperator.Root, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreateBinary("⌟", BinaryOperator.Fraction, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreateBinary("P", BinaryOperator.Permutation, ExceptBaseN));
         Add(symbols, SyntaxSymbol.CreateBinary("∠", BinaryOperator.Polar, CalculatorApp.Complex));
         Add(symbols, SyntaxSymbol.CreateBinary("•", BinaryOperator.DotProduct, CalculatorApp.Vector));
         Add(symbols, SyntaxSymbol.CreateBinary("and", BinaryOperator.And, CalculatorApp.BaseN));
@@ -79,22 +85,22 @@ internal static class StandardVocabulary
         Add(symbols, SyntaxSymbol.CreateBinary("xor", BinaryOperator.Xor, CalculatorApp.BaseN));
         Add(symbols, SyntaxSymbol.CreateBinary("xnor", BinaryOperator.Xnor, CalculatorApp.BaseN));
 
-        Add(symbols, SyntaxSymbol.CreatePostfix("²", PostfixOperator.Square));
-        Add(symbols, SyntaxSymbol.CreatePostfix("³", PostfixOperator.Cube));
-        Add(symbols, SyntaxSymbol.CreatePostfix("⁻¹", PostfixOperator.Reciprocal));
-        Add(symbols, SyntaxSymbol.CreatePostfix("!", PostfixOperator.Factorial));
-        Add(symbols, SyntaxSymbol.CreatePostfix("%", PostfixOperator.Percent));
-        Add(symbols, SyntaxSymbol.CreatePostfix("°", PostfixOperator.Degrees));
-        Add(symbols, SyntaxSymbol.CreatePostfix("ʳ", PostfixOperator.Radians));
-        Add(symbols, SyntaxSymbol.CreatePostfix("ᵍ", PostfixOperator.Gradians));
+        Add(symbols, SyntaxSymbol.CreatePostfix("²", PostfixOperator.Square, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("³", PostfixOperator.Cube, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("⁻¹", PostfixOperator.Reciprocal, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("!", PostfixOperator.Factorial, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("%", PostfixOperator.Percent, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("°", PostfixOperator.Degrees, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("ʳ", PostfixOperator.Radians, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreatePostfix("ᵍ", PostfixOperator.Gradians, ExceptBaseN));
         Add(symbols, SyntaxSymbol.CreatePostfix("▶t", PostfixOperator.StandardizedVariate, CalculatorApp.Statistics), "->t");
         Add(symbols, SyntaxSymbol.CreatePostfix("x̂", PostfixOperator.EstimateX, CalculatorApp.Statistics));
         Add(symbols, SyntaxSymbol.CreatePostfix("ŷ", PostfixOperator.EstimateY, CalculatorApp.Statistics));
         Add(symbols, SyntaxSymbol.CreatePostfix("x̂₁", PostfixOperator.EstimateX1, CalculatorApp.Statistics));
         Add(symbols, SyntaxSymbol.CreatePostfix("x̂₂", PostfixOperator.EstimateX2, CalculatorApp.Statistics));
 
-        Add(symbols, SyntaxSymbol.CreatePunctuation("′", SymbolKind.SexagesimalMark), "'");
-        Add(symbols, SyntaxSymbol.CreatePunctuation("″", SymbolKind.SexagesimalMark), "\"");
+        Add(symbols, SyntaxSymbol.CreatePunctuation("′", SymbolKind.SexagesimalMark, ExceptBaseN), "'");
+        Add(symbols, SyntaxSymbol.CreatePunctuation("″", SymbolKind.SexagesimalMark, ExceptBaseN), "\"");
 
         // No ASCII alias for ≠: "!=" would swallow the factorial in "3!=6".
         Add(symbols, SyntaxSymbol.CreateRelation("=", RelationOperator.Equal));
@@ -106,7 +112,7 @@ internal static class StandardVocabulary
 
         foreach (string symbol in (string[])["m", "μ", "n", "p", "f", "k", "M", "G", "T", "P", "E"])
         {
-            SyntaxSymbol engineering = SyntaxSymbol.CreateName("_" + symbol, SymbolKind.EngineeringSymbol);
+            SyntaxSymbol engineering = SyntaxSymbol.CreateName("_" + symbol, SymbolKind.EngineeringSymbol, ExceptBaseN);
             if (symbol == "μ")
             {
                 // "_u" is the ASCII spelling; U+00B5 MICRO SIGN is what many keyboards produce, and Unicode
@@ -125,18 +131,18 @@ internal static class StandardVocabulary
         AddFunction(symbols, "sin(");
         AddFunction(symbols, "cos(");
         AddFunction(symbols, "tan(");
-        AddFunction(symbols, "sin⁻¹(", [], "asin(");
-        AddFunction(symbols, "cos⁻¹(", [], "acos(");
-        AddFunction(symbols, "tan⁻¹(", [], "atan(");
+        AddFunction(symbols, "sin⁻¹(", ExceptBaseN, "asin(");
+        AddFunction(symbols, "cos⁻¹(", ExceptBaseN, "acos(");
+        AddFunction(symbols, "tan⁻¹(", ExceptBaseN, "atan(");
         AddFunction(symbols, "sinh(");
         AddFunction(symbols, "cosh(");
         AddFunction(symbols, "tanh(");
-        AddFunction(symbols, "sinh⁻¹(", [], "asinh(");
-        AddFunction(symbols, "cosh⁻¹(", [], "acosh(");
-        AddFunction(symbols, "tanh⁻¹(", [], "atanh(");
+        AddFunction(symbols, "sinh⁻¹(", ExceptBaseN, "asinh(");
+        AddFunction(symbols, "cosh⁻¹(", ExceptBaseN, "acosh(");
+        AddFunction(symbols, "tanh⁻¹(", ExceptBaseN, "atanh(");
         AddFunction(symbols, "log(");
         AddFunction(symbols, "ln(");
-        AddFunction(symbols, "√(", [], "sqrt(");
+        AddFunction(symbols, "√(", ExceptBaseN, "sqrt(");
         AddFunction(symbols, "Abs(");
         AddFunction(symbols, "Int(");
         AddFunction(symbols, "Intg(");
@@ -147,10 +153,10 @@ internal static class StandardVocabulary
         AddFunction(symbols, "Rec(");
         AddFunction(symbols, "RanInt#(");
         AddFunction(symbols, "AtWt(");
-        AddFunction(symbols, "d/dx(", [], "diff(");
-        AddFunction(symbols, "∫(", [], "integral(");
-        AddFunction(symbols, "Σ(", [], "sum(");
-        AddFunction(symbols, "Π(", [], "product(");
+        AddFunction(symbols, "d/dx(", ExceptBaseN, "diff(");
+        AddFunction(symbols, "∫(", ExceptBaseN, "integral(");
+        AddFunction(symbols, "Σ(", ExceptBaseN, "sum(");
+        AddFunction(symbols, "Π(", ExceptBaseN, "product(");
         AddFunction(symbols, "f(");
         AddFunction(symbols, "g(");
 
@@ -179,9 +185,9 @@ internal static class StandardVocabulary
 
     private static void AddValues(List<SyntaxSymbol> symbols)
     {
-        Add(symbols, SyntaxSymbol.CreateName("π", SymbolKind.Constant), "pi");
-        Add(symbols, SyntaxSymbol.CreateName("e", SymbolKind.Constant));
-        Add(symbols, SyntaxSymbol.CreateName("Ran#", SymbolKind.Constant));
+        Add(symbols, SyntaxSymbol.CreateName("π", SymbolKind.Constant, ExceptBaseN), "pi");
+        Add(symbols, SyntaxSymbol.CreateName("e", SymbolKind.Constant, ExceptBaseN));
+        Add(symbols, SyntaxSymbol.CreateName("Ran#", SymbolKind.Constant, ExceptBaseN));
         Add(symbols, SyntaxSymbol.CreateName("i", SymbolKind.Constant, CalculatorApp.Complex));
 
         // C is also the combination operator when it stands between two operands (docs/LINEAR-SYNTAX.md).
@@ -229,7 +235,7 @@ internal static class StandardVocabulary
                 .Replace("_2", "₂", StringComparison.Ordinal)
                 .Replace("_∞", "∞", StringComparison.Ordinal);
 
-            Add(symbols, SyntaxSymbol.CreateName(canonical, SymbolKind.ScientificConstant), Distinct(canonical, ascii, subscripts));
+            Add(symbols, SyntaxSymbol.CreateName(canonical, SymbolKind.ScientificConstant, ExceptBaseN), Distinct(canonical, ascii, subscripts));
         }
     }
 
@@ -250,12 +256,12 @@ internal static class StandardVocabulary
             .Replace("₁₅", "15", StringComparison.Ordinal)
             .Replace("·", ".", StringComparison.Ordinal);
 
-        Add(symbols, SyntaxSymbol.CreateName(canonical, SymbolKind.UnitConversion), Distinct(canonical, ascii));
+        Add(symbols, SyntaxSymbol.CreateName(canonical, SymbolKind.UnitConversion, ExceptBaseN), Distinct(canonical, ascii));
     }
 
     private static void AddFunction(List<SyntaxSymbol> symbols, string name, CalculatorApp[]? applications = null, params string[] aliases)
     {
-        Add(symbols, SyntaxSymbol.CreateName(name, SymbolKind.Function, applications ?? []), aliases);
+        Add(symbols, SyntaxSymbol.CreateName(name, SymbolKind.Function, applications ?? ExceptBaseN), aliases);
     }
 
     private static void Add(List<SyntaxSymbol> symbols, SyntaxSymbol symbol, params string[] aliases)

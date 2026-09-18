@@ -173,8 +173,8 @@ marked *planned* are designed in their phase and may change.
 | Fraction, √ and π forms | Recognized from a 23-digit value | Recognized at display time from the `decimal` value |
 | Special angles | Approximate | Exact table (`cos 90° = 0`; `tan 90°` is a Math ERROR) |
 | Integer functions (`!`, nPr, nCr, GCD, LCM) | `x! ≤ 69` | `BigInteger`, exact at any size |
-| d/dx | Numerical, with tolerance | *Planned:* automatic differentiation on `double`, no truncation error |
-| ∫ | Gauss-Kronrod with tolerance | *Planned:* adaptive quadrature on `double` with an error estimate |
+| d/dx | Numerical, with tolerance | The bound tree is differentiated and the derivative evaluated like any expression: exact where the operations are, Math ERROR where there is no derivative |
+| ∫ | Gauss-Kronrod with tolerance | Adaptive Gauss-Kronrod 7/15 on `double`, with the error estimate reported |
 | Solver | Newton; one root; may miss | *Planned:* Newton on `double` |
 | Polynomials 2-4 | Approximate | *Planned:* quadratic discriminant in `decimal` (exact surd roots); cubic and quartic on `double` |
 | Prime factorization | ≤ 10 digits; large factors left unfactored | Trial division on `long` (the `Standard` profile reproduces the calculator's display) |

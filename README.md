@@ -10,8 +10,19 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
   distributions, equations, inequalities, complex numbers, Base-N, matrices, vectors, spreadsheet, tables and more,
   checked by a conformance suite built from the calculator's own worked examples.
 
-> **Status: Phase 1 - Numerics, complete.** `Barbatos.Pallas.Numerics` has its tested API; the other packages are
-> not implemented yet. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> **Status: Phase 3 - Engine, complete.** Numerics, Expressions, Engine, Data and DependencyInjection have their
+> tested APIs: Calculate, Complex and Base-N work end to end, and their conformance cases pass. The domain
+> applications (statistics, equations, matrices, spreadsheet) and the desktop app come next. See the
+> [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+
+```csharp
+CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
+
+session.Calculate("2⌟3+1⌟1⌟2").Display.Text;        // "13⌟6"
+session.Calculate("10√(2)+15×3√(3)").Display.Text;  // "45√(3)+10√(2)"
+session.Calculate("d/dx(x³,0.1)").Result;           // exactly 0.03
+session.Calculate("14÷0×2").Error;                  // MathError at the division
+```
 
 ## Packages
 
@@ -19,7 +30,7 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
 |---|---|---|
 | `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds | 1 |
 | `Barbatos.Pallas.Expressions` | Lexer, Pratt parser with the reference calculator's priority, syntax tree, error spans, linear and LaTeX printers | 2 |
-| `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N | 3 |
+| `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex | 3 |
 | `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | 3 |
 | `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection | 3 |
 | `Barbatos.Pallas.LinearAlgebra` | Matrices and vectors | 4 |

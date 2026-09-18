@@ -45,12 +45,12 @@ a custom number tower; the maintainer chose the built-in types instead (§12 of 
 | # | Invariant | Enforced by |
 |---|---|---|
 | I1 | Pallas never re-implements what `Math`, `System.Double`, `System.Decimal` or `BigInteger` provide, and never wraps a BCL function only to change how it reports errors (§6). | Code review; the §3 table |
-| I2 | A decimal literal is parsed into `decimal`, never through `double`: `0.1` is exactly one tenth. | Engine tests (Phase 3) |
+| I2 | A decimal literal is parsed into `decimal`, never through `double`: `0.1` is exactly one tenth. | `Binder.TryParseNumber`, `ValueTests` |
 | I3 | Rounding happens only at an explicit boundary (§5), never to an intermediate result. | Code review, tests |
-| I4 | No silent loss: a value `decimal` would hold with fewer than 15 significant digits is kept as `double` (§3). | Engine tests (Phase 3) |
+| I4 | No silent loss: a value `decimal` would hold with fewer than 15 significant digits is kept as `double` (§3). | `Value.FromApproximation`, `ValueMath`, `ValueTests` |
 | I5 | `decimal` and `BigInteger` results are identical on every runtime, OS and architecture. `double` results agree to the tested accuracy (§6), not necessarily bit for bit. | CI on Windows x64, Linux x64 and Linux ARM64 |
 | I6 | `float`, `Half` and `MathF` appear nowhere in `src/core`; `double` and `System.Numerics.Complex` only in allow-listed assemblies (§7). | Two locks, §7 |
-| I7 | A numerical method (integration, root finding) reports an error estimate or a named failure, never a bare number it cannot stand behind. | API shape (Phases 3-4) |
+| I7 | A numerical method (integration, root finding) reports an error estimate or a named failure, never a bare number it cannot stand behind. | `Calculation.Integrals`, Time Out; `AccuracyTests` |
 
 ## 3. Which type holds a value, and where .NET already has the code
 
@@ -91,16 +91,25 @@ What .NET does not have, and `Barbatos.Pallas.Numerics` therefore provides:
 - fraction recognition (`Fractions`);
 - degrees-minutes-seconds (`Sexagesimal`).
 
-**Fractions, surds and π forms are display-time recognition, not types.** `Fractions.TryFromDecimal` finds the
-simplest fraction within a tolerance that matches the value's precision: 28 digits for a `decimal` quotient, 15 for a
-value from `double`. The calculator does the same from its 23-digit value.
+**Fractions, surds and π forms are display forms, not types.** A value computed exactly from square roots and π also
+carries its *exact form*, a short sum of rational multiples of 1, √b and π recorded beside the number (decision of
+18 Sep 2026). It is not a number type: arithmetic is still `decimal` and `double`. It does two things no search over
+15 digits can do: it shows `10√(2)+15×3√(3)` as `45√(3)+10√(2)` (manual p. 35), and it makes `√(2)×√(2)` exactly 2,
+where the 15-digit decimal of √2 squared is 2.000000000000014. A value with a form is also computed from the form in
+`double`, which is why `Rec(√(2),45)` gives x = 1 rather than 1.0000000000000042.
+
+Everything else is recognized from the value at display time. `Fractions.TryFromDecimal` finds the simplest fraction
+within a tolerance that matches the value's precision: 10⁻²⁵ for an exact `decimal`, and 10⁻¹³ relative with
+denominators of at most 10⁴ for a value that went through `double`, so that a transcendental result is not dressed up
+as a fraction by coincidence. The calculator recognizes forms from its 23-digit value.
 
 **The precision rule.** A value stays `decimal` only while it holds at least 15 significant digits.
 - That is when it is zero or its magnitude is at least 10⁻¹⁴: `decimal` keeps 28 decimal places, so from 10⁻¹⁴ down to
   10⁻²⁸ exactly 15 digits remain.
 - Below that, or beyond ±7.9×10²⁸, the value is `double`.
-- The engine applies the rule where values are created (Phase 3), using the APIs above: `decimal.TryParse` followed
-  by a magnitude check, and the `OverflowException` of `decimal` arithmetic.
+- The engine applies the rule where values are created (`Value`, `ValueMath`), using the APIs above: `decimal.TryParse`
+  followed by a magnitude check, and the `OverflowException` of `decimal` arithmetic. A `decimal` product or quotient
+  that lands below 10⁻¹⁴ is recomputed from the operands in `double`, not converted from the rounded `decimal`.
 - Division by zero is not a precision question: `DivideByZeroException` is the calculator's Math ERROR.
 
 ## 4. Measured behavior of the built-in types
@@ -223,9 +232,11 @@ itself tested: it must find every deliberately planted usage, and must not flag 
 
 **The allow-list.** `CoreFloatingPointTests.AllowList` names the assemblies where `double` may appear, each with its
 reason.
-- Today it holds `Barbatos.Pallas.Numerics` (`Trigonometry`).
-- The engine calls `System.Math` directly (§6), so Engine gets an entry in Phase 3; Graphing's screen coordinates get
-  one in Phase 6.
+- `Barbatos.Pallas.Numerics` (`Trigonometry`).
+- `Barbatos.Pallas.Engine`: it calls `System.Math` and `System.Numerics.Complex` directly (§6), holds values `decimal`
+  cannot keep to 15 significant digits, and integrates numerically. Graphing's screen coordinates get an entry in
+  Phase 6.
+- `Barbatos.Pallas.Data` needs none: a published value is a `decimal` mantissa and a power of ten (`ScaledDecimal`).
 - `float`, `Half` and `MathF` stay banned everywhere.
 - Adding an entry needs the same review as changing this document.
 
@@ -249,9 +260,18 @@ The engine for each domain is designed in its phase. These are the rules it star
 - σ, s and r use `Math.Sqrt`.
 - Regression transforms (`ln`, `exp`) use `double`.
 
-**Calculus** (Phase 3).
-- `Σ` and `Π` evaluate in `decimal` while the terms are decimal.
-- `d/dx` and `∫` evaluate on `double`. Each reports an error estimate, or Time Out when it cannot converge (I6).
+**Calculus.**
+- `Σ` and `Π` evaluate in `decimal` while the terms are decimal, so `Σ(1⌟x,1,4)` is exactly 25⌟12.
+- `d/dx` differentiates the bound tree and evaluates the derivative like any expression, so it is exact where the
+  operations are: `d/dx(x³,0.1)` is exactly 0.03 and `d/dx(sin(x),π÷2)` is exactly 0. Where there is no derivative it
+  is a Math ERROR (deviation D5), because the derivative expression divides by zero there. The `tol` argument of the
+  calculator is accepted and validated (≥ 10⁻²²), and changes nothing.
+- `∫` is adaptive Gauss–Kronrod 7/15 on `double`, the method the manual names (p. 52). It refines until the estimated
+  error is below 10⁻¹⁴ relative to ∫|f| (or below a looser `tol`), answers while the estimate is within 10⁻⁹ or a
+  looser `tol`, and reports Time Out otherwise. A `tol` tighter than 10⁻⁹ is accepted (down to 10⁻²², as on the
+  calculator) but promises nothing more: `double` cannot guarantee it for a difficult integrand, and it used to end in
+  Time Out (decision of 18 Sep 2026). Every integral of a calculation reports its estimate in
+  `Calculation.Integrals` (I7).
 
 **Solvers** (Phase 4).
 - Quadratic discriminants are `decimal`, so a root such as `−1 ± √3` is recognized from an exact discriminant.
@@ -295,11 +315,17 @@ defined unit (the 15 °C calorie) uses its tabulated value.
 
 ## 9. Equality and Verify
 
-- **`decimal` values compare exactly.**
-- **Values that went through `double`** compare after conversion to 15 significant digits (§4). `(√2)² = 2` is
-  therefore True, matching working assumption U6 in [CONFORMANCE.md](CONFORMANCE.md). Values that differ only
-  beyond the 15th digit are reported equal. That is the stated accuracy limit, not a bug.
-- The exact comparison rules are fixed with the Verify implementation in Phase 3.
+- **Exact values compare exactly.** Two `decimal` values that never went through `double` are equal only if they are
+  the same number, so `1.0000000001 = 1` is False.
+- **Exact forms compare symbolically.** `(√2)² = 2` is True because the form of the left side is the rational 2, not
+  because of a tolerance (working assumption U6 in [CONFORMANCE.md](CONFORMANCE.md)).
+- **Values that went through `double` are equal within 10⁻¹³ relative** (decision of 18 Sep 2026), which is where the
+  engine also stops recognizing display forms. `sin(45)²+cos(45)²=1` is therefore True. The measurements behind the
+  figure: `(decimal)double` is off by up to 5.07×10⁻¹⁵ relative (2 million samples, 18 Sep 2026), `System.Math` adds up
+  to 5×10⁻¹⁵ (§6), and a comparison has two sides; 10⁻¹⁴ would already fail U6. It is still a thousand times finer than
+  the ten digits displayed.
+- **An inequality is strict about equality:** `<` is False where `=` is True. An inequality with a complex operand is a
+  Math ERROR (manual p. 128).
 
 ## 10. Profiles
 
@@ -337,6 +363,10 @@ Every long operation takes a `CancellationToken` and an `EngineBudget { MaxItera
 - **Coverage**, identical on net8.0, net9.0 and net10.0: 177 of 179 lines and 55 of 56 branches. The rest is one
   defensive exit in `Fractions.TryFromDecimal` that 9.2 million searched inputs never reached, documented in the
   source.
+- **The engine's own checks** (`tests/Barbatos.Pallas.Engine.Tests`): the precision rule value by value; the manual's
+  worked examples through the conformance suite; integrals against 50-digit PeterO.Numbers references; and CsCheck
+  properties over generated syntax trees, where evaluating any tree in any application gives a value or a
+  `CalcError`, never an exception and never a run past its budget.
 - **Mutation testing.** Stryker.NET gives a mutation score of 96.55% (17 Sep 2026; gate 90%, enforced in CI). The
   4 undetected mutants change no observable result:
   - `checked` removed, twice, where the continued fraction fails either way after an overflow;

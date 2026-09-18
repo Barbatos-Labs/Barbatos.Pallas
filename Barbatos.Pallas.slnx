@@ -43,6 +43,9 @@
     <Project Path="tests/Barbatos.Pallas.Architecture.Tests/Barbatos.Pallas.Architecture.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Conformance.Tests/Barbatos.Pallas.Conformance.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Expressions.Tests/Barbatos.Pallas.Expressions.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Engine.Tests/Barbatos.Pallas.Engine.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Data.Tests/Barbatos.Pallas.Data.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.DependencyInjection.Tests/Barbatos.Pallas.DependencyInjection.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Numerics.Tests/Barbatos.Pallas.Numerics.Tests.csproj" />
   </Folder>
 </Solution>

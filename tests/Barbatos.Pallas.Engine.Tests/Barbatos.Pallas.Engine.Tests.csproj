@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Engine is checked by:
+      * the precision rule of docs/PRECISION.md §3, value by value: which type holds a result, and when it is exact;
+      * the manual's worked examples, which the conformance suite runs as data (tests/Barbatos.Pallas.Conformance.Tests);
+      * accuracy tests of the numerical integrator against PeterO.Numbers references;
+      * CsCheck properties over generated syntax trees: evaluating any tree gives a value or a CalcError, never an
+        exception, and never runs past its budget.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="PeterO.Numbers" />
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+  </ItemGroup>
+
+  <!-- The generators of Phase 2 produce the trees an application can hold; the engine evaluates the same trees. -->
+  <ItemGroup>
+    <Compile Include="..\Barbatos.Pallas.Expressions.Tests\Support\SyntaxTrees.cs" Link="Support\SyntaxTrees.cs" />
+  </ItemGroup>
+
+</Project>

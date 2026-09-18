@@ -107,7 +107,7 @@ Parsing takes a `SyntaxContext`: the application, and whether relations are allo
 
 | Application | What changes |
 |---|---|
-| Base-N | A run of `0`-`9` and `A`-`F` is a number, unless a longer name starts there (`Ans`). `d h b o` directly before such a digit is a prefix. No decimal point. `and or xor xnor Not( Neg(` are available. The variables A-F cannot be typed, and neither can the combination operator `C`. |
+| Base-N | A run of `0`-`9` and `A`-`F` is a number, unless a longer name starts there (`Ans`). `d h b o` directly before such a digit is a prefix. No decimal point. Available: `+ − × ÷`, `and or xor xnor`, `Not( Neg(`, parentheses and the memories. The CATALOG commands of manual pp. 51-69 are not (p. 51), so there are no functions, constants, powers, roots, fractions, angle marks, engineering symbols or unit conversions here; the variables A-F cannot be typed, and neither can the combination operator `C` (assumption U12). |
 | Spreadsheet | `A1`-style cell references win over the variables A-E; `:` forms ranges. |
 | Complex | `i`, `∠` and the complex functions are available. |
 | Statistics | Statistic variables, estimates, `▶t` and `P( Q( R(` are available. `P(` is then the distribution function, so a permutation with a parenthesized right operand is written `10P (4)`. |

@@ -147,32 +147,39 @@ Formatter  profile + settings + FORMAT target ─► FormattedResult (display tr
 
 ## 6. Extending the engine: functions, constants, units
 
-The contract below is indicative and is finalized in Phase 3.
+The contract, as built in Phase 3.
 
 ```csharp
 public interface IMathFunction
 {
-    FunctionSignature Signature { get; }   // name, arity, parameter kinds, domain, CATALOG group, LaTeX template, i18n key
+    FunctionSignature Signature { get; }   // name as written ("beam("), arity, applications
     EvalResult Invoke(ReadOnlySpan<Value> arguments, EvaluationContext context);
 }
 
-services.AddPallas(options =>
+PallasEngine engine = PallasEngineBuilder.CreateDefault()   // without DI: console, Web API, tests
+    .AddConstantSet(ConstantSets.Codata2022)                // Barbatos.Pallas.Data
+    .AddUnitSet(UnitSets.NistSp811)
+    .AddAtomicWeights(AtomicWeightTables.Ciaaw)
+    .AddFunction(new BeamDeflection())
+    .Build();
+
+services.AddPallas(options =>                               // Barbatos.Pallas.DependencyInjection
         {
             options.Profile = CalculatorProfile.Extended;
-            options.Budget.Timeout = TimeSpan.FromSeconds(5);
+            options.Budget = new EngineBudget(MaxIterations: 10_000_000, Timeout: TimeSpan.FromSeconds(5));
         })
-        .AddConstantSet(ConstantSets.CodataLatest)
-        .AddUnitSet(UnitSets.NistSp811)
-        .AddFunction<BeamDeflectionFunction>()
-        .AddConstant("γ_bt", value: 25m, unit: "kN/m³");      // decimal, so a typed constant stays exact
-
-PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without DI: console, Web API, tests
+        .AddFunction<BeamDeflection>();                     // the data sets are included unless turned off
 ```
 
-- **Frozen registry.** It is built into a `FrozenDictionary`, so the hot path takes no locks. Names are bound
-  during parsing, so evaluation never looks up a string.
-- **Declared exactness.** A function declares whether it maps `decimal` to `decimal` exactly, so the formatter
-  only tries fraction and surd recognition where it can be right.
+- **Frozen registry.** Functions, constants and unit conversions are built into `FrozenDictionary` tables when the
+  engine is built, so the engine is immutable and safe to share; sessions hold the state.
+- **No data of its own.** The engine has the calculator's functions but no scientific constants, unit conversions or
+  atomic weights until a data set is added: reference data versions separately from the engine (decision of
+  18 Sep 2026).
+- **Values and errors.** A function receives `Value` arguments, which carry their own type and exactness, and answers
+  with a value or a `CalcErrorKind`; the engine checks the arity before the call and the profile's range after it.
+- **Names.** A signature's name joins the vocabulary of `Barbatos.Pallas.Expressions`, so a plugin function is parsed,
+  printed and bound exactly like a built-in one.
 
 ## 7. Growing without breaking the core
 
@@ -279,9 +286,9 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without 
 | Phase | Scope | Exit criteria |
 |---|---|---|
 | **0 Foundation** ✅ | Repository, build, analyzers, both floating-point locks, project skeletons, conformance data (164 cases) and domain table, docs, CI | Build and tests green on three TFMs |
-| **1 Numerics** ✅ | The calculator math .NET lacks: trigonometry in angle units, integer functions, fraction recognition, sexagesimal. Everything .NET has (`System.Math`, `System.Double`, `System.Decimal`, `BigInteger`, `System.Numerics.Complex`, `System.Random`) is used directly by the engine instead | Every branch covered or the exception documented; accuracy tests against PeterO.Numbers on Windows and Linux (x64, ARM64); mutation score ≥ 90% |
+| **1 Numerics** ✅ | The calculator math .NET lacks: trigonometry in angle units, integer functions, fraction recognition, sexagesimal. Everything .NET has (`System.Math`, `System.Double`, `System.Decimal`, `BigInteger`, `System.Numerics.Complex`, `System.Random`) is used directly by the engine instead | Every branch covered or the exception documented; accuracy tests against PeterO.Numbers on Windows; mutation score ≥ 90% |
 | **2 Expressions** ✅ | Lexer, Pratt parser, syntax tree, diagnostics with spans, vocabulary, linear and LaTeX printers; Canonical Linear Syntax final (docs/LINEAR-SYNTAX.md) | Every conformance input parses in its application; print-and-reparse property in 7 application contexts; fuzzing never throws or hangs; lexing allocates nothing; every branch covered but one documented; mutation score ≥ 90% |
-| 3 Engine | Binder, plugins, evaluator, formatter, memory, calculus, Verify, Base-N, Data, DI | Calculate, Complex and Base-N conformance cases pass |
+| **3 Engine** ✅ | Binder, plugins, RPN evaluator, exact display forms, formatter, memory and sessions, calculus, Verify, Base-N, Complex, the CODATA/NIST/CIAAW data sets and `AddPallas()` | The 111 Calculate, Complex and Base-N conformance cases pass; evaluation of any generated tree ends in a value or a named error within its budget; integrals agree with 50-digit references; mutation score ≥ 90% |
 | 4 Domain apps | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Their conformance cases pass |
 | 5 WPF | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
 | 6 Graph and Math Box | Graphing; Dice, Coin, Number Line, Circle | Math Box conformance cases pass |
@@ -304,5 +311,18 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();   // without 
 | 17 Sep 2026 | **Built-in numeric types instead of a custom number tower.** The first Phase 1 implementation (`BigRational`, `BigDecimal`, `RoundingMode`, `MathContext`, a number parser, planned certified reals) was deleted. The maintainer's direction: the reference calculator is a functional reference, not an implementation model, and .NET already provides the types and rounding. Now: `decimal` for arithmetic, `Math.Round` with `MidpointRounding`, `double` with `System.Math` for transcendental functions, `BigInteger` for integer functions, `int` for Base-N, `System.Numerics.Complex` for complex numbers; fractions, surds and π forms recognized at display time. Accepted cost: about 15 significant digits for transcendental results instead of certified digits, and no arbitrary precision. `double` and `Complex` are confined to Numerics (amended below); `float`, `Half` and `MathF` are banned (PRECISION.md §7). |
 | 17 Sep 2026 | Phase 2 plan approved as proposed. Text cannot tell some calculator keys apart, so: `^` is left-associative (level 3, manual p. 168); `C` between two operands is the combination operator, elsewhere the variable C; `°` followed by minutes or seconds is sexagesimal, alone the degree unit; scientific constants take `@`; in a Verify chain inequalities point one way and `≠` does not combine with them (U10); names live in a vocabulary the engine can extend; parsing stops at the first error; nesting deeper than 128 is a Stack ERROR (U11). Details in docs/LINEAR-SYNTAX.md §5. |
 | 17 Sep 2026 | Expressions has no dependencies: the parser keeps numbers as text and uses nothing from Numerics. |
+| 17 Sep 2026 | Phase 1 closes without a Linux run of the accuracy tests: the maintainer does not require one. The CI workflow keeps its Linux x64 and ARM64 test job, which runs once the repository has a remote. |
 | 17 Sep 2026 | Mutation-score gate extended to Expressions (≥ 90%, enforced in CI). `StandardVocabulary.cs` is excluded from mutation: it only builds the static `SyntaxVocabulary.Standard`, and the MTP runner cannot switch mutants in static initialization, so all 98 of them were reported as survivors although deleting a line by hand fails 13 to 18 tests. First score with the exclusion: 100% (738 killed, 108 timeouts, no survivors); a timeout is a failing CsCheck property still shrinking. |
+| 18 Sep 2026 | Phase 3 plan approved as proposed. (1) MathO forms: values computed exactly carry an exact form (rational multiples of 1, square roots of integers and π, with `decimal` coefficients) through + − × ÷, integer powers and √ of rationals, stored with Ans and variables; results of other functions are recognized from their value at display time, single-term forms only. Arithmetic stays `decimal`/`double`. (2) Two exact values compare exactly; otherwise values are equal within 10⁻¹³ relative, for Verify and for form recognition (measured: `(decimal)double` is off by up to 5.07×10⁻¹⁵ relative in 2 million samples). (3) Complex integer powers by repeated multiplication and `r∠θ` through `Trigonometry`, because `Complex.Pow(i, 2)` is −1 + 1.2×10⁻¹⁶i. (4) ∫ by adaptive Gauss–Kronrod 7/15 on `double`, refined to 10⁻¹⁴ relative and answered while the estimate is within 10⁻¹⁰ (or `tol`), Time Out otherwise; d/dx by differentiating the syntax tree, `tol` validated but unused. (5) Data: CODATA 2022, NIST SP 811 definitions, CIAAW atomic weights, stored as `decimal` mantissa and exponent so Data needs no `double`; the engine has no data sets unless added, `AddPallas()` adds all three. (6) Working assumptions U12–U17 (CONFORMANCE.md §6). (7) Public API: `PallasEngineBuilder`, `PallasEngine`, `CalculatorSession`, `Calculation`, `Value`, `IMathFunction`. (8) Milestones M1–M6, each reported to the maintainer. |
+| 18 Sep 2026 | The engine has no reference data of its own: scientific constants, unit conversions and atomic weights come from data sets (`Barbatos.Pallas.Data`), which `AddPallas()` registers by default. A data set holds published values as a `decimal` mantissa and a power of ten, so the data package needs no `double`. |
+| 18 Sep 2026 | Base-N offers only what the manual leaves it: numbers, base prefixes, the four operations, the logic operators, `Not(`, `Neg(`, parentheses and the memories. The CATALOG commands of pp. 51-69 are unavailable there (p. 51), which the Phase 2 vocabulary had allowed. Assumption U12. |
+| 18 Sep 2026 | The `Standard` profile refuses a result that would already display as 1×10^100: the calculator's range ends at 9.999999999×10⁹⁹ (p. 169), so rounding for display must not carry a value past it. Found by the property test that reparses every displayed result. |
+| 18 Sep 2026 | An operand with an exact form is taken as `double` from that form rather than from its 15-digit `decimal`: √2 is 1.4142135623731 as a decimal, 3.5×10⁻¹⁵ away from the truth, so `Rec(√(2),45)` gave x = 1.0000000000000042. e carries a form for the same reason, though it is not a display form. |
+| 18 Sep 2026 | An exact base is multiplied out only while the product stays a `decimal`; beyond it, `Math.Pow`. Squaring out 10⁹⁹ in `double` drifted a unit below it, so 10⁻⁹⁹ (and 2×10⁻⁹⁹) became 0, and 10⁻¹²⁸ was a Math ERROR through the square 10¹²⁸ instead of 0. Found by mutation testing. |
+| 18 Sep 2026 | Both ends of the `Standard` range are taken at ten significant digits: a result that displays as 1×10⁻⁹⁹ is in range (assumption U18), as one that displays as 1×10^100 is not. |
+| 18 Sep 2026 | Base-N subtracts in 32 bits directly: `FFFFFFFF−80000000` is 7FFFFFFF, where subtracting as `left + (−right)` failed on −(−2³¹). Verify is refused outside Calculate, Table, Equation and Complex (p. 73); in Base-N with Verify on, a relation used to be verified. |
+| 18 Sep 2026 | `AddPallas()` may be called more than once and returns the same builder: a library and its host can both call it. Functions added through a second call used to be dropped silently. |
+| 18 Sep 2026 | Mutation-score gate extended to Engine and DependencyInjection (≥ 90%, enforced in CI). Data is not mutated: it is static initialization, which the MTP runner cannot switch, and its tests check every value against its defining relation instead. Code whose mutants could not change a result was simplified rather than kept: an unreachable Base-N comparison, a tolerance comparison in `decimal` that `double` answers to 10⁻¹⁶, and guards that `System.Math` already applies. |
+| 18 Sep 2026 | ∫ answers while its error estimate is within 10⁻⁹ relative, or a looser `tol` (was 10⁻¹⁰, or `tol` itself). It still refines to 10⁻¹⁴. A `tol` down to 10⁻²² is accepted as on the calculator, but one tighter than 10⁻⁹ no longer ends in Time Out when `double` cannot reach it: `∫(x,0,1,1×10^-21)` is 1⌟2. The maintainer: 10⁻⁹ is plenty. |
+| 18 Sep 2026 | **No brand or model name of the reference calculator anywhere in the repository** (legal risk, maintainer): not in identifiers, file or folder names, comments, XML docs, READMEs, package metadata, docs or test data. The profile is `CalculatorProfile.Standard`, the vocabulary `SyntaxVocabulary.Standard` (built by `StandardVocabulary`); the conformance data live in `Data/calculator` and are run by `CalculatorConformanceTests`; the catalog is docs/CALCULATOR-CATALOG.md; conformance cases name the profile `Standard`; prose says *the reference calculator* and *the manual*, which stays local as `docs/reference-manual_VI.pdf` (gitignored as `docs/*.pdf`). |
 | 17 Sep 2026 | **No wrappers around the BCL.** The maintainer's review of Numerics: remove every piece of code that `Math`, `MathF` or `System.Double` already provide. Deleted `MathConstants` (use `double.Pi`, `double.E`), `DecimalArithmetic` (use `decimal` operators, `decimal.TryParse`, `(decimal)value`, `Math.Round` and format strings; the 10⁻¹⁴ precision rule moves to the engine) and `ScientificMath` (the engine calls `System.Math` directly and turns NaN or ∞ into Math ERROR in one place). The special-angle table became `double.SinPi`, `double.CosPi` and `double.TanPi`. Complex and random numbers use `System.Numerics.Complex` and `System.Random` in the engine rather than Phase 1 code. `double` is therefore allowed per assembly: Numerics now, Engine from Phase 3. |
