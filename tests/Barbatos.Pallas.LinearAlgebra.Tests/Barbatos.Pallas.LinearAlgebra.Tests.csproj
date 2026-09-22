@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.LinearAlgebra is checked against exact arithmetic, never against itself:
+      * determinants against the Leibniz formula on the same integers;
+      * inverses and solutions by multiplying back: A times the result must be exactly the identity or b;
+      * singular matrices, including decimal ones that elimination in decimal would not find singular;
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.LinearAlgebra\Barbatos.Pallas.LinearAlgebra.csproj" />
+  </ItemGroup>
+
+</Project>

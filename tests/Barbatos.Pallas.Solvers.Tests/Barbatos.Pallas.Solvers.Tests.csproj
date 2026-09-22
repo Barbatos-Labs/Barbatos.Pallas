@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Solvers is checked against exact arithmetic, never against itself:
+      * the sign, the square-free part and the real-root count against polynomials built from known roots;
+      * division by a rational root against multiplying the quotient back;
+      * iterated roots against the roots they were built from, and against the value of the polynomial there;
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="PeterO.Numbers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Solvers\Barbatos.Pallas.Solvers.csproj" />
+  </ItemGroup>
+
+</Project>

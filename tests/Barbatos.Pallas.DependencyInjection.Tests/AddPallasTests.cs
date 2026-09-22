@@ -28,6 +28,39 @@ public sealed class AddPallasTests
         first.Calculate("2⌟3+1⌟1⌟2").Display.Text.Should().Be("13⌟6");
     }
 
+    [Theory]
+    // Every application of the calculator but Math Box, which arrives in Phase 6.
+    [InlineData(CalculatorApp.Calculate, "1+1", "2")]
+    [InlineData(CalculatorApp.Complex, "(1+2i)×i", "-2+i")]
+    [InlineData(CalculatorApp.BaseN, "d5+d3", "8")]
+    [InlineData(CalculatorApp.Matrix, "Identity(2)", "[[1, 0], [0, 1]]")]
+    [InlineData(CalculatorApp.Vector, "1+1", "2")]
+    [InlineData(CalculatorApp.Statistics, "1+1", "2")]
+    [InlineData(CalculatorApp.Distribution, "1+1", "2")]
+    [InlineData(CalculatorApp.Equation, "1+1", "2")]
+    [InlineData(CalculatorApp.Inequality, "1+1", "2")]
+    [InlineData(CalculatorApp.Ratio, "1+1", "2")]
+    [InlineData(CalculatorApp.Spreadsheet, "A1+1", "1")]
+    [InlineData(CalculatorApp.Table, "1+1", "2")]
+    public void ASessionOfEveryApplicationCanBeResolvedAndUsed(CalculatorApp app, string input, string display)
+    {
+        using ServiceProvider provider = new ServiceCollection().AddPallas(options => options.App = app).Services.BuildServiceProvider();
+
+        CalculatorSession session = provider.GetRequiredService<CalculatorSession>();
+
+        session.App.Should().Be(app);
+        session.Calculate(input).Display.Text.Should().Be(display);
+    }
+
+    [Fact]
+    public void ASessionOfMathBox_IsRefusedWhereItIsResolved()
+    {
+        // p. 146: the Math Box application arrives in Phase 6; until then the engine says so rather than pretending.
+        using ServiceProvider provider = new ServiceCollection().AddPallas(options => options.App = CalculatorApp.MathBox).Services.BuildServiceProvider();
+
+        provider.Invoking(p => p.GetRequiredService<CalculatorSession>()).Should().Throw<NotSupportedException>();
+    }
+
     [Fact]
     public void TheReferenceDataIsIncludedByDefault()
     {

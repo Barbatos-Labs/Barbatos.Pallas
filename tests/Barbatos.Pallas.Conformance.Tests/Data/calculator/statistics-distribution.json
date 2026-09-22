@@ -27,10 +27,10 @@
       "expect": {
         "n": "20", "Σx": "119", "Σx²": "837", "x̄": "5.95",
         "σ²x": "6.4475", "σx": "2.539192785", "s²x": "6.786842105", "sx": "2.605156829",
-        "min(x)": "1", "max(x)": "10"
+        "min(x)": "1", "max(x)": "10", "Q1": "4", "Med": "6.5", "Q3": "8"
       },
       "expectationSource": "derived-exact",
-      "note": "Derived with exact rational arithmetic and integer square roots. Q1, Med and Q3 are omitted until the reference calculator's quartile rule is confirmed (docs/CONFORMANCE.md, unverified behaviours)." },
+      "note": "Derived with exact rational arithmetic and integer square roots. Q1, Med and Q3 are the values the 1-Var Results screen of p. 84 shows, which the quartile rule of assumption U1 gives." },
     { "id": "stats-1var-normdist-001", "page": 91, "app": "Statistics", "kind": "statistics", "status": "ready",
       "given": { "sameDataAs": "stats-1var-001", "inputs": [ "2▶t", "P(Ans)" ] },
       "expect": { "values": { "2▶t": "-1.555612486", "P(Ans)": "0.05990013396" } }, "expectationSource": "reference",

@@ -27,14 +27,16 @@ internal sealed class Evaluator
     private readonly CompiledProgram _program;
     private readonly EvaluationContext _context;
     private readonly Func<MemorySlot, EvalResult> _memory;
+    private readonly Func<Statistic, EvalResult> _statistics;
     private readonly Value[] _locals;
     private readonly Value[]?[] _stacks;
 
-    public Evaluator(CompiledProgram program, EvaluationContext context, Func<MemorySlot, EvalResult> memory)
+    public Evaluator(CompiledProgram program, EvaluationContext context, Func<MemorySlot, EvalResult> memory, Func<Statistic, EvalResult> statistics)
     {
         _program = program;
         _context = context;
         _memory = memory;
+        _statistics = statistics;
         _locals = new Value[program.SlotCount];
         _stacks = new Value[program.Segments.Length][];
     }
@@ -63,6 +65,12 @@ internal sealed class Evaluator
                     continue;
                 case OpCode.Load:
                     result = _memory((MemorySlot)instruction.A);
+                    break;
+                case OpCode.LoadStatistic:
+                    result = _statistics((Statistic)instruction.A);
+                    break;
+                case OpCode.LoadCell:
+                    result = SpreadsheetCells.Read(_program.Cells[instruction.A], _context.Cells, _context);
                     break;
                 case OpCode.Call:
                     result = Operations.Evaluate((Operation)instruction.A, stack.AsSpan(top - instruction.B, instruction.B), _context);
@@ -104,7 +112,7 @@ internal sealed class Evaluator
     private EvalResult InvokePlugin(IMathFunction function, ReadOnlySpan<Value> arguments)
     {
         EvalResult result = function.Invoke(arguments, _context);
-        if (!result.Succeeded || result.Value.Kind is ValueKind.BaseN or ValueKind.DecimalReal)
+        if (!result.Succeeded || result.Value.Kind is ValueKind.BaseN or ValueKind.DecimalReal or ValueKind.Matrix or ValueKind.Vector)
         {
             return result;
         }

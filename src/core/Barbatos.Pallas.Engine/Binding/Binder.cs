@@ -53,7 +53,50 @@ internal sealed class Binder
             ["ImP("] = (Operation.ImaginaryPart, 1, 1),
             ["Not("] = (Operation.Not, 1, 1),
             ["Neg("] = (Operation.Neg, 1, 1),
+            ["Det("] = (Operation.Determinant, 1, 1),
+            ["Trn("] = (Operation.Transpose, 1, 1),
+            ["Identity("] = (Operation.Identity, 1, 1),
+            ["Angle("] = (Operation.VectorAngle, 2, 2),
+            ["UnitV("] = (Operation.UnitVector, 1, 1),
+            ["P("] = (Operation.NormalP, 1, 1),
+            ["Q("] = (Operation.NormalQ, 1, 1),
+            ["R("] = (Operation.NormalR, 1, 1),
         }.ToFrozenDictionary(StringComparer.Ordinal);
+
+    // The statistic variables (pp. 90-91); "min(x)" is one name, as on the calculator's menu.
+    private static readonly FrozenDictionary<string, Statistic> Statistics = new Dictionary<string, Statistic>(StringComparer.Ordinal)
+    {
+        ["n"] = Statistic.Count,
+        ["Σx"] = Statistic.SumX,
+        ["Σy"] = Statistic.SumY,
+        ["Σx²"] = Statistic.SumX2,
+        ["Σy²"] = Statistic.SumY2,
+        ["Σxy"] = Statistic.SumXY,
+        ["Σx³"] = Statistic.SumX3,
+        ["Σx²y"] = Statistic.SumX2Y,
+        ["Σx⁴"] = Statistic.SumX4,
+        ["x̄"] = Statistic.MeanX,
+        ["ȳ"] = Statistic.MeanY,
+        ["σ²x"] = Statistic.PopulationVarianceX,
+        ["σ²y"] = Statistic.PopulationVarianceY,
+        ["σx"] = Statistic.PopulationDeviationX,
+        ["σy"] = Statistic.PopulationDeviationY,
+        ["s²x"] = Statistic.SampleVarianceX,
+        ["s²y"] = Statistic.SampleVarianceY,
+        ["sx"] = Statistic.SampleDeviationX,
+        ["sy"] = Statistic.SampleDeviationY,
+        ["min(x)"] = Statistic.MinX,
+        ["max(x)"] = Statistic.MaxX,
+        ["min(y)"] = Statistic.MinY,
+        ["max(y)"] = Statistic.MaxY,
+        ["Q1"] = Statistic.FirstQuartile,
+        ["Med"] = Statistic.Median,
+        ["Q3"] = Statistic.ThirdQuartile,
+        ["a"] = Statistic.A,
+        ["b"] = Statistic.B,
+        ["c"] = Statistic.C,
+        ["r"] = Statistic.R,
+    }.ToFrozenDictionary(StringComparer.Ordinal);
 
     private static readonly FrozenDictionary<string, MemorySlot> Memories = new Dictionary<string, MemorySlot>(StringComparer.Ordinal)
     {
@@ -68,6 +111,16 @@ internal sealed class Binder
         ["z"] = MemorySlot.Z,
         ["Ans"] = MemorySlot.Ans,
         ["PreAns"] = MemorySlot.PreAns,
+        ["MatA"] = MemorySlot.MatA,
+        ["MatB"] = MemorySlot.MatB,
+        ["MatC"] = MemorySlot.MatC,
+        ["MatD"] = MemorySlot.MatD,
+        ["MatAns"] = MemorySlot.MatAns,
+        ["VctA"] = MemorySlot.VctA,
+        ["VctB"] = MemorySlot.VctB,
+        ["VctC"] = MemorySlot.VctC,
+        ["VctD"] = MemorySlot.VctD,
+        ["VctAns"] = MemorySlot.VctAns,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     private static readonly FrozenDictionary<string, int> EngineeringExponents = new Dictionary<string, int>(StringComparer.Ordinal)
@@ -101,17 +154,19 @@ internal sealed class Binder
     private readonly CalculatorApp _app;
     private readonly CalculatorSettings _settings;
     private readonly IReadOnlyDictionary<DefinedFunction, SyntaxNode> _definitions;
+    private readonly StatisticsSetup _statistics;
     private readonly List<(string Name, int Slot)> _scopes = [];
     private readonly List<DefinedFunction> _calling = [];
     private SourceSpan? _spanOverride;
     private CalcError? _error;
 
-    private Binder(EngineCatalog catalog, CalculatorApp app, CalculatorSettings settings, IReadOnlyDictionary<DefinedFunction, SyntaxNode> definitions)
+    private Binder(EngineCatalog catalog, CalculatorApp app, CalculatorSettings settings, IReadOnlyDictionary<DefinedFunction, SyntaxNode> definitions, StatisticsSetup statistics)
     {
         _catalog = catalog;
         _app = app;
         _settings = settings;
         _definitions = definitions;
+        _statistics = statistics;
     }
 
     /// <summary>Gets the number of local slots the bound tree uses.</summary>
@@ -125,10 +180,11 @@ internal sealed class Binder
         CalculatorApp app,
         CalculatorSettings settings,
         IReadOnlyDictionary<DefinedFunction, SyntaxNode> definitions,
+        StatisticsSetup statistics,
         out int slotCount,
         out CalcError? error)
     {
-        Binder binder = new(catalog, app, settings, definitions);
+        Binder binder = new(catalog, app, settings, definitions, statistics);
         BoundStatement? statement = binder.BindStatement(root);
         slotCount = binder.SlotCount;
         error = statement is null ? binder._error : null;
@@ -138,7 +194,7 @@ internal sealed class Binder
     /// <summary>Binds the body of f(x) or g(x) on its own, to check it when it is defined.</summary>
     public static CalcError? Check(SyntaxNode body, EngineCatalog catalog, CalculatorSettings settings)
     {
-        Binder binder = new(catalog, CalculatorApp.Calculate, settings, new Dictionary<DefinedFunction, SyntaxNode>());
+        Binder binder = new(catalog, CalculatorApp.Calculate, settings, new Dictionary<DefinedFunction, SyntaxNode>(), default);
         binder._scopes.Add(("x", binder.SlotCount++));
         return binder.BindNode(body) is null && binder._error is { Kind: not CalcErrorKind.NotDefined } error ? error : null;
     }
@@ -198,8 +254,32 @@ internal sealed class Binder
             SuffixCommandExpression suffix => BindSuffix(suffix),
             FunctionCall call => BindFunction(call),
             ParenthesizedExpression parenthesized => BindNode(parenthesized.Inner),
+            CellReference cell => BindCell(cell),
             _ => Fail(CalcErrorKind.SyntaxError, node.Span),
         };
+    }
+
+    /// <summary>One cell of the Spreadsheet application; a range belongs to Min(, Max(, Mean( or Sum( and nowhere else.</summary>
+    private BoundNode? BindCell(CellReference cell)
+    {
+        SourceSpan span = SpanOf(cell);
+        return CellAddress.TryParse(cell.Text, out CellAddress address)
+            ? new BoundCells(new CellSelection(address, address, RangeAggregate.Cell), span)
+            : Fail(CalcErrorKind.SyntaxError, span);
+    }
+
+    /// <summary>A range command of p. 105: its one argument is a range of cells, such as <c>Sum(A1:A3)</c>.</summary>
+    private BoundNode? BindRange(FunctionCall call, RangeAggregate aggregate)
+    {
+        SourceSpan span = SpanOf(call);
+        if (call.Arguments.Length != 1 || call.Arguments[0] is not CellRange range)
+        {
+            return Fail(CalcErrorKind.SyntaxError, span);
+        }
+
+        return CellAddress.TryParse(range.Start.Text, out CellAddress start) && CellAddress.TryParse(range.End.Text, out CellAddress end)
+            ? new BoundCells(new CellSelection(start, end, aggregate), span)
+            : Fail(CalcErrorKind.SyntaxError, span);
     }
 
     private BoundNode? BindNumber(NumberLiteral literal)
@@ -320,6 +400,13 @@ internal sealed class Binder
                 return symbol.Text == "PreAns" && _app != CalculatorApp.Calculate
                     ? Fail(CalcErrorKind.SyntaxError, span)
                     : new BoundMemory(Memories[symbol.Text], span);
+            case SymbolKind.MatrixVariable or SymbolKind.VectorVariable:
+                // The vocabulary offers these names only in the Matrix and Vector applications.
+                return new BoundMemory(Memories[symbol.Text], span);
+            case SymbolKind.StatisticsVariable:
+                // The vocabulary offers these names only in the Statistics application.
+                Statistic statistic = Statistics[symbol.Text];
+                return Offers(statistic) ? new BoundStatistic(statistic, span) : Fail(CalcErrorKind.SyntaxError, span);
             case SymbolKind.ScientificConstant:
                 return _catalog.Constants.TryGetValue(symbol.Text, out (ScientificConstant Constant, Value Value) constant)
                     ? new BoundConstant(constant.Value, span)
@@ -355,7 +442,93 @@ internal sealed class Binder
             _ => null,
         };
 
-        return operation is { } known ? BindCall(known, postfix.Span, postfix.Operand) : Fail(CalcErrorKind.SyntaxError, postfix.Span);
+        return operation is { } known ? BindCall(known, postfix.Span, postfix.Operand) : BindStatisticCommand(postfix);
+    }
+
+    /// <summary>Whether the data and the regression type offer a statistic variable (p. 90; the asterisks mark one variable).</summary>
+    private bool Offers(Statistic statistic)
+    {
+        return statistic switch
+        {
+            Statistic.Count or Statistic.SumX or Statistic.SumX2 or Statistic.MeanX or Statistic.PopulationVarianceX
+                or Statistic.PopulationDeviationX or Statistic.SampleVarianceX or Statistic.SampleDeviationX
+                or Statistic.MinX or Statistic.MaxX => true,
+            Statistic.FirstQuartile or Statistic.Median or Statistic.ThirdQuartile => !_statistics.TwoVariable,
+            Statistic.C => _statistics.TwoVariable && _statistics.Regression == RegressionModel.Quadratic,
+            Statistic.R => _statistics.TwoVariable && _statistics.Regression != RegressionModel.Quadratic,
+            _ => _statistics.TwoVariable,
+        };
+    }
+
+    /// <summary>
+    /// ▶t and the estimates x̂, x̂₁, x̂₂ and ŷ (pp. 91-92), as expressions in the statistic variables with the formulas of
+    /// pp. 93-95. The operand is evaluated once, into a local slot.
+    /// </summary>
+    private BoundNode? BindStatisticCommand(PostfixExpression postfix)
+    {
+        SourceSpan span = SpanOf(postfix);
+        bool quadratic = _statistics.Regression == RegressionModel.Quadratic;
+        bool offered = postfix.Operator switch
+        {
+            PostfixOperator.StandardizedVariate => !_statistics.TwoVariable,
+            PostfixOperator.EstimateY => _statistics.TwoVariable,
+            PostfixOperator.EstimateX => _statistics.TwoVariable && !quadratic,
+            _ => _statistics.TwoVariable && quadratic,
+        };
+        if (!offered)
+        {
+            return Fail(CalcErrorKind.SyntaxError, span);
+        }
+
+        if (BindNode(postfix.Operand) is not { } operand)
+        {
+            return null;
+        }
+
+        int slot = SlotCount++;
+        BoundNode v = new BoundLocal(slot, span);
+        BoundNode a = new BoundStatistic(Statistic.A, span);
+        BoundNode b = new BoundStatistic(Statistic.B, span);
+        BoundNode Call(Operation operation, params BoundNode[] arguments) => new BoundCall(operation, [.. arguments], span);
+
+        BoundNode body = postfix.Operator switch
+        {
+            // t = (x − x̄)/σx.
+            PostfixOperator.StandardizedVariate => Call(Operation.Divide, Call(Operation.Subtract, v, new BoundStatistic(Statistic.MeanX, span)), new BoundStatistic(Statistic.PopulationDeviationX, span)),
+            PostfixOperator.EstimateY => _statistics.Regression switch
+            {
+                RegressionModel.Linear => Call(Operation.Add, a, Call(Operation.Multiply, b, v)),
+                RegressionModel.Quadratic => Call(Operation.Add, Call(Operation.Add, a, Call(Operation.Multiply, b, v)), Call(Operation.Multiply, new BoundStatistic(Statistic.C, span), Call(Operation.Square, v))),
+                RegressionModel.Logarithmic => Call(Operation.Add, a, Call(Operation.Multiply, b, Call(Operation.Ln, v))),
+                RegressionModel.ExponentialE => Call(Operation.Multiply, a, Call(Operation.Exp, Call(Operation.Multiply, b, v))),
+                RegressionModel.ExponentialAB => Call(Operation.Multiply, a, Call(Operation.Power, b, v)),
+                RegressionModel.Power => Call(Operation.Multiply, a, Call(Operation.Power, v, b)),
+                _ => Call(Operation.Add, a, Call(Operation.Divide, b, v)),
+            },
+            PostfixOperator.EstimateX => _statistics.Regression switch
+            {
+                RegressionModel.Linear => Call(Operation.Divide, Call(Operation.Subtract, v, a), b),
+                RegressionModel.Logarithmic => Call(Operation.Exp, Call(Operation.Divide, Call(Operation.Subtract, v, a), b)),
+                RegressionModel.ExponentialE => Call(Operation.Divide, Call(Operation.Subtract, Call(Operation.Ln, v), Call(Operation.Ln, a)), b),
+                RegressionModel.ExponentialAB => Call(Operation.Divide, Call(Operation.Subtract, Call(Operation.Ln, v), Call(Operation.Ln, a)), Call(Operation.Ln, b)),
+                RegressionModel.Power => Call(Operation.Exp, Call(Operation.Divide, Call(Operation.Subtract, Call(Operation.Ln, v), Call(Operation.Ln, a)), b)),
+                _ => Call(Operation.Divide, b, Call(Operation.Subtract, v, a)),
+            },
+            _ => QuadraticRoot(postfix.Operator == PostfixOperator.EstimateX1, v, a, b, span),
+        };
+
+        return new BoundLet(slot, operand, body, span);
+    }
+
+    /// <summary>x̂₁ or x̂₂ = (−b ± √(b² − 4c(a − y)))/(2c) (p. 94).</summary>
+    private static BoundCall QuadraticRoot(bool first, BoundNode y, BoundNode a, BoundNode b, SourceSpan span)
+    {
+        BoundNode c = new BoundStatistic(Statistic.C, span);
+        BoundCall Call(Operation operation, params BoundNode[] arguments) => new(operation, [.. arguments], span);
+        BoundConstant Constant(decimal value) => new(Value.FromDecimal(value), span);
+
+        BoundNode root = Call(Operation.SquareRoot, Call(Operation.Subtract, Call(Operation.Square, b), Call(Operation.Multiply, Call(Operation.Multiply, Constant(4m), c), Call(Operation.Subtract, a, y))));
+        return Call(Operation.Divide, Call(first ? Operation.Add : Operation.Subtract, Call(Operation.Negate, b), root), Call(Operation.Multiply, Constant(2m), c));
     }
 
     private BoundNode? BindBinary(BinaryExpression binary)
@@ -378,6 +551,7 @@ internal sealed class Binder
             BinaryOperator.Permutation => Operation.Permutation,
             BinaryOperator.Combination => Operation.Combination,
             BinaryOperator.Polar => Operation.Polar,
+            BinaryOperator.DotProduct => Operation.DotProduct,
             BinaryOperator.And => Operation.And,
             BinaryOperator.Or => Operation.Or,
             BinaryOperator.Xor => Operation.Xor,
@@ -465,6 +639,17 @@ internal sealed class Binder
             case "Pol(" or "Rec(":
                 // Only on their own (assumption U14); BindStatement handles that case.
                 return Fail(CalcErrorKind.SyntaxError, span);
+            case "P(" or "Q(" or "R(" when _statistics.TwoVariable:
+                // The normal distribution is offered with one-variable data only (p. 91).
+                return Fail(CalcErrorKind.SyntaxError, span);
+            case "Min(":
+                return BindRange(call, RangeAggregate.Minimum);
+            case "Max(":
+                return BindRange(call, RangeAggregate.Maximum);
+            case "Mean(":
+                return BindRange(call, RangeAggregate.Mean);
+            case "Sum(":
+                return BindRange(call, RangeAggregate.Sum);
         }
 
         if (Functions.TryGetValue(name, out (Operation Operation, int MinimumArity, int MaximumArity) builtIn))

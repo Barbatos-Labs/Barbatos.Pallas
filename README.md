@@ -10,10 +10,9 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
   distributions, equations, inequalities, complex numbers, Base-N, matrices, vectors, spreadsheet, tables and more,
   checked by a conformance suite built from the calculator's own worked examples.
 
-> **Status: Phase 3 - Engine, complete.** Numerics, Expressions, Engine, Data and DependencyInjection have their
-> tested APIs: Calculate, Complex and Base-N work end to end, and their conformance cases pass. The domain
-> applications (statistics, equations, matrices, spreadsheet) and the desktop app come next. See the
-> [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> **Status: Phase 4 - domain applications - complete.** Every application but Math Box works end to end - Calculate,
+> Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and Table - and
+> every one of their conformance cases passes. The desktop app is next. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ```csharp
 CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
@@ -28,15 +27,15 @@ session.Calculate("14÷0×2").Error;                  // MathError at the divisi
 
 | Package | Purpose | Phase |
 |---|---|---|
-| `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds | 1 |
+| `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds, erf and erfc, the Poisson probability | 1 |
 | `Barbatos.Pallas.Expressions` | Lexer, Pratt parser with the reference calculator's priority, syntax tree, error spans, linear and LaTeX printers | 2 |
-| `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex | 3 |
+| `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex, and the Matrix, Vector, Statistics, Distribution, Equation, Inequality and Ratio applications | 3 |
 | `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | 3 |
 | `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection | 3 |
-| `Barbatos.Pallas.LinearAlgebra` | Matrices and vectors | 4 |
-| `Barbatos.Pallas.Statistics` | Statistics, regressions, distributions | 4 |
-| `Barbatos.Pallas.Solvers` | Equations, polynomials, Solver, inequalities | 4 |
-| `Barbatos.Pallas.Spreadsheet` | Spreadsheet and function tables | 4 |
+| `Barbatos.Pallas.LinearAlgebra` | Exact determinants, inverses and linear systems of decimal matrices | 4 |
+| `Barbatos.Pallas.Statistics` | Exact sums, variances and least-squares fits of decimal data; quartile ranks | 4 |
+| `Barbatos.Pallas.Solvers` | Exact integer polynomials and the roots of a polynomial: the sign at a rational point, Sturm's count of the real roots, division by a rational root, Aberth's iteration | 4 |
+| `Barbatos.Pallas.Spreadsheet` | The sheet: constants and formulas, relative and absolute references, ranges, fills, circular-reference detection; and number tables of f(x) and g(x) | 4 |
 | `Barbatos.Pallas.Graphing` | Platform-neutral function graphing | 6 |
 
 ## Documentation

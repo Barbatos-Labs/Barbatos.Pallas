@@ -3,8 +3,8 @@
   <PropertyGroup>
     <PackageId>Barbatos.Pallas.Numerics</PackageId>
     <RootNamespace>Barbatos.Pallas.Numerics</RootNamespace>
-    <PackageTags>trigonometry;angle-units;factorial;permutations;combinations;lcm;prime-factors;fractions;sexagesimal</PackageTags>
-    <Description>The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition and degrees-minutes-seconds.</Description>
+    <PackageTags>trigonometry;angle-units;factorial;permutations;combinations;lcm;prime-factors;fractions;sexagesimal;erf;erfc;poisson</PackageTags>
+    <Description>The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition, degrees-minutes-seconds, the error function erf, erfc and its inverse, and the Poisson probability.</Description>
   </PropertyGroup>
 
 </Project>

@@ -87,4 +87,17 @@ internal enum Operation
     IntegerPartSlope,
     LargestIntegerSlope,
     RoundSlope,
+
+    // Matrix and Vector (pp. 132-145)
+    Determinant,
+    Transpose,
+    Identity,
+    DotProduct,
+    VectorAngle,
+    UnitVector,
+
+    // Statistics (p. 91): the normal distribution of a standardized variate t.
+    NormalP,
+    NormalQ,
+    NormalR,
 }

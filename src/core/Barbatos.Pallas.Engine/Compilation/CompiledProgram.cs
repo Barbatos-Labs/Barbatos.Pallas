@@ -17,6 +17,12 @@ internal enum OpCode : byte
     /// <summary>Pushes memory <c>A</c> (a <see cref="MemorySlot"/>).</summary>
     Load,
 
+    /// <summary>Pushes statistic <c>A</c> (a <see cref="Statistic"/>).</summary>
+    LoadStatistic,
+
+    /// <summary>Pushes the value of the cells <c>A</c> (a <see cref="CellSelection"/> of the program).</summary>
+    LoadCell,
+
     /// <summary>Pushes local slot <c>A</c>.</summary>
     LoadLocal,
 
@@ -52,6 +58,7 @@ internal sealed class CompiledProgram(
     BoundStatement statement,
     ImmutableArray<Segment> segments,
     ImmutableArray<Value> constants,
+    ImmutableArray<CellSelection> cells,
     ImmutableArray<IMathFunction> plugins,
     int slotCount)
 {
@@ -60,6 +67,8 @@ internal sealed class CompiledProgram(
     public ImmutableArray<Segment> Segments { get; } = segments;
 
     public ImmutableArray<Value> Constants { get; } = constants;
+
+    public ImmutableArray<CellSelection> Cells { get; } = cells;
 
     public ImmutableArray<IMathFunction> Plugins { get; } = plugins;
 

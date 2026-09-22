@@ -23,6 +23,13 @@ public sealed class CoreFloatingPointTests
                 ("Barbatos.Pallas.Numerics.",
                     "Trigonometry in calculator angle units, on double.SinPi, double.CosPi, double.TanPi and System.Math (PRECISION.md §6)."),
             ],
+            ["Barbatos.Pallas.Solvers"] =
+            [
+                ("Barbatos.Pallas.Solvers.PolynomialRoots",
+                    "The roots of a polynomial of degree 3 or more have no closed form a calculator can display, so they are "
+                    + "iterated in double and System.Numerics.Complex; a root that is rational is recovered exactly from them "
+                    + "(PRECISION.md §7). IntegerPolynomial stays exact."),
+            ],
             ["Barbatos.Pallas.Engine"] =
             [
                 ("Barbatos.Pallas.Engine.",

@@ -38,7 +38,14 @@ internal static class ResultFormatter
         }
 
         string? text = FormatValue(calculation.Result, app, settings, profile, target, calculation.Hints);
-        return text is null ? null : new FormattedResult(text, Latex(text, calculation.Result, app, settings));
+        if (text is null)
+        {
+            return null;
+        }
+
+        return calculation.Result.IsComposite
+            ? new FormattedResult(text, CompositeLatex(calculation.Result, app, settings))
+            : new FormattedResult(text, Latex(text, calculation.Result, app, settings));
     }
 
     /// <summary>Formats a value, or returns <see langword="null"/> when the FORMAT conversion does not apply to it.</summary>
@@ -48,6 +55,9 @@ internal static class ResultFormatter
         {
             ValueKind.BaseN => target is null ? FormatBaseN(value.ToInt32(), settings.BaseMode) : null,
             ValueKind.Complex => FormatComplex(value.ToComplex(), settings, profile, target),
+            ValueKind.Matrix or ValueKind.Vector => target is null or FormatTarget.Standard or FormatTarget.DecimalValue
+                ? FormatComposite(value, settings)
+                : null,
             _ => FormatReal(value, settings, profile, target, hints),
         };
 
@@ -78,6 +88,13 @@ internal static class ResultFormatter
             // A sum of degrees-minutes-seconds is displayed as one (assumption U16); LineO shows a fraction only for
             // fraction input (p. 32: 2⌟3+1⌟1⌟2 is 13⌟6, while p. 47 shows 3.25 as 3.25).
             bool decimalOutput = settings.InputOutput is InputOutput.MathIDecimalO or InputOutput.LineIDecimalO;
+            if ((hints & DisplayHints.DecimalResult) != 0)
+            {
+                // Statistic and distribution results are decimals on every screen of pp. 83-100: x̄ is 5.95, not 119⌟20,
+                // and a binomial probability 0.8125, not 13⌟16 (assumption U23).
+                return DecimalText(value, settings);
+            }
+
             if ((hints & DisplayHints.Sexagesimal) != 0 && !decimalOutput && ExactDisplay.Sexagesimal(value) is { } sexagesimal)
             {
                 return sexagesimal;
@@ -153,6 +170,45 @@ internal static class ResultFormatter
         return settings.InputOutput == InputOutput.MathIMathO
             ? ExactDisplay.Standard(value, settings, profile, allowRoots: true) ?? NumberText.Format(value, settings.NumberFormat)
             : NumberText.Format(value, settings.NumberFormat);
+    }
+
+    /// <summary>Writes a matrix as <c>[[3, 0], [1, 1]]</c> and a vector as <c>[0.6, 0.8]</c>, each entry in the number format.</summary>
+    /// <remarks>
+    /// The calculator shows matrix and vector entries as decimals, never as fractions or surds: UnitV of (3, 4) is (0.6, 0.8)
+    /// in MathI/MathO (p. 145; assumption U21).
+    /// </remarks>
+    private static string FormatComposite(Value value, CalculatorSettings settings)
+    {
+        string separator = settings.DecimalMark == DecimalMark.Comma ? "; " : ", ";
+        if (value.Kind == ValueKind.Vector)
+        {
+            return "[" + string.Join(separator, value.ToVector().Elements.Select(element => DecimalText(element, settings))) + "]";
+        }
+
+        MatrixValue matrix = value.ToMatrix();
+        IEnumerable<string> rows = Enumerable.Range(0, matrix.Rows)
+            .Select(row => "[" + string.Join(separator, Enumerable.Range(0, matrix.Columns).Select(column => DecimalText(matrix[row, column], settings))) + "]");
+        return "[" + string.Join(separator, rows) + "]";
+    }
+
+    /// <summary>Writes a matrix, or a vector as a column (as the VctAns screen shows it, p. 144), as a LaTeX pmatrix.</summary>
+    private static string CompositeLatex(Value value, CalculatorApp app, CalculatorSettings settings)
+    {
+        string Entry(Value entry) => Latex(NumberText.Localize(DecimalText(entry, settings), settings), entry, app, settings);
+
+        IEnumerable<string> rows;
+        if (value.Kind == ValueKind.Vector)
+        {
+            rows = value.ToVector().Elements.Select(Entry);
+        }
+        else
+        {
+            MatrixValue matrix = value.ToMatrix();
+            rows = Enumerable.Range(0, matrix.Rows)
+                .Select(row => string.Join("&", Enumerable.Range(0, matrix.Columns).Select(column => Entry(matrix[row, column]))));
+        }
+
+        return @"\begin{pmatrix}" + string.Join(@"\\", rows) + @"\end{pmatrix}";
     }
 
     private static FormattedResult Plain(string text) => new(text, @"\text{" + text + "}");

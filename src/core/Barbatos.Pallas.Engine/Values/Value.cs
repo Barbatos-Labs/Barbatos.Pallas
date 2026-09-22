@@ -9,8 +9,8 @@ using System.Numerics;
 namespace Barbatos.Pallas.Engine;
 
 /// <summary>
-/// A calculator value: a real number held as <see cref="decimal"/> or <see cref="double"/>, a complex number, or a 32-bit
-/// Base-N integer.
+/// A calculator value: a real number held as <see cref="decimal"/> or <see cref="double"/>, a complex number, a 32-bit
+/// Base-N integer, or a matrix or vector of real numbers.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,6 +39,7 @@ public readonly struct Value : IEquatable<Value>
     private readonly double _imaginary;
     private readonly int _baseN;
     private readonly ExactForm? _form;
+    private readonly object? _composite;
 
     private Value(ValueKind kind, decimal decimalValue, double real, double imaginary, int baseN, bool isExact, ExactForm? form)
     {
@@ -49,6 +50,12 @@ public readonly struct Value : IEquatable<Value>
         _baseN = baseN;
         IsExact = isExact;
         _form = form;
+    }
+
+    private Value(ValueKind kind, object composite)
+    {
+        Kind = kind;
+        _composite = composite;
     }
 
     /// <summary>Gets exact zero.</summary>
@@ -84,8 +91,12 @@ public readonly struct Value : IEquatable<Value>
     {
         ValueKind.DecimalReal => _decimal == 0m,
         ValueKind.BaseN => _baseN == 0,
+        ValueKind.Matrix or ValueKind.Vector => false,
         _ => _real == 0d && _imaginary == 0d,
     };
+
+    /// <summary>Gets whether the value is a matrix or a vector.</summary>
+    internal bool IsComposite => _composite is not null;
 
     /// <summary>Compares two values for equality of kind, exactness and number.</summary>
     public static bool operator ==(Value left, Value right) => left.Equals(right);
@@ -129,6 +140,26 @@ public readonly struct Value : IEquatable<Value>
         return CreateComplex(value.Real, value.Imaginary);
     }
 
+    /// <summary>Creates a matrix value.</summary>
+    /// <param name="matrix">The matrix.</param>
+    /// <returns>A <see cref="ValueKind.Matrix"/> value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="matrix"/> is <see langword="null"/>.</exception>
+    public static Value FromMatrix(MatrixValue matrix)
+    {
+        ArgumentNullException.ThrowIfNull(matrix);
+        return new Value(ValueKind.Matrix, matrix);
+    }
+
+    /// <summary>Creates a vector value.</summary>
+    /// <param name="vector">The vector.</param>
+    /// <returns>A <see cref="ValueKind.Vector"/> value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="vector"/> is <see langword="null"/>.</exception>
+    public static Value FromVector(VectorValue vector)
+    {
+        ArgumentNullException.ThrowIfNull(vector);
+        return new Value(ValueKind.Vector, vector);
+    }
+
     /// <summary>Creates a Base-N value.</summary>
     /// <param name="value">The 32-bit two's complement integer.</param>
     /// <returns>A <see cref="ValueKind.BaseN"/> value.</returns>
@@ -152,7 +183,7 @@ public readonly struct Value : IEquatable<Value>
 
     /// <summary>Returns the real number as <see cref="double"/>.</summary>
     /// <returns>The number; a value with an exact form is computed from the form, so π÷2 is exactly <c>double.Pi / 2</c>.</returns>
-    /// <exception cref="InvalidOperationException">The value is a complex number.</exception>
+    /// <exception cref="InvalidOperationException">The value is a complex number, a matrix or a vector.</exception>
     public double ToDouble()
     {
         return Kind switch
@@ -160,7 +191,7 @@ public readonly struct Value : IEquatable<Value>
             ValueKind.DecimalReal => _form?.ToDouble() ?? (double)_decimal,
             ValueKind.DoubleReal => _real,
             ValueKind.BaseN => _baseN,
-            _ => throw new InvalidOperationException("A complex value has no real double."),
+            _ => throw new InvalidOperationException($"A {Kind} value has no real double."),
         };
     }
 
@@ -169,6 +200,22 @@ public readonly struct Value : IEquatable<Value>
     public Complex ToComplex()
     {
         return Kind == ValueKind.Complex ? new Complex(_real, _imaginary) : new Complex(ToDouble(), 0d);
+    }
+
+    /// <summary>Returns the matrix.</summary>
+    /// <returns>The matrix.</returns>
+    /// <exception cref="InvalidOperationException">The value is not a matrix.</exception>
+    public MatrixValue ToMatrix()
+    {
+        return _composite as MatrixValue ?? throw new InvalidOperationException($"A {Kind} value is not a matrix.");
+    }
+
+    /// <summary>Returns the vector.</summary>
+    /// <returns>The vector.</returns>
+    /// <exception cref="InvalidOperationException">The value is not a vector.</exception>
+    public VectorValue ToVector()
+    {
+        return _composite as VectorValue ?? throw new InvalidOperationException($"A {Kind} value is not a vector.");
     }
 
     /// <summary>Returns the Base-N integer.</summary>
@@ -187,14 +234,15 @@ public readonly struct Value : IEquatable<Value>
             && _decimal == other._decimal
             && _real.Equals(other._real)
             && _imaginary.Equals(other._imaginary)
-            && _baseN == other._baseN;
+            && _baseN == other._baseN
+            && Equals(_composite, other._composite);
     }
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is Value other && Equals(other);
 
     /// <inheritdoc/>
-    public override int GetHashCode() => HashCode.Combine(Kind, IsExact, _decimal, _real, _imaginary, _baseN);
+    public override int GetHashCode() => HashCode.Combine(Kind, IsExact, _decimal, _real, _imaginary, _baseN, _composite);
 
     /// <summary>Returns the number in the invariant culture, for diagnostics; calculator display is the formatter's job.</summary>
     /// <returns>The text.</returns>
@@ -205,6 +253,7 @@ public readonly struct Value : IEquatable<Value>
             ValueKind.DecimalReal => _decimal.ToString(CultureInfo.InvariantCulture),
             ValueKind.DoubleReal => _real.ToString("R", CultureInfo.InvariantCulture),
             ValueKind.Complex => string.Create(CultureInfo.InvariantCulture, $"({_real:R}, {_imaginary:R})"),
+            ValueKind.Matrix or ValueKind.Vector => _composite!.ToString()!,
             _ => _baseN.ToString(CultureInfo.InvariantCulture),
         };
     }

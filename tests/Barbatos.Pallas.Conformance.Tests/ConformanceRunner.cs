@@ -9,6 +9,7 @@ using Barbatos.Pallas.Data;
 using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
 using Barbatos.Pallas.Numerics;
+using Barbatos.Pallas.Spreadsheet;
 
 namespace Barbatos.Pallas.Conformance.Tests;
 
@@ -23,6 +24,27 @@ internal static class ConformanceRunner
 {
     // Property cases evaluate a random function this many times.
     private const int PropertySamples = 2000;
+
+    // The regression menu of p. 86, as the cases name its items.
+    private static readonly Dictionary<string, RegressionModel> Regressions = new(StringComparer.Ordinal)
+    {
+        ["y=a+bx"] = RegressionModel.Linear,
+        ["y=a+bx+cx²"] = RegressionModel.Quadratic,
+        ["y=a+b·ln(x)"] = RegressionModel.Logarithmic,
+        ["y=a·e^(bx)"] = RegressionModel.ExponentialE,
+        ["y=a·b^x"] = RegressionModel.ExponentialAB,
+        ["y=a·x^b"] = RegressionModel.Power,
+        ["y=a+b/x"] = RegressionModel.Inverse,
+    };
+
+    // The relations of the Inequality menu (p. 124).
+    private static readonly Dictionary<string, RelationOperator> Relations = new(StringComparer.Ordinal)
+    {
+        [">"] = RelationOperator.Greater,
+        ["<"] = RelationOperator.Less,
+        ["≥"] = RelationOperator.GreaterOrEqual,
+        ["≤"] = RelationOperator.LessOrEqual,
+    };
 
     private static readonly Lazy<PallasEngine> Engine = new(() => PallasEngineBuilder.CreateDefault()
         .AddConstantSet(ConstantSets.Codata2022)
@@ -47,6 +69,22 @@ internal static class ConformanceRunner
                     session.Define(function, body.GetString()!).Should().BeNull("{0}: {1}(x) = {2} must define", conformanceCase, name, body.GetString());
                 }
             }
+
+            if (given.TryGetProperty("matrices", out JsonElement matrices))
+            {
+                foreach (JsonProperty matrix in matrices.EnumerateObject())
+                {
+                    session.SetMatrix(Enum.Parse<MatrixVariable>(matrix.Name), MatrixOf(matrix.Value));
+                }
+            }
+
+            if (given.TryGetProperty("vectors", out JsonElement vectors))
+            {
+                foreach (JsonProperty vector in vectors.EnumerateObject())
+                {
+                    session.SetVector(Enum.Parse<VectorVariable>(vector.Name), new VectorValue([.. vector.Value.EnumerateArray().Select(element => Parse(element.GetString()!))]));
+                }
+            }
         }
 
         switch (conformanceCase.Kind)
@@ -68,6 +106,33 @@ internal static class ConformanceRunner
                 break;
             case "property":
                 CheckProperty(conformanceCase, session);
+                break;
+            case "statistics":
+                RunStatistics(conformanceCase, session);
+                break;
+            case "distribution":
+                RunDistribution(conformanceCase, session);
+                break;
+            case "simultaneous":
+                RunSimultaneous(conformanceCase, session);
+                break;
+            case "polynomial":
+                RunPolynomial(conformanceCase, session);
+                break;
+            case "solver":
+                RunSolver(conformanceCase, session);
+                break;
+            case "inequality":
+                RunInequality(conformanceCase, session);
+                break;
+            case "ratio":
+                RunRatio(conformanceCase, session);
+                break;
+            case "spreadsheet":
+                RunSpreadsheet(conformanceCase, session);
+                break;
+            case "table":
+                RunTable(conformanceCase, session);
                 break;
             default:
                 Assert.Fail($"{conformanceCase}: the runner does not know the kind '{conformanceCase.Kind}'.");
@@ -98,6 +163,438 @@ internal static class ConformanceRunner
             last.Should().NotBeNull("{0}: a step needs a calculation before it", conformanceCase);
             Check(conformanceCase, session, last!, step.Expect!.Value);
         }
+    }
+
+    private static void RunStatistics(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        ConformanceCase source = given.TryGetProperty("sameDataAs", out JsonElement same) ? ConformanceCatalog.Find(same.GetString()!) : conformanceCase;
+        session.SetStatisticsData(StatisticsDataOf(source));
+        if (source.Given!.Value.TryGetProperty("operations", out JsonElement operations))
+        {
+            foreach (JsonElement operation in operations.EnumerateArray())
+            {
+                // "Sort x Ascending", "Sort y Descending" (p. 82).
+                string[] words = operation.GetString()!.Split(' ');
+                StatisticsColumn column = words[1] == "x" ? StatisticsColumn.X : words[1] == "y" ? StatisticsColumn.Y : StatisticsColumn.Frequency;
+                session.SetStatisticsData(session.StatisticsData.Sort(column, descending: words[2] == "Descending"));
+            }
+        }
+
+        if (given.TryGetProperty("regression", out JsonElement regression))
+        {
+            session.Regression = Regressions[regression.GetString()!];
+        }
+
+        List<Calculation> calculations = [];
+        if (given.TryGetProperty("inputs", out JsonElement inputs))
+        {
+            calculations.AddRange(inputs.EnumerateArray().Select(input => session.Calculate(input.GetString()!)));
+        }
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "rows":
+                    StatisticsData data = session.StatisticsData;
+                    string[][] rows = [.. Enumerable.Range(0, data.Rows).Select(row => data.IsTwoVariable ? new[] { data.X[row].ToString(), data.Y[row].ToString() } : [data.X[row].ToString()])];
+                    rows.Should().BeEquivalentTo(member.Value.EnumerateArray().Select(row => row.EnumerateArray().Select(value => value.GetString()!).ToArray()), options => options.WithStrictOrdering(), "{0}: the data rows", conformanceCase);
+                    break;
+                case "values":
+                    foreach (JsonProperty value in member.Value.EnumerateObject())
+                    {
+                        Calculation calculation = calculations.Single(candidate => candidate.Input == value.Name);
+                        calculation.Display.Text.Should().Be(value.Value.GetString(), "{0}: '{1}'", conformanceCase, value.Name);
+                    }
+
+                    break;
+                case "result":
+                    calculations[^1].Display.Text.Should().Be(member.Value.GetString(), "{0}: '{1}'", conformanceCase, calculations[^1].Input);
+                    break;
+                default:
+                    // Any other member names a statistic variable, as the Statistics Calc screen shows it (pp. 88-89).
+                    session.Calculate(member.Name).Display.Text.Should().Be(member.Value.GetString(), "{0}: {1}", conformanceCase, member.Name);
+                    break;
+            }
+        }
+    }
+
+    private static void RunDistribution(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        // The menu names of p. 96 and the parameter names of p. 98.
+        JsonElement given = conformanceCase.Given!.Value;
+        DistributionKind kind = Enum.Parse<DistributionKind>(given.GetProperty("distribution").GetString()!.Replace(" ", string.Empty, StringComparison.Ordinal));
+        DistributionParameters parameters = new();
+        foreach (JsonProperty parameter in given.EnumerateObject().Where(member => member.Value.ValueKind == JsonValueKind.String))
+        {
+            Value value = parameter.Name is "distribution" or "inputMethod" ? Value.Zero : Parse(parameter.Value.GetString()!);
+            parameters = parameter.Name switch
+            {
+                "distribution" or "inputMethod" => parameters,
+                "x" => parameters with { X = value },
+                "N" => parameters with { Trials = value },
+                "p" => parameters with { Probability = value },
+                "μ" => parameters with { Mean = value },
+                "σ" => parameters with { StandardDeviation = value },
+                "Lower" => parameters with { Lower = value },
+                "Upper" => parameters with { Upper = value },
+                "Area" => parameters with { Area = value },
+                "λ" => parameters with { Lambda = value },
+                _ => throw new InvalidOperationException($"The runner does not know the parameter '{parameter.Name}'."),
+            };
+        }
+
+        bool list = given.GetProperty("inputMethod").GetString() == "List";
+        Calculation[] calculations = list
+            ? [.. session.CalculateDistribution(kind, parameters, [.. given.GetProperty("x").EnumerateArray().Select(x => Parse(x.GetString()!))])]
+            : [session.CalculateDistribution(kind, parameters)];
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            string[] expected = member.Value.ValueKind == JsonValueKind.Array ? [.. member.Value.EnumerateArray().Select(value => value.GetString()!)] : [member.Value.GetString()!];
+            member.Name.Should().BeOneOf(["P", "p", "xInv"], "{0}: the runner knows P, p and xInv", conformanceCase);
+            calculations.Select(calculation => calculation.Display.Text).Should().Equal(expected, "{0}: {1}", conformanceCase, member.Name);
+        }
+    }
+
+    private static void RunSimultaneous(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        // The coefficients of each equation, then its constant, as the calculator's input screen asks for them (p. 114).
+        JsonElement given = conformanceCase.Given!.Value;
+        JsonElement[] rows = [.. given.GetProperty("coefficients").EnumerateArray()];
+        int unknowns = given.GetProperty("unknowns").GetInt32();
+        Value[,] augmented = new Value[unknowns, unknowns + 1];
+        for (int row = 0; row < unknowns; row++)
+        {
+            int column = 0;
+            foreach (JsonElement entry in rows[row].EnumerateArray())
+            {
+                augmented[row, column++] = Parse(entry.GetString()!);
+            }
+        }
+
+        SimultaneousSolution solution = session.SolveSimultaneous(augmented);
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "solution":
+                    foreach (JsonProperty unknown in member.Value.EnumerateObject())
+                    {
+                        Calculation value = solution.Unknowns.Single(candidate => candidate.Input == unknown.Name);
+                        value.Display.Text.Should().Be(unknown.Value.GetString(), "{0}: {1}", conformanceCase, unknown.Name);
+                    }
+
+                    break;
+                case "message":
+                    solution.Outcome.ToString().Should().Be(member.Value.GetString(), "{0}: the message", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunPolynomial(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        Value[] coefficients = [.. given.GetProperty("coefficients").EnumerateArray().Select(coefficient => Parse(coefficient.GetString()!))];
+        (coefficients.Length - 1).Should().Be(given.GetProperty("degree").GetInt32(), "{0}: the degree and the coefficients", conformanceCase);
+
+        PolynomialSolution solution = session.SolvePolynomial(coefficients);
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "roots":
+                    solution.Roots.Select(RootText).Should().Equal(
+                        member.Value.EnumerateArray().Select(root => root.GetString()!), "{0}: the roots", conformanceCase);
+                    break;
+                case "extremum":
+                    PolynomialExtremum extremum = solution.Extrema.Single();
+                    string kind = extremum.Kind == ExtremumKind.Minimum ? "Min" : "Max";
+                    kind.Should().Be(member.Value.GetProperty("type").GetString(), "{0}: the kind of extremum", conformanceCase);
+                    extremum.X.Display.Text.Should().Be(member.Value.GetProperty("x").GetString(), "{0}: x of the extremum", conformanceCase);
+                    extremum.Y.Display.Text.Should().Be(member.Value.GetProperty("y").GetString(), "{0}: y of the extremum", conformanceCase);
+                    break;
+                case "message":
+                    solution.Outcome.ToString().Should().Be(member.Value.GetString(), "{0}: the message", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunSolver(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        if (given.TryGetProperty("variables", out JsonElement variables))
+        {
+            foreach (JsonProperty variable in variables.EnumerateObject())
+            {
+                session.SetVariable(Variable(variable.Name), Parse(variable.Value.GetString()!));
+            }
+        }
+
+        Calculation calculation = session.SolveEquation(
+            given.GetProperty("equation").GetString()!,
+            Variable(given.GetProperty("solveFor").GetString()!),
+            Parse(given.GetProperty("initialValue").GetString()!));
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "error":
+                    calculation.Error!.Value.Kind.ToString().Should().Be(member.Value.GetString(), "{0}: the error", conformanceCase);
+                    break;
+                case "solution":
+                    calculation.Error.Should().BeNull("{0}: '{1}' should solve", conformanceCase, calculation.Input);
+                    calculation.Display.Text.Should().Be(member.Value.GetString(), "{0}: the solution", conformanceCase);
+                    break;
+                case "leftMinusRight":
+                    PallasEngine.Format(calculation.Second!.Value, session.Settings, session.Profile)!.Text
+                        .Should().Be(member.Value.GetString(), "{0}: Left − Right", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunInequality(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        Value[] coefficients = [.. given.GetProperty("coefficients").EnumerateArray().Select(coefficient => Parse(coefficient.GetString()!))];
+        (coefficients.Length - 1).Should().Be(given.GetProperty("degree").GetInt32(), "{0}: the degree and the coefficients", conformanceCase);
+        InequalitySolution solution = session.SolveInequality(coefficients, Relations[given.GetProperty("relation").GetString()!]);
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "solution":
+                    solution.Text.Should().Be(member.Value.GetString(), "{0}: the intervals", conformanceCase);
+                    break;
+                case "message":
+                    solution.Outcome.ToString().Should().Be(member.Value.GetString(), "{0}: the message", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunRatio(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        bool xInSecond = given.GetProperty("form").GetString() == "A:B=X:D";
+        Calculation calculation = session.SolveRatio(
+            xInSecond ? RatioForm.XInSecondRatio : RatioForm.XLastInSecondRatio,
+            Parse(given.GetProperty("A").GetString()!),
+            Parse(given.GetProperty("B").GetString()!),
+            Parse(given.GetProperty(xInSecond ? "D" : "C").GetString()!));
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "error":
+                    calculation.Error!.Value.Kind.ToString().Should().Be(member.Value.GetString(), "{0}: the error", conformanceCase);
+                    break;
+                case "X":
+                    calculation.Error.Should().BeNull("{0}: the ratio should solve", conformanceCase);
+                    calculation.Display.Text.Should().Be(member.Value.GetString(), "{0}: X", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunSpreadsheet(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        SpreadsheetGrid grid = new(session);
+        foreach (JsonProperty cell in given.GetProperty("cells").EnumerateObject())
+        {
+            CellAddress address = Cell(conformanceCase, cell.Name);
+            string input = cell.Value.GetString()!;
+            _ = input.StartsWith('=') ? grid.SetFormula(address, input[1..]) : grid.SetConstant(address, input);
+        }
+
+        if (given.TryGetProperty("operations", out JsonElement operations))
+        {
+            RunSheetOperations(conformanceCase, grid, operations);
+        }
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "values":
+                    foreach (JsonProperty value in member.Value.EnumerateObject())
+                    {
+                        SpreadsheetCell? cell = grid[Cell(conformanceCase, value.Name)];
+                        cell.Should().NotBeNull("{0}: {1} should have content", conformanceCase, value.Name);
+                        PallasEngine.Format(cell!.Value, session.Settings, session.Profile)!.Text
+                            .Should().Be(value.Value.GetString(), "{0}: the value of {1}", conformanceCase, value.Name);
+                    }
+
+                    break;
+                case "formulas":
+                    foreach (JsonProperty formula in member.Value.EnumerateObject())
+                    {
+                        grid[Cell(conformanceCase, formula.Name)]?.Text
+                            .Should().Be(formula.Value.GetString(), "{0}: the formula of {1}", conformanceCase, formula.Name);
+                    }
+
+                    break;
+                case "constants":
+                    foreach (JsonElement constant in member.Value.EnumerateArray())
+                    {
+                        grid[Cell(conformanceCase, constant.GetString()!)]?.IsFormula
+                            .Should().BeFalse("{0}: {1} holds a constant", conformanceCase, constant.GetString());
+                    }
+
+                    break;
+                case "error":
+                    grid.Cells.Should().Contain(cell => cell.Error!.Value.Kind.ToString() == member.Value.GetString(), "{0}: the error", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    /// <summary>The operations of a sheet case: "Copy B1", "Paste C3", "Fill Formula =2A1-3 B1:B3", "Fill Value B1×3 C1:C3".</summary>
+    private static void RunSheetOperations(ConformanceCase conformanceCase, SpreadsheetGrid grid, JsonElement operations)
+    {
+        CellAddress copied = default;
+        foreach (JsonElement operation in operations.EnumerateArray())
+        {
+            string[] words = operation.GetString()!.Split(' ');
+            switch (words[0])
+            {
+                case "Copy":
+                    copied = Cell(conformanceCase, words[1]);
+                    break;
+                case "Paste":
+                    grid.CopyPaste(copied, Cell(conformanceCase, words[1]));
+                    break;
+                case "Cut":
+                    copied = Cell(conformanceCase, words[1]);
+                    break;
+                case "Fill":
+                    string[] range = words[^1].Split(':');
+                    string input = string.Join(' ', words[2..^1]).TrimStart('=');
+                    _ = words[1] == "Formula"
+                        ? grid.Fill(input, Cell(conformanceCase, range[0]), Cell(conformanceCase, range[1]))
+                        : grid.FillValue(input, Cell(conformanceCase, range[0]), Cell(conformanceCase, range[1]));
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the operation '{operation.GetString()}'.");
+                    break;
+            }
+        }
+    }
+
+    private static void RunTable(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        // The table type names of the menu of p. 109.
+        JsonElement given = conformanceCase.Given!.Value;
+        TableType type = given.GetProperty("tableType").GetString() switch
+        {
+            "f(x)/g(x)" => TableType.FunctionsFAndG,
+            "f(x)" => TableType.FunctionF,
+            _ => TableType.FunctionG,
+        };
+
+        NumberTable table = NumberTable.Generate(
+            session,
+            type,
+            Parse(given.GetProperty("start").GetString()!),
+            Parse(given.GetProperty("end").GetString()!),
+            Parse(given.GetProperty("step").GetString()!));
+
+        foreach (JsonProperty member in conformanceCase.Expect!.Value.EnumerateObject())
+        {
+            switch (member.Name)
+            {
+                case "rows":
+                    string[][] rows = [.. table.Rows.Select(row => (string[])[.. new[] { row.X, row.F, row.G }.Where(cell => cell is not null).Select(cell => cell!.Display.Text)])];
+                    rows.Should().BeEquivalentTo(
+                        member.Value.EnumerateArray().Select(row => row.EnumerateArray().Select(cell => cell.GetString()!).ToArray()),
+                        options => options.WithStrictOrdering(),
+                        "{0}: the rows of the table", conformanceCase);
+                    break;
+                case "variables":
+                    foreach (JsonProperty variable in member.Value.EnumerateObject())
+                    {
+                        VariableText(session.GetVariable(Variable(variable.Name)), session)
+                            .Should().Be(variable.Value.GetString(), "{0}: variable {1}", conformanceCase, variable.Name);
+                    }
+
+                    break;
+                case "verify":
+                    foreach (JsonProperty answer in given.GetProperty("answers").EnumerateObject())
+                    {
+                        // "f(x) row 1": the column and the row, counted from 1 as the screen numbers them.
+                        string[] words = answer.Name.Split(' ');
+                        TableFunction function = words[0] == "f(x)" ? TableFunction.F : TableFunction.G;
+                        int row = int.Parse(words[^1], CultureInfo.InvariantCulture) - 1;
+                        table.Verify(row, function, answer.Value.GetString()!)
+                            .Should().Be(member.Value.GetString() == "True", "{0}: {1}", conformanceCase, answer.Name);
+                    }
+
+                    break;
+                case "error":
+                    table.Error!.Value.Kind.ToString().Should().Be(member.Value.GetString(), "{0}: the error", conformanceCase);
+                    break;
+                default:
+                    Assert.Fail($"{conformanceCase}: the runner does not know the expectation '{member.Name}'.");
+                    break;
+            }
+        }
+    }
+
+    private static CellAddress Cell(ConformanceCase conformanceCase, string name)
+    {
+        CellAddress.TryParse(name, out CellAddress address).Should().BeTrue("{0}: '{1}' is a cell", conformanceCase, name);
+        return address;
+    }
+
+    /// <summary>A root as the calculator writes it: the real part, then the imaginary part with its sign and i (p. 118).</summary>
+    private static string RootText(PolynomialRoot root)
+    {
+        if (root.IsReal)
+        {
+            return root.Real.Display.Text;
+        }
+
+        string imaginary = root.Imaginary!.Display.Text;
+        return root.Real.Display.Text + (imaginary.StartsWith('-') ? string.Empty : "+") + imaginary + "i";
+    }
+
+    private static StatisticsData StatisticsDataOf(ConformanceCase source)
+    {
+        JsonElement given = source.Given!.Value;
+        bool twoVariable = given.GetProperty("mode").GetString() == "2-Variable";
+        bool frequency = source.Settings.TryGetValue("frequency", out string? setting) && setting == "On";
+        Value[][] rows = [.. given.GetProperty("rows").EnumerateArray().Select(row => row.EnumerateArray().Select(value => Parse(value.GetString()!)).ToArray())];
+        int frequencyColumn = twoVariable ? 2 : 1;
+        rows.Should().OnlyContain(row => row.Length == frequencyColumn + (frequency ? 1 : 0), "{0}: every row has x{1}{2}", source, twoVariable ? ", y" : string.Empty, frequency ? " and Freq" : string.Empty);
+        return new StatisticsData(
+            rows.Select(row => row[0]),
+            twoVariable ? rows.Select(row => row[1]) : null,
+            frequency ? rows.Select(row => row[frequencyColumn]) : null);
     }
 
     private static void Check(ConformanceCase conformanceCase, CalculatorSession session, Calculation calculation, JsonElement expect)
@@ -152,6 +649,13 @@ internal static class ConformanceRunner
                 case "engShiftRight":
                     session.FormatEngineering(calculation, shift: -1).Should().Be(expected, because);
                     break;
+                case "matrix":
+                    // The display writes a matrix row by row, as [[3, 0], [1, 1]].
+                    session.Format(calculation)!.Text.Should().Be("[" + string.Join(", ", member.Value.EnumerateArray().Select(ListText)) + "]", because);
+                    break;
+                case "vector":
+                    session.Format(calculation)!.Text.Should().Be(ListText(member.Value), because);
+                    break;
                 default:
                     FormatTarget target = TargetOf(member.Name, because);
                     session.Format(calculation, target)?.Text.Should().Be(expected, because);
@@ -181,6 +685,25 @@ internal static class ConformanceRunner
         // Every value of a small range turns up; a large one is at least well spread.
         long count = (long)((high - low) / step) + 1;
         seen.Count.Should().BeGreaterThanOrEqualTo((int)Math.Min(count, PropertySamples / 4), "{0}: the values must vary", conformanceCase);
+    }
+
+    private static string ListText(JsonElement list) => "[" + string.Join(", ", list.EnumerateArray().Select(element => element.GetString())) + "]";
+
+    private static MatrixValue MatrixOf(JsonElement rows)
+    {
+        JsonElement[] list = [.. rows.EnumerateArray()];
+        int columns = list[0].GetArrayLength();
+        Value[,] entries = new Value[list.Length, columns];
+        for (int row = 0; row < list.Length; row++)
+        {
+            int column = 0;
+            foreach (JsonElement entry in list[row].EnumerateArray())
+            {
+                entries[row, column++] = Parse(entry.GetString()!);
+            }
+        }
+
+        return new MatrixValue(entries);
     }
 
     /// <summary>The variable list displays in Norm 1 (p. 38).</summary>
@@ -230,6 +753,9 @@ internal static class ConformanceRunner
                 "digitSeparator" => result with { DigitSeparator = value == "On" },
                 "baseMode" => result with { BaseMode = BaseModeOf(value) },
                 "verify" => result with { Verify = value == "On" },
+                "complexRoots" => result with { ComplexRoots = value == "On" },
+                // The statistics editor's frequency column, which StatisticsDataOf reads.
+                "frequency" => result,
                 _ => throw new InvalidOperationException($"The runner does not know the setting '{key}'."),
             };
         }

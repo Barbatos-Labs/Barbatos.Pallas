@@ -17,6 +17,11 @@ internal static class Operations
 {
     public static EvalResult Evaluate(Operation operation, ReadOnlySpan<Value> arguments, EvaluationContext context)
     {
+        if (CompositeMath.Handles(operation, arguments))
+        {
+            return CompositeMath.Evaluate(operation, arguments, context);
+        }
+
         return operation switch
         {
             Operation.Negate => ValueMath.Negate(arguments[0], context),
@@ -84,6 +89,10 @@ internal static class Operations
             Operation.AtomicWeight => AtomicWeight(arguments[0], context),
             Operation.IntegerPartSlope or Operation.LargestIntegerSlope => IntegerSlope(arguments[0]),
             Operation.RoundSlope => RoundSlope(arguments[0], context),
+            // P(t) = Φ(t), R(t) = 1 − Φ(t) and Q(t) = |Φ(t) − ½| (p. 91; assumption U4), with Φ(t) = erfc(−t/√2)/2.
+            Operation.NormalP => Real(arguments[0], context, static t => ErrorFunction.Erfc(-t / Math.Sqrt(2d)) / 2d),
+            Operation.NormalQ => Real(arguments[0], context, static t => ErrorFunction.Erf(Math.Abs(t) / Math.Sqrt(2d)) / 2d),
+            Operation.NormalR => Real(arguments[0], context, static t => ErrorFunction.Erfc(t / Math.Sqrt(2d)) / 2d),
             _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, "Not a built-in operation."),
         };
     }

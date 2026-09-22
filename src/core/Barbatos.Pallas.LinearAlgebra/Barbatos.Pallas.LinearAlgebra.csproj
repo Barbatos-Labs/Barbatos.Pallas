@@ -4,7 +4,7 @@
     <PackageId>Barbatos.Pallas.LinearAlgebra</PackageId>
     <RootNamespace>Barbatos.Pallas.LinearAlgebra</RootNamespace>
     <PackageTags>matrix;vector;linear-algebra;determinant;decimal</PackageTags>
-    <Description>Matrices and vectors for Barbatos.Pallas on decimal: determinants, inverses, dot and cross products, angles and unit vectors.</Description>
+    <Description>Exact linear algebra of decimal matrices for Barbatos.Pallas: determinants, inverses and linear systems by fraction-free elimination on BigInteger.</Description>
   </PropertyGroup>
 
   <ItemGroup>

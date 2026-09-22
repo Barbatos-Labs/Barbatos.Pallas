@@ -9,13 +9,15 @@ namespace Barbatos.Pallas.Conformance.Tests;
 /// Runs every conformance case against the engine.
 /// </summary>
 /// <remarks>
-/// A case runs once the engine of its application exists (Calculate, Complex and Base-N from Phase 3); the others are
+/// A case runs once the engine of its application exists (Calculate, Complex and Base-N from Phase 3, Matrix, Vector,
+/// Statistics, Distribution, Equation, Inequality and Ratio from Phase 4); the others are
 /// reported as skipped with the phase that implements them, never as passed. A case waiting for an oracle is skipped
 /// too, because it has nothing to check.
 /// </remarks>
 public sealed class CalculatorConformanceTests
 {
-    private static readonly HashSet<string> ImplementedApps = ["Calculate", "Complex", "BaseN"];
+    private static readonly HashSet<string> ImplementedApps =
+        ["Calculate", "Complex", "BaseN", "Matrix", "Vector", "Statistics", "Distribution", "Equation", "Inequality", "Ratio", "Spreadsheet", "Table"];
 
     public static TheoryData<string> CaseIds => [.. ConformanceCatalog.Cases.Select(conformanceCase => conformanceCase.Id)];
 

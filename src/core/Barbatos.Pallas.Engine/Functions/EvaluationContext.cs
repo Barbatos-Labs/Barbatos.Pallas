@@ -27,8 +27,10 @@ public sealed class EvaluationContext
         CalculatorProfile profile,
         EngineBudget budget,
         Random random,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Func<CellAddress, EvalResult>? cells = null)
     {
+        Cells = cells;
         Catalog = catalog;
         App = app;
         Settings = settings;
@@ -52,6 +54,9 @@ public sealed class EvaluationContext
 
     /// <summary>Gets the token that cancels the calculation.</summary>
     public CancellationToken CancellationToken { get; }
+
+    /// <summary>The cells of the Spreadsheet application, or <see langword="null"/> when no grid is attached.</summary>
+    internal Func<CellAddress, EvalResult>? Cells { get; }
 
     internal EngineCatalog Catalog { get; }
 

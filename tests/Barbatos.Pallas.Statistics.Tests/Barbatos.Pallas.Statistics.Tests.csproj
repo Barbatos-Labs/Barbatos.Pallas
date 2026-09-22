@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Statistics is checked against exact arithmetic, never against itself:
+      * the manual's data of pp. 83-86, whose sums and coefficients are known fractions;
+      * fits that satisfy their normal equations exactly, and variances equal to the two-pass definition;
+      * degenerate data: no values, one value, all x equal, fewer than three distinct x;
+      * quartile ranks against the manual's 1-Var Results screen (p. 84);
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Statistics\Barbatos.Pallas.Statistics.csproj" />
+  </ItemGroup>
+
+</Project>

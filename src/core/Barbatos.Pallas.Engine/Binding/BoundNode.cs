@@ -33,6 +33,18 @@ internal sealed class BoundMemory(MemorySlot slot, SourceSpan span) : BoundNode(
     public MemorySlot Slot { get; } = slot;
 }
 
+/// <summary>A statistic variable of the Statistics application, calculated from its data when the input runs.</summary>
+internal sealed class BoundStatistic(Statistic statistic, SourceSpan span) : BoundNode(span)
+{
+    public Statistic Statistic { get; } = statistic;
+}
+
+/// <summary>Cells of the Spreadsheet application: one cell, or a range through Min(, Max(, Mean( or Sum( (p. 105).</summary>
+internal sealed class BoundCells(CellSelection selection, SourceSpan span) : BoundNode(span)
+{
+    public CellSelection Selection { get; } = selection;
+}
+
 /// <summary>The variable of a Σ, Π, ∫ or d/dx body, or the x of f(x) and g(x).</summary>
 internal sealed class BoundLocal(int slot, SourceSpan span) : BoundNode(span)
 {
@@ -116,4 +128,14 @@ internal enum MemorySlot
     Z,
     Ans,
     PreAns,
+    MatA,
+    MatB,
+    MatC,
+    MatD,
+    MatAns,
+    VctA,
+    VctB,
+    VctC,
+    VctD,
+    VctAns,
 }

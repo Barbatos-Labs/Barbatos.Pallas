@@ -40,7 +40,7 @@ public sealed class Calculation
         Display = ResultFormatter.Format(this, settings, target: null) ?? new FormattedResult(string.Empty, string.Empty);
     }
 
-    /// <summary>Gets the input, in Canonical Linear Syntax.</summary>
+    /// <summary>Gets the input, in Canonical Linear Syntax; for a Distribution calculation, the name of its type, such as "Binomial CD".</summary>
     public string Input { get; }
 
     /// <summary>Gets the application the calculation ran in.</summary>
@@ -58,7 +58,7 @@ public sealed class Calculation
     /// <summary>Gets the result: the value, the quotient of ÷R, r of Pol(, x of Rec(, or 1 or 0 for Verify.</summary>
     public Value Result { get; }
 
-    /// <summary>Gets the second result: the remainder of ÷R, θ of Pol( or y of Rec(; otherwise <see langword="null"/>.</summary>
+    /// <summary>Gets the second result: the remainder of ÷R, θ of Pol(, y of Rec( or Left − Right of the Solver; otherwise <see langword="null"/>.</summary>
     public Value? Second { get; }
 
     /// <summary>Gets the Verify result; <see langword="null"/> for other calculations.</summary>

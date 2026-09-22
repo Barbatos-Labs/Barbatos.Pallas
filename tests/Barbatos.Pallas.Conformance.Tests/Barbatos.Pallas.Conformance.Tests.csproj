@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Expressions\Barbatos.Pallas.Expressions.csproj" />
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
   </ItemGroup>
 
 </Project>

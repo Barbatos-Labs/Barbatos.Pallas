@@ -48,7 +48,7 @@ jobs:
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
-          $expected = 21   # 7 test projects x 3 target frameworks
+          $expected = 33   # 11 test projects x 3 target frameworks
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
@@ -69,6 +69,22 @@ jobs:
       - name: Mutation testing (Engine)
         working-directory: tests/Barbatos.Pallas.Engine.Tests
         run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Engine
+
+      - name: Mutation testing (LinearAlgebra)
+        working-directory: tests/Barbatos.Pallas.LinearAlgebra.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/LinearAlgebra
+
+      - name: Mutation testing (Statistics)
+        working-directory: tests/Barbatos.Pallas.Statistics.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Statistics
+
+      - name: Mutation testing (Solvers)
+        working-directory: tests/Barbatos.Pallas.Solvers.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Solvers
+
+      - name: Mutation testing (Spreadsheet)
+        working-directory: tests/Barbatos.Pallas.Spreadsheet.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Spreadsheet
 
       # Data is only static initialization, whose mutants the MTP runner cannot switch; its tests check every value
       # against its defining relation instead.
@@ -136,6 +152,18 @@ jobs:
 
       - name: Engine tests
         run: dotnet test --project tests/Barbatos.Pallas.Engine.Tests --configuration Release
+
+      - name: LinearAlgebra tests
+        run: dotnet test --project tests/Barbatos.Pallas.LinearAlgebra.Tests --configuration Release
+
+      - name: Statistics tests
+        run: dotnet test --project tests/Barbatos.Pallas.Statistics.Tests --configuration Release
+
+      - name: Solvers tests
+        run: dotnet test --project tests/Barbatos.Pallas.Solvers.Tests --configuration Release
+
+      - name: Spreadsheet tests
+        run: dotnet test --project tests/Barbatos.Pallas.Spreadsheet.Tests --configuration Release
 
       - name: Data tests
         run: dotnet test --project tests/Barbatos.Pallas.Data.Tests --configuration Release

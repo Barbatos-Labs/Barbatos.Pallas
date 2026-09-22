@@ -3,8 +3,8 @@
   <PropertyGroup>
     <PackageId>Barbatos.Pallas.Statistics</PackageId>
     <RootNamespace>Barbatos.Pallas.Statistics</RootNamespace>
-    <PackageTags>statistics;regression;distribution;quartile;normal;binomial;poisson</PackageTags>
-    <Description>Statistics for Barbatos.Pallas: one- and two-variable summaries with decimal sums, quartiles, seven regression models with estimators, and binomial, normal and Poisson distributions.</Description>
+    <PackageTags>statistics;regression;least-squares;quartile;exact;biginteger</PackageTags>
+    <Description>Exact statistics of decimal data for Barbatos.Pallas: sums, means, variances, linear and quadratic least-squares fits and the correlation coefficient on BigInteger, and the ranks of the quartiles.</Description>
   </PropertyGroup>
 
   <ItemGroup>

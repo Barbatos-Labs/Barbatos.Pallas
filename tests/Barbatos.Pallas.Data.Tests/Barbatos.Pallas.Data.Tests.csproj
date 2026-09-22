@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+
+    <!-- The README shows the data sets in use, through an engine; ReadmeTests runs that example as written. -->
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
   </ItemGroup>
 
 </Project>

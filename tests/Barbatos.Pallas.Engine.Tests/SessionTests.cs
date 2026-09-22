@@ -189,8 +189,9 @@ public sealed class SessionTests
     {
         PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();
 
-        Action create = () => engine.CreateSession(CalculatorApp.Matrix);
-        Action switchApp = () => engine.CreateSession().SwitchApp(CalculatorApp.Statistics);
+        // Math Box is the last application without an engine; it arrives in Phase 6.
+        Action create = () => engine.CreateSession(CalculatorApp.MathBox);
+        Action switchApp = () => engine.CreateSession().SwitchApp(CalculatorApp.MathBox);
 
         create.Should().Throw<NotSupportedException>();
         switchApp.Should().Throw<NotSupportedException>();

@@ -84,8 +84,8 @@ A setting that is not listed has its initial value (manual p. 22).
   `mixedFraction`, `eng`, `sexagesimal`, `polar`, `rectangular`.
 - **Parsing:** `equivalentTo`, an expression that must parse to the same tree.
 - **State after evaluation:** `variables`, e.g. `{ "E": "2", "F": "1", "Ans": "2" }`.
-- **Verify and errors:** `verify` (`True`/`False`); `error` (a `CalcErrorKind` name); `message` (`NoRealRoots`,
-  `NoSolution`, `AllRealNumbers`).
+- **Verify and errors:** `verify` (`True`/`False`); `error` (a `CalcErrorKind` name); `message` (a `SolutionOutcome`
+  name: `NoRealRoots`, `NoSolution`, `InfiniteSolutions`, `AllRealNumbers`).
 - **Structured results:** `matrix`, `vector`, `roots`, `extremum`, `solution`, `rows`, `values`, `formulas`, and
   statistic names such as `Σx`, `σx`, `a`, `r`.
 - **Random functions** (`kind: property`): `range` and `step`.
@@ -120,12 +120,15 @@ relations allowed when the case sets `"verify": "On"`:
 
 These tests do not change a case's status: parsing an expression is not computing the calculator's result.
 
-**Engine runs (Phase 3).** `CalculatorConformanceTests` runs every case whose application has an engine - Calculate,
-Complex and Base-N since Phase 3 - through a `CalculatorSession` with the case's settings and profile
-(`ConformanceRunner`). Each expectation is checked: the display, the FORMAT conversions, the variables after the
-calculation, the Verify result, the error kind, and the range and step of a random function. An expectation the
-runner does not know fails the case, so nothing passes because part of it was ignored. Cases of the other
-applications are still reported as skipped with the phase that implements them.
+**Engine runs (Phases 3 and 4).** `CalculatorConformanceTests` runs every case whose application has an engine
+through a `CalculatorSession` with the case's settings and profile (`ConformanceRunner`). Each expectation is checked:
+the display, the FORMAT conversions, the variables after the calculation, the Verify result, the error kind, the rows
+of a table or a sheet, and the range and step of a random function. An expectation the runner does not know fails the
+case, so nothing passes because part of it was ignored.
+
+Since Phase 4 closed, every application but Math Box runs: Calculate, Complex and Base-N (Phase 3), then Matrix,
+Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and Table. The four Math Box cases are
+reported as skipped with Phase 6, which implements them.
 
 ## 5. How derived values were computed
 
@@ -168,14 +171,14 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 
 | # | Behavior | Working assumption | How to settle it |
 |---|---|---|---|
-| U1 | Quartiles Q1/Q3 with frequencies | Median of the lower and upper halves of the frequency-expanded data, excluding the median when n is odd (the convention of the same calculator series) | Formula pages 93-95 (images), or the manufacturer's official emulator |
+| U1 | Quartiles Q1/Q3 with frequencies | Median of the lower and upper halves of the frequency-expanded data, excluding the median when n is odd (the convention of the same calculator series). *Partly confirmed 18 Sep 2026:* the 1-Var Results screen of p. 84 shows Q1 = 4, Med = 6.5 and Q3 = 8 for the 20 values of Example 3, which this rule gives; pp. 93-95 give no quartile formula, and no example has an odd n. A single value is all three quartiles | The manufacturer's official emulator, for an odd n |
 | U2 | Associativity of `^` and `ˣ√` in linear input (`2^3^2`) | Left to right, by the general rule of p. 168: 64 | The manufacturer's official emulator |
 | U3 | Display rounding at an exact tie (`0.125` in Fix 2; negative ties) | Half away from zero | The manufacturer's official emulator |
-| U4 | Sign of `Q(t)` for t < 0 | `Q(t)` is the area between 0 and \|t\|, non-negative | Formula pages 93-95 |
-| U5 | Regression formulas (pp. 93-95 are images) | Least squares on linearized data: `ln x` (logarithmic, power), `ln y` (both exponential forms, power), `1/x` (inverse) | Visual check of pp. 93-95 |
+| U4 | Sign of `Q(t)` for t < 0 | `Q(t)` is the area between 0 and \|t\|, non-negative | The manufacturer's official emulator (the figure of p. 91 shows only t > 0, and pp. 93-95 have no distribution formulas) |
+| U5 | Regression formulas (pp. 93-95 are images) | *Resolved 18 Sep 2026 by reading pp. 93-95:* least squares on linearized data, as assumed: `ln x` (logarithmic, power), `ln y` (both exponential forms, power), `1/x` (inverse), with a and b of the exponential and power forms recovered through `exp`; the quadratic regression solves its normal equations; r is Pearson's coefficient of the linearized data | Done |
 | U6 | Verify of an irrational identity such as `(√2)² = 2` | `True` | The manufacturer's official emulator |
 | U7 | Exact display of cubic and quartic roots | Surd form only when the polynomial factors over Q into factors of degree ≤ 2 and the forms fit the display bounds; decimals otherwise | The manufacturer's official emulator |
-| U8 | Matrices of Examples 3-9 (p. 137, images) | Equal to the matrices entered in Examples 1-2 | Visual check of p. 137 |
+| U8 | Matrices of Examples 3-9 (p. 137, images) | *Resolved 18 Sep 2026 by reading p. 137:* MatA-MatD are printed there, and MatB is [[2, 3], [2, 1]], not the MatB of Example 1; `matrix-add-001` was corrected to it | Done |
 | U9 | Operator of the second Ans example (p. 37, key icons) | `789 − Ans` | Visual check of p. 37 |
 | U10 | Which relational operators may not combine in a Verify chain (p. 75 lists them in an image) | `≠` does not combine with `< > ≤ ≥`; the manual's example is `4<6≠8` | Visual check of p. 75, or the manufacturer's official emulator |
 | U11 | Stack size behind Stack ERROR (not stated in the manual) | 128 nested parentheses, functions or signs | The manufacturer's official emulator |
@@ -187,9 +190,16 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 | U17 | Which engineering symbol a result is displayed with (p. 64) | The one that leaves the mantissa in [1, 1000); outside f…E the result is displayed normally | The manufacturer's official emulator |
 | U18 | A result whose magnitude is below the calculation range, 10⁻⁹⁹ (p. 169) | It becomes 0, which the domain of xʸ (p. 171) implies by allowing y·log x down to −10¹⁰⁰. Both ends of the range are taken at ten significant digits: a result that displays as 1×10⁻⁹⁹ is in range, so a `double` one unit below 10⁻⁹⁹ is not lost | The manufacturer's official emulator |
 | U19 | The value of the scientific constant `t` (p. 66 lists it without a value) | The zero of the Celsius scale, 273.15 K | The manufacturer's official emulator |
+| U20 | Matrix and vector operations the manual does not list, and their errors (pp. 132-145, 163) | A matrix or vector may be divided by a number, entry by entry (the ÷ key is offered on the MatAns and VctAns screens); any other operation with operands it does not take (`MatA+1`, `1÷MatA`, `MatA^2`, `Det(2)`) is a Math ERROR; sizes that do not fit are a Dimension ERROR; an `Identity(` size outside 1-4 is an Argument ERROR | The manufacturer's official emulator |
+| U21 | How matrix and vector entries are displayed | As decimals in the number format, never as fractions or surds: the VctAns screen of p. 145 shows UnitV of (3, 4) as (0.6, 0.8) in MathI/MathO | Other screens of pp. 132-145 |
+| U22 | Which frequencies the Statistics editor takes (pp. 80-83 give no rule) | Any real number. A negative frequency makes every statistic a Math ERROR; a row with frequency 0 is left out, of the extremes and the quartiles too; a fraction weights the sums and means, and makes the quartiles a Math ERROR, because they count values (confirmed by the maintainer, 18 Sep 2026) | The manufacturer's official emulator |
+| U23 | How statistic and distribution results are displayed | As decimals in the number format, never as fractions or surds, when the input uses a statistic variable, an estimate, ▶t or P( Q( R(, and for every Distribution result: every screen of pp. 83-100 shows a decimal where MathI/MathO would give a fraction (x̄ = 5.95, not 119⌟20; a = 0.5043587805, not 10009⌟19845; a binomial 0.8125, not 13⌟16). Other calculations in Statistics display as in Calculate, and FORMAT still converts | Other Statistics Calc screens, or the manufacturer's official emulator |
+| U24 | The domains of the Distribution parameters the manual does not give (p. 98 gives 0 ≤ p ≤ 1, σ > 0, 0 ≤ Area ≤ 1) | x and N are whole numbers with 0 ≤ x ≤ N; Poisson's x is a whole number of 0 or more and λ > 0; Lower ≤ Upper; Area 0 and 1 give an infinite x, which is a Math ERROR. A value outside is a Math ERROR of that calculation, "ERROR" in its row of a list (p. 97). A binomial whose fraction has too many digits for the budget is a Time Out (p. 165 lists Time Out for Distribution) | The manufacturer's official emulator |
+| U25 | What the Equation and Inequality applications do where the manual only shows a screen (pp. 114-125) | The roots of a polynomial come by decreasing real part, a conjugate pair with the positive imaginary part first, and a repeated root as often as it is a root; a leading coefficient of 0 is a Math ERROR, because the degree is the one the application asked for; Complex Roots off leaves the real roots, and none of them is "No Real Roots"; a cubic has its two extrema by increasing x, and a double root of the derivative is "No Local Max/Min"; the solution of a system stays in the result, and only the Solver stores what it found, in the variable it solved for; the Solver settles when a step no longer reaches the digits the solution is held to, and reports Cannot Solve after 200 steps; an inequality satisfied only at a root is written `x=1` | The manufacturer's official emulator |
+| U26 | What the Spreadsheet and Table applications do where the manual only shows a screen (pp. 100-113) | An empty cell reads as 0, and every cell of a range counts in Mean; a cell displays its value with the settings in effect, so MathI/MathO shows a fraction where the calculator's screens show whole numbers; a range may be written either way round (`Sum(A3:A1)`); a cell in error carries its error to the cells that read it; the sheet holds 1,700 bytes, an input 49, and more is a Memory ERROR; a table steps through decimals, so a Start, End or Step that is no decimal is a Range ERROR, as are a step of 0 and one that leads away from the end; generating a table leaves Ans and the history alone, as entering a cell does | The manufacturer's official emulator |
 
-Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3), U11-U13 and U18 by the
-engine, U14-U17 by the formatter.
+Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3), U1, U4, U11-U13, U18, U20, U22,
+U24, U25 and U26 by the engine and the applications, U14-U17, U21 and U23 by the formatter.
 
 ## 7. Deliberate deviations from the calculator
 

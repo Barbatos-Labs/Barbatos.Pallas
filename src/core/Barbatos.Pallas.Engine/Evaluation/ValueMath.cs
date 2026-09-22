@@ -3,6 +3,7 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
+using System.Globalization;
 using System.Numerics;
 using Barbatos.Pallas.Expressions;
 using Barbatos.Pallas.Numerics;
@@ -420,6 +421,63 @@ internal static class ValueMath
         }
 
         return imaginary.Value.IsZero ? real : Value.CreateComplex(real.Value.ToDouble(), imaginary.Value.ToDouble());
+    }
+
+    /// <summary>Makes a real value from an exact fraction of integers with a positive denominator, rounding once.</summary>
+    /// <remarks>
+    /// .NET divides no <see cref="BigInteger"/> into a <see cref="decimal"/>. The quotient is taken at the most decimal
+    /// places a <see cref="decimal"/> of its magnitude holds, and rounded half away from zero, so an exact determinant or
+    /// inverse entry is rounded at its 28th digit at most, like any <see cref="decimal"/> quotient. Below 10⁻¹⁴ or beyond
+    /// <see cref="decimal"/>, the precision rule makes it a <see cref="double"/>, from the same fraction. The fractions
+    /// come from <c>ExactLinearAlgebra</c>, whose denominators are positive.
+    /// </remarks>
+    public static EvalResult FromRatio(BigInteger numerator, BigInteger denominator, bool isExact, EvaluationContext context)
+    {
+        if (numerator.IsZero)
+        {
+            return Value.FromDecimal(0m, isExact, form: null);
+        }
+
+        // The most decimal places a decimal of this magnitude holds: 28 − ⌊log₁₀|v|⌋, or one less. The estimate starts one place
+        // higher, so that the rounding of the logarithms can only cost a division, never a digit: a fraction of a long
+        // binomial or statistics sum is then divided once or twice instead of up to 29 times.
+        BigInteger largest = new(decimal.MaxValue);
+        int magnitude = (int)Math.Floor(BigInteger.Log10(BigInteger.Abs(numerator)) - BigInteger.Log10(denominator));
+        for (int scale = Math.Min(28, 29 - magnitude); scale >= 0; scale--)
+        {
+            BigInteger quotient = BigInteger.DivRem(numerator * BigInteger.Pow(10, scale), denominator, out BigInteger remainder);
+            if (BigInteger.Abs(remainder) * 2 >= denominator)
+            {
+                quotient += numerator.Sign;
+            }
+
+            if (BigInteger.Abs(quotient) <= largest)
+            {
+                decimal value = (decimal)quotient / DecimalDigits.PowerOfTen(scale);
+                return Math.Abs(value) >= Value.SmallestPreciseDecimal
+                    ? Value.FromDecimal(value, isExact, form: null)
+                    : Real(RatioToDouble(numerator, denominator), null, context);
+            }
+        }
+
+        return Real(RatioToDouble(numerator, denominator), null, context);
+    }
+
+    /// <summary>
+    /// Returns the <see cref="double"/> nearest a fraction of integers with a positive denominator, from 18 significant
+    /// digits of it.
+    /// </summary>
+    public static double RatioToDouble(BigInteger numerator, BigInteger denominator)
+    {
+        if (numerator.IsZero)
+        {
+            return 0d;
+        }
+
+        // 18 digits before the point: numerator·10^shift / denominator, with the power of ten on whichever side keeps it whole.
+        int shift = 17 - (int)Math.Floor(BigInteger.Log10(BigInteger.Abs(numerator)) - BigInteger.Log10(denominator));
+        BigInteger quotient = numerator * BigInteger.Pow(10, Math.Max(shift, 0)) / (denominator * BigInteger.Pow(10, Math.Max(-shift, 0)));
+        return double.Parse(string.Create(CultureInfo.InvariantCulture, $"{quotient}E{-shift}"), NumberStyles.Float, CultureInfo.InvariantCulture);
     }
 
     public static EvalResult FromBigInteger(BigInteger integer, bool isExact, EvaluationContext context)

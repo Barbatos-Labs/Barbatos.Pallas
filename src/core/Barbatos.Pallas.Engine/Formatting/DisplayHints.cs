@@ -20,6 +20,12 @@ internal enum DisplayHints
 
     /// <summary>The input is a sum or difference of degrees-minutes-seconds: the result is displayed in them too.</summary>
     Sexagesimal = 2,
+
+    /// <summary>
+    /// A statistic or distribution result - the input uses a statistic, an estimate, ▶t or P(, Q(, R(, or the result is a
+    /// Distribution calculation: it is displayed as a decimal (assumption U23).
+    /// </summary>
+    DecimalResult = 4,
 }
 
 /// <summary>Reads <see cref="DisplayHints"/> from a syntax tree.</summary>
@@ -28,7 +34,24 @@ internal static class DisplayHintReader
     public static DisplayHints Read(SyntaxNode root)
     {
         return (ContainsFraction(root) ? DisplayHints.FractionInput : DisplayHints.None)
-            | (IsSexagesimalSum(root) ? DisplayHints.Sexagesimal : DisplayHints.None);
+            | (IsSexagesimalSum(root) ? DisplayHints.Sexagesimal : DisplayHints.None)
+            | (UsesStatistics(root) ? DisplayHints.DecimalResult : DisplayHints.None);
+    }
+
+    private static bool UsesStatistics(SyntaxNode node)
+    {
+        return node switch
+        {
+            NameReference name => name.Symbol.Kind == SymbolKind.StatisticsVariable,
+            PostfixExpression postfix => postfix.Operator is PostfixOperator.StandardizedVariate or PostfixOperator.EstimateX
+                or PostfixOperator.EstimateY or PostfixOperator.EstimateX1 or PostfixOperator.EstimateX2 || UsesStatistics(postfix.Operand),
+            FunctionCall call => call.Function.Text is "P(" or "Q(" or "R(" || call.Arguments.Any(UsesStatistics),
+            BinaryExpression binary => UsesStatistics(binary.Left) || UsesStatistics(binary.Right),
+            NegationExpression negation => UsesStatistics(negation.Operand),
+            ParenthesizedExpression parenthesized => UsesStatistics(parenthesized.Inner),
+            SuffixCommandExpression suffix => UsesStatistics(suffix.Operand),
+            _ => false,
+        };
     }
 
     private static bool ContainsFraction(SyntaxNode node)

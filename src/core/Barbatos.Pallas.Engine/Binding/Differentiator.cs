@@ -47,7 +47,7 @@ internal sealed class Differentiator
         {
             case BoundLocal local:
                 return local.Slot == slot ? Constant(1m, span) : Constant(0m, span);
-            case BoundConstant or BoundMemory:
+            case BoundConstant or BoundMemory or BoundStatistic or BoundCells:
                 return Constant(0m, span);
             case BoundFailure:
                 return node;

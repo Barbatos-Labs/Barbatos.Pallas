@@ -18,6 +18,7 @@ internal sealed class Compiler
 {
     private readonly List<Segment?> _segments = [];
     private readonly List<Value> _constants = [];
+    private readonly List<CellSelection> _cells = [];
     private readonly List<IMathFunction> _plugins = [];
 
     private Compiler()
@@ -37,7 +38,13 @@ internal sealed class Compiler
             compiler._segments[i] = compiler.CompileSegment(statement.Operands[i]);
         }
 
-        return new CompiledProgram(statement, [.. compiler._segments.Select(segment => segment!)], [.. compiler._constants], [.. compiler._plugins], slotCount);
+        return new CompiledProgram(
+            statement,
+            [.. compiler._segments.Select(segment => segment!)],
+            [.. compiler._constants],
+            [.. compiler._cells],
+            [.. compiler._plugins],
+            slotCount);
     }
 
     private Segment CompileSegment(BoundNode node)
@@ -66,6 +73,15 @@ internal sealed class Compiler
                 break;
             case BoundMemory memory:
                 code.Add(new Instruction(OpCode.Load, (int)memory.Slot, 0, 0, 0, node.Span));
+                Push(ref depth, ref maxStack);
+                break;
+            case BoundStatistic statistic:
+                code.Add(new Instruction(OpCode.LoadStatistic, (int)statistic.Statistic, 0, 0, 0, node.Span));
+                Push(ref depth, ref maxStack);
+                break;
+            case BoundCells cells:
+                _cells.Add(cells.Selection);
+                code.Add(new Instruction(OpCode.LoadCell, _cells.Count - 1, 0, 0, 0, node.Span));
                 Push(ref depth, ref maxStack);
                 break;
             case BoundLocal local:

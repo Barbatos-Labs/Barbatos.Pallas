@@ -24,4 +24,7 @@ public enum CalculationKind
 
     /// <summary>Rec(: x and y (p. 62).</summary>
     Rectangular = 4,
+
+    /// <summary>A Solver result: the solution, with Left − Right in <see cref="Calculation.Second"/> (p. 121).</summary>
+    Solution = 5,
 }

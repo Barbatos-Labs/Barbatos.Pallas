@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Spreadsheet is checked against the worked examples of the manual and against exact arithmetic:
+      * constants fixed when entered, formulas calculated again, and what a paste does to each kind of reference;
+      * ranges (Min, Max, Mean, Sum), circular references, Auto Calc and the byte capacity of the sheet;
+      * number tables against the values of f(x) and g(x), their row limits and Verify;
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
+  </ItemGroup>
+
+</Project>

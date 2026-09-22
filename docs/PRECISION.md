@@ -62,7 +62,7 @@ for `System.Int64` and `float` for `System.Single`: the same types under two nam
 |---|---|---|
 | `decimal` | **The calculator's number**: input, + − × ÷, %, fractions, sexagesimal values, statistics sums, unit factors, results | Base 10, so decimal input is exact; 28-29 significant digits, more than the reference calculator's 23 internal digits |
 | `double` | sin, cos, tan and their inverses, sinh…, exp, ln, log, √, ˣ√, powers with non-integer exponents; values `decimal` cannot hold precisely | `decimal` has no transcendental functions; `double` spans ±1.8×10³⁰⁸ |
-| `BigInteger` | `x!`, nPr, nCr, GCD, LCM, prime factorization | Exact at any size: `28!` already overflows `decimal`, the calculator goes to `69!` |
+| `BigInteger` | `x!`, nPr, nCr, GCD, LCM, prime factorization; exact elimination of matrices and exact statistics sums and fits, on `decimal` values scaled to integers | Exact at any size: `28!` already overflows `decimal`, the calculator goes to `69!`; and sums cannot cancel |
 | `int` | Base-N | The reference calculator's Base-N is 32-bit |
 | `System.Numerics.Complex` | Complex mode | Built on `double` |
 
@@ -237,6 +237,13 @@ reason.
   cannot keep to 15 significant digits, and integrates numerically. Graphing's screen coordinates get an entry in
   Phase 6.
 - `Barbatos.Pallas.Data` needs none: a published value is a `decimal` mantissa and a power of ten (`ScaledDecimal`).
+- `Barbatos.Pallas.LinearAlgebra` and `Barbatos.Pallas.Statistics` need none: they work on `decimal` values scaled to
+  integers. The Phase 4 plan allowed `double` in Statistics; it was not needed, because square roots, logarithms and
+  the normal distribution are computed in the engine and in Numerics (decisions of 18 Sep 2026).
+- `Barbatos.Pallas.Solvers`, in `PolynomialRoots` only: the roots of a polynomial of degree 3 or more have no closed
+  form a calculator can display, so they are iterated in `double` and `System.Numerics.Complex` (Aberth). A root that
+  is rational is recovered from the iteration exactly, and `IntegerPolynomial` - the sign at a rational point, the
+  number of real roots, division by a root - stays on `BigInteger` (decision of 22 Sep 2026).
 - `float`, `Half` and `MathF` stay banned everywhere.
 - Adding an entry needs the same review as changing this document.
 
@@ -250,15 +257,31 @@ The engine for each domain is designed in its phase. These are the rules it star
 - Chains through transcendental functions accumulate about 10⁻¹⁵ relative per step. The calculator accumulates
   error at the 10th digit (p. 169).
 
-**Matrices** (Phase 4).
-- Entries are `decimal`, computed by elimination.
-- A determinant of exactly 0 can come out as about 10⁻²⁷ after decimal division. The singularity test compares
-  against the entries' magnitude; its threshold is decided and documented in Phase 4.
+**Matrices and vectors** (Phase 4).
+- Entries are `Value`s: sums and products go through `ValueMath`, so each entry follows the precision rule and keeps
+  its exact form (`√2` squared is exactly 2 inside a matrix too).
+- A determinant of exactly 0 comes out as about 10⁻²⁷ after elimination in `decimal`, and no threshold can tell that
+  from a small nonzero one. A matrix of `decimal` entries is therefore eliminated exactly: each row is scaled to
+  integers and eliminated without fractions (Bareiss) on `BigInteger` (`ExactLinearAlgebra`), and the determinant
+  and inverse are rounded once. An exact matrix is singular only when its determinant is exactly 0.
+- A matrix with an approximate entry is singular when its determinant is within 10⁻¹³ of the Hadamard bound (the
+  product of the rows' lengths): the tolerance values compare with (§9). `[[√2, 2], [1, √2]]` has a determinant of
+  about 3×10⁻¹⁵ from its 15-digit entries; it is 0 and the matrix has no inverse.
+- A matrix with an entry held as `double` is eliminated in `double` with partial pivoting.
+- A vector's length is `ValueMath.SquareRoot` of its dot product, so |(3, 4)| is exactly 5 and |(1, 1)| is √2 with its
+  form; the angle is `cos⁻¹` of the cosine, which rounding may put a little outside [−1, 1] and is then clamped.
 
 **Statistics** (Phase 4).
-- Sums (Σx, Σx², Σxy…), means and variances are `decimal`: exact sums of decimal data.
-- σ, s and r use `Math.Sqrt`.
-- Regression transforms (`ln`, `exp`) use `double`.
+- Sums (Σx to Σx⁴, Σy, Σy², Σxy, Σx²y), means, variances and the coefficients of the linear and quadratic regressions
+  are exact: each column is scaled to integers once and summed on `BigInteger` (`ExactSample`), and each result is
+  rounded once (`ValueMath.FromRatio`). The one-pass formulas of the manual cancel in `decimal`: Sxx of equal
+  20-digit values comes out as about 10⁻²⁷ instead of 0, and a vertical line gets a slope instead of a Math ERROR. A
+  value held as `double` enters as its shortest round-trip decimal, the digits it was entered with.
+- σ, s and r are square roots of exact values (`ValueMath.SquareRoot`); r² itself is exact.
+- The logarithmic, exponential, power and inverse regressions fit a line to ln x, ln y or 1/x (pp. 94-95), whose values
+  follow the precision rule, and recover a and b through exp.
+- A frequency is a weight: a negative one is a Math ERROR, 0 leaves the row out, and the quartiles need whole
+  frequencies (assumption U22). A statistic result is displayed as a decimal (U23).
 
 **Calculus.**
 - `Σ` and `Π` evaluate in `decimal` while the terms are decimal, so `Σ(1⌟x,1,4)` is exactly 25⌟12.
@@ -273,14 +296,59 @@ The engine for each domain is designed in its phase. These are the rules it star
   Time Out (decision of 18 Sep 2026). Every integral of a calculation reports its estimate in
   `Calculation.Integrals` (I7).
 
-**Solvers** (Phase 4).
-- Quadratic discriminants are `decimal`, so a root such as `−1 ± √3` is recognized from an exact discriminant.
-- Cubics, quartics and the Newton Solver run on `double`.
+**Equation, Inequality and Ratio** (Phase 4).
+- A system of linear equations is exact: each row is scaled into integers, which leaves the solution where it is, and
+  eliminated without fractions, so a solution such as 1/2 is a fraction and not 0.4999999999999999999999999999. A
+  singular system has infinitely many solutions when its constants do not raise the rank (`ExactLinearAlgebra.Rank`),
+  and none otherwise.
+- A polynomial is scaled into integer coefficients the same way. Its rational roots are recovered exactly - the
+  continued fraction of an iterated root proposes them, `IntegerPolynomial.SignAt` confirms them - and divided out, so
+  a cubic or a quartic that factors over the rationals keeps the exact roots of the quadratic that is left, with its
+  display form: `-1+√(3)`, `-3⌟4+√(23)⌟4i`. Only a cubic or a quartic with no rational root is iterated, and how many
+  of its roots are real is decided exactly by Sturm's theorem, never by a tolerance on the imaginary part.
+- A repeated root is kept: after the rational roots, a repeated factor can only be the square of a quadratic, which is
+  solved exactly and counted twice.
+- The extremum of a quadratic or a cubic is the polynomial evaluated at a root of its derivative, both of them exact
+  where the coefficients are.
+- An inequality is the sign of the polynomial at a rational point of each stretch between its real roots
+  (`IntegerPolynomial.SignAt`), which is exact: no sampled sign can be off, however close two roots are.
+- The Solver is Newton's method on Left − Right, with the slope from a central difference over |x|·10⁻¹⁰, all in
+  `Value` arithmetic: an equation whose solution is a decimal lands on it exactly, and `x² − B² = 0` with B = 4 gives
+  Left − Right of exactly 0. Once the steps fall below 10⁻¹⁴ the precision rule continues them in `double`, so a
+  solution that is no decimal, such as √2, is as accurate as `double` - past the ten digits displayed.
+
+**Spreadsheet and Table** (Phase 4).
+- A constant is calculated once and keeps that value, as on the calculator; only a constant typed with 11 or more
+  significant digits is converted, to the ten the calculator stores (p. 101).
+- A formula is calculated through the same engine as any other input, so a cell holds a `Value` with its precision and
+  its exact form: A1 = 1÷3 and B1 = A1×3 is exactly 1, not 0.9999999999.
+- A range (`Sum`, `Mean`, `Min`, `Max`) adds and divides through `ValueMath`, and every cell of it counts against the
+  budget: a range of a large sheet is a Time Out, never a hang.
+- A number table steps in `decimal` and takes every x as start + row·step, so a step of 0.1 does not drift: the row
+  after ten steps from 0 is exactly 1.
 
 **Distributions** (Phase 4).
-- Binomial coefficients are `BigInteger`.
-- The normal distribution needs erf, which `System.Math` lacks. Its implementation is tested against PeterO.Numbers
-  like the other functions (§12).
+- A binomial probability of a decimal p = m/10^s is a fraction: Σ C(N, k)·m^k·(10^s − m)^(N−k)/10^(sN), summed on
+  `BigInteger` and rounded once, so 0.8125 is exactly 13/16. Its size is about N·(s + 1) digits and the work grows as
+  its square, counted against the budget before it starts: a binomial beyond the budget is Time Out (p. 165), never a
+  rounded guess. N = 1,000 with p = 0.5 takes milliseconds; N = 10⁶ is a Time Out.
+- The Poisson probability is Loader's saddle-point form (`PoissonDistribution` in Numerics), which avoids the
+  cancellation of exp(x·ln λ − λ − ln x!): a relative error below 10⁻¹⁵·(1 + |ln P|) against 50-digit references.
+  Poisson CD adds the terms from x towards the side where they vanish, stopping when a geometric bound on the rest is
+  below 10⁻¹⁷ of the sum, and takes the complement above the mean; each term counts against the budget.
+- Normal PD takes e^(−z²/2) with z²/2 in `decimal` split into its whole part and fraction, so that exp does not
+  carry the rounding of a large exponent: e^(−453.005)/√(2π) is within 2×10⁻¹⁵ (Extended), where exp of 453.005
+  rounded to double would be 5×10⁻¹⁴ off. Normal CD subtracts the two
+  tails on the side where they are small, so that Φ(11) − Φ(10) = 7.6×10⁻²⁴ keeps its digits instead of becoming 0.
+  Inverse Normal is μ + σ·(−√2·erfc⁻¹(2·Area)).
+- The normal distribution is the complementary error function, which .NET lacks: `ErrorFunction` in Numerics. erf is
+  its Maclaurin series below 1; erfc is the continued fraction of Γ(½, x²) above, evaluated backward (forward, Lentz's
+  method was measured 6.5×10⁻¹⁵ off near 1), with e^(−x²) split so that x² is exact. Both agree with 50-digit
+  PeterO.Numbers references within 2×10⁻¹⁵ relative wherever erfc is a normal `double` (ErrorFunctionTests).
+- P(t) = erfc(−t/√2)/2, Q(t) = erf(|t|/√2)/2 and R(t) = erfc(t/√2)/2. The division by √2 is rounded, which moves the
+  result by about 2x²·2⁻⁵³ relative with x = t/√2: 1.4×10⁻¹⁴ at t = −8, invisible at 10 digits.
+- The inverse of erfc, for Inverse Normal, is Newton's method on ln erfc from x = √(−ln y), which decreases to the root
+  without overshooting because ln erfc is concave.
 
 **Spreadsheet.** Cells hold calculator values; recalculation runs in a deterministic topological order.
 
@@ -335,6 +403,8 @@ One engine, two presentations. A profile changes limits and formatting, never ho
 |---|---|---|
 | Display | 10 digits, Norm 1/2, Fix 0-9, Sci 1-10 | Up to 15 significant digits |
 | Limits | pp. 169-171: \|x\| < 10¹⁰⁰, `x! ≤ 69`, 4×4 matrices, 32-bit Base-N, A1:E45 | The range of `double` (±1.8×10³⁰⁸); `BigInteger` for integer functions |
+| Application limits | 4×4 matrices, 2- and 3-dimensional vectors, 160/80/53 statistics rows, a Distribution list of 45, a sheet of A1:E45 and 1,700 bytes, tables of 45 or 30 rows | 64×64 matrices, 64-dimensional vectors, 10,000 statistics rows, a Distribution list of 10,000, a sheet of A1:E99 with no byte limit, tables of 10,000 rows |
+| Equation and Inequality | 2 to 4 unknowns, degree 2 to 4 | The same: the calculator names four unknowns, and the exact factoring is designed for those degrees |
 | Fraction, surd and π forms | The calculator's display bounds | Wider bounds |
 | `2036162` → Prime Factor | `2 × (1018081)` | `2 × 1009²` |
 | Used by | The conformance suite; users who want "exactly like the calculator" | Engineering and accounting work |

@@ -25,17 +25,17 @@ The PDF itself is the manufacturer's copyrighted work. It stays out of the repos
 | Application | Functions | Reference calculator limits | Pages |
 |---|---|---|---|
 | Calculate | Arithmetic, fractions, functions, CALC, f(x)/g(x), Verify, history, FORMAT | 10 display digits, 23 internal | 28-76 |
-| Statistics | 1-Variable (x, Freq), 2-Variable (x, y, Freq); sort; 1-Var/2-Var/Reg Results; Statistics Calc; seven regressions; x̂, ŷ, x̂₁, x̂₂; Norm Dist P( Q( R( ▶t | 160 / 80 / 53 rows for 1 / 2 / 3 columns | 79-95 |
-| Distribution | Binomial PD/CD, Normal PD/CD, Inverse Normal (left tail), Poisson PD/CD; List or Variable input | List ≤ 45 items; 6 significant digits | 95-100 |
-| Spreadsheet | Constants and `=` formulas; relative/absolute references (`$A1`, `A$1`, `$A$1`); Grab; Cut & Paste (references unchanged); Copy & Paste (relative references move); Min( Max( Mean( Sum( over ranges; Fill Formula; Fill Value; Auto Calc; Show Cell (Formula/Value); Recalculate | A1:E45; 49 bytes per cell; 1,700 bytes total; constants rounded to 10 significant digits | 100-107 |
-| Table | Number table of f(x) and/or g(x) from Start, End, Step; edit x cells; ± step entry; Recalculate; Verify of f/g values | 45 rows (one function) / 30 rows (two) | 108-113 |
-| Equation | Simultaneous linear equations, 2-4 unknowns; polynomials of degree 2-4 with local min/max (degree 2 and 3; "No Local Max/Min"); Complex Roots On/Off ("No Real Roots"); Solver (Newton, initial value, shows Left − Right, Continue/Exit) | Solver returns one root | 114-124 |
-| Inequality | Degree 2-4 with `> < ≥ ≤`; "No Solution", "All Real Numbers" | | 124-125 |
+| Statistics | 1-Variable (x, Freq), 2-Variable (x, y, Freq); sort; 1-Var/2-Var/Reg Results; Statistics Calc; seven regressions; x̂, ŷ, x̂₁, x̂₂; Norm Dist P( Q( R( ▶t. In Pallas: `StatisticsData` and `CalculatorSession.Regression`, with the statistic variables as names in the input; the Results screens are those names | 160 / 80 / 53 rows for 1 / 2 / 3 columns (Extended: 10,000) | 79-95 |
+| Distribution | Binomial PD/CD, Normal PD/CD, Inverse Normal (left tail), Poisson PD/CD; List or Variable input. In Pallas: `CalculatorSession.CalculateDistribution` with `DistributionKind` and `DistributionParameters`; binomial exact, the others to the digits of `double` | List ≤ 45 items (Extended: 10,000); the calculator promises 6 significant digits | 95-100 |
+| Spreadsheet | Constants and `=` formulas; relative/absolute references (`$A1`, `A$1`, `$A$1`); Grab; Cut & Paste (references unchanged); Copy & Paste (relative references move); Min( Max( Mean( Sum( over ranges; Fill Formula; Fill Value; Auto Calc; Show Cell (Formula/Value); Recalculate. In Pallas: `SpreadsheetGrid` and `SpreadsheetCell` (Barbatos.Pallas.Spreadsheet), whose formulas the engine calculates through `CalculatorSession.CellValues`; Show Cell is the application's, which has both the formula and the value | A1:E45; 49 bytes per cell; 1,700 bytes total; constants rounded to 10 significant digits | 100-107 |
+| Table | Number table of f(x) and/or g(x) from Start, End, Step; edit x cells; ± step entry; Recalculate; Verify of f/g values. In Pallas: `NumberTable` with `TableType`, whose rows are calculations of the session; ± step entry is the application adding or subtracting Step from the row above | 45 rows (one function) / 30 rows (two) | 108-113 |
+| Equation | Simultaneous linear equations, 2-4 unknowns; polynomials of degree 2-4 with local min/max (degree 2 and 3; "No Local Max/Min"); Complex Roots On/Off ("No Real Roots"); Solver (Newton, initial value, shows Left − Right, Continue/Exit). In Pallas: `CalculatorSession.SolveSimultaneous`, `SolvePolynomial` and `SolveEquation`, with `SimultaneousSolution`, `PolynomialSolution` and `CalculationKind.Solution`; the roots keep their exact form wherever the polynomial factors over the rationals | Solver returns one root | 114-124 |
+| Inequality | Degree 2-4 with `> < ≥ ≤`; "No Solution", "All Real Numbers". In Pallas: `CalculatorSession.SolveInequality` with `InequalitySolution`, whose intervals carry both the bounds and the text the calculator writes | | 124-125 |
 | Complex | `a+bi` and `r∠θ` input; arithmetic; Conjugate, Absolute Value, Argument, Real Part, Imaginary Part; rectangular/polar display | θ in (−180°, 180°]; `(a+bi)ⁿ` needs \|n\| < 10¹⁰ | 125-129 |
 | Base-N | Decimal/Hexadecimal/Binary/Octal modes; prefixes d h b o; Neg, Not, and, or, xor, xnor | 32-bit two's complement; fractional parts dropped | 129-132 |
 | Matrix | MatA-MatD, MatAns; `+ − ×`, scalar product, ², ³, ⁻¹, Det, Trn, Identity(n), Abs (element-wise) | Up to 4×4 | 132-139 |
 | Vector | VctA-VctD, VctAns; `+ − ×`, scalar product, dot, cross, Angle, Unit Vector, Abs | 2 or 3 dimensions | 139-145 |
-| Ratio | `A:B = X:D`, `A:B = C:X` | A zero coefficient is a Math ERROR | 145-146 |
+| Ratio | `A:B = X:D`, `A:B = C:X`. In Pallas: `CalculatorSession.SolveRatio` with `RatioForm`; the result goes to Ans | A zero coefficient is a Math ERROR | 145-146 |
 | Math Box | Dice Roll and Coin Toss (1-3 dice/coins, 1-250 attempts, List/Relative Freq, "Same Result" #1-#3 seeds); Number Line (three axes, nine forms `x<a` … `a≤x≤b`, View-Window); Circle (Unit Circle, Half Circle, Clock) | Number-line bounds ±10¹⁰ | 146-161 |
 
 Verify is available in Calculate, Table, Equation and Complex (p. 73).
@@ -175,11 +175,12 @@ marked *planned* are designed in their phase and may change.
 | Integer functions (`!`, nPr, nCr, GCD, LCM) | `x! ≤ 69` | `BigInteger`, exact at any size |
 | d/dx | Numerical, with tolerance | The bound tree is differentiated and the derivative evaluated like any expression: exact where the operations are, Math ERROR where there is no derivative |
 | ∫ | Gauss-Kronrod with tolerance | Adaptive Gauss-Kronrod 7/15 on `double`, with the error estimate reported |
-| Solver | Newton; one root; may miss | *Planned:* Newton on `double` |
-| Polynomials 2-4 | Approximate | *Planned:* quadratic discriminant in `decimal` (exact surd roots); cubic and quartic on `double` |
+| Solver | Newton; one root; may miss | Newton on `Value` arithmetic, with the slope from a central difference: exact where the solution is a decimal, and as accurate as `double` where it is not |
+| Polynomials 2-4 | Approximate | Exact rational roots and exact quadratic factors (surds and complex surds); a cubic or quartic with no rational root by Aberth on `Complex`, with its real roots counted by Sturm |
+| Spreadsheet | 1,700 bytes; recalculated as needed | Cells calculated where they stand, each once per pass, with a Circular ERROR for a cell that is asked for while it is being calculated |
 | Prime factorization | ≤ 10 digits; large factors left unfactored | Trial division on `long` (the `Standard` profile reproduces the calculator's display) |
-| Matrices | ≤ 4×4; accuracy suffers near det = 0 | *Planned:* `decimal` entries, any size in the `Extended` profile |
-| Distributions | 6 significant digits | *Planned:* binomial on `BigInteger`; normal and Poisson on `double` |
+| Matrices | ≤ 4×4; accuracy suffers near det = 0 | Entries follow the precision rule; determinant and inverse exact by fraction-free elimination on `BigInteger`, rounded once; up to 64×64 in the `Extended` profile |
+| Distributions | 6 significant digits | Binomial exactly on `BigInteger`; normal through `ErrorFunction`; Poisson by Loader's saddle-point form |
 | Random numbers | Device PRNG; "Same Result" presets | *Planned:* `System.Random`; a seeded instance reproduces its sequence |
 
 ## 10. Out of scope

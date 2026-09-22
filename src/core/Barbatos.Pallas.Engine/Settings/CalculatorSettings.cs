@@ -46,4 +46,8 @@ public sealed record CalculatorSettings
 
     /// <summary>Gets whether Verify is on (manual p. 73): every input must then be an equation or inequality.</summary>
     public bool Verify { get; init; }
+
+    /// <summary>Gets whether a polynomial shows its complex roots (manual p. 118); initially on.</summary>
+    /// <remarks>The setting belongs to the Equation application, not to the Calc Settings of pp. 22-25.</remarks>
+    public bool ComplexRoots { get; init; } = true;
 }

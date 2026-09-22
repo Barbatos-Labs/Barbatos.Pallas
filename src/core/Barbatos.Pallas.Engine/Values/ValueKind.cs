@@ -21,4 +21,10 @@ public enum ValueKind
 
     /// <summary>A 32-bit two's complement integer, in the Base-N application.</summary>
     BaseN = 3,
+
+    /// <summary>A matrix of real values (<see cref="MatrixValue"/>), in the Matrix application.</summary>
+    Matrix = 4,
+
+    /// <summary>A vector of real values (<see cref="VectorValue"/>), in the Vector application.</summary>
+    Vector = 5,
 }

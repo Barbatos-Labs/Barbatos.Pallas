@@ -1,6 +1,6 @@
 # Barbatos.Pallas.Numerics
 
-The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition and degrees-minutes-seconds.
+The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition, degrees-minutes-seconds, the error function erf, erfc and its inverse, and the Poisson probability.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
 
@@ -48,6 +48,15 @@ Fractions.TryFromDecimal((2m / 3m) + 1.5m, 9_999_999_999, 0.00000000000000000000
 decimal angle = Sexagesimal.ToDegrees(2, 20, 30) + Sexagesimal.ToDegrees(0, 9, 30);      // == 2.5m
 (bool negative, decimal degrees, decimal minutes, decimal seconds) =
     Sexagesimal.FromDegrees(angle, 0, MidpointRounding.AwayFromZero);                    // false, 2, 30, 0
+
+// The error function, for the normal distribution: Φ(t) = erfc(−t/√2)/2.
+ErrorFunction.Erf(1);                                     // 0.8427007929497149
+ErrorFunction.Erfc(10);                                   // 2.0884875837625446E-45, no cancellation
+ErrorFunction.InverseErfc(0.5);                           // 0.47693627620446993
+
+// The Poisson probability e^(−λ)·λ^x/x!, without the cancellation of exp(x·ln λ − λ − ln x!).
+PoissonDistribution.Probability(2, 1);                    // 0.18393972058572122, e⁻¹/2
+PoissonDistribution.Probability(1_000_000, 1_000_000);    // 0.00039894224715624404
 ```
 
 `Trigonometry` returns what .NET returns for invalid input: NaN for asin 2 or an infinite angle, ±∞ for tan 90°. A
@@ -57,6 +66,10 @@ caller that needs errors checks `double.IsFinite` once.
 
 - sin, cos and tan agree with 40-digit references within 5×10⁻¹⁵ (relative), including degree and gradian angles up
   to ±10⁶, because whole turns are removed exactly with `double.Ieee754Remainder` before `double.SinPi` is called.
+- erf and erfc agree with 50-digit references within 2×10⁻¹⁵ (relative) wherever erfc is a normal `double`, down to
+  erfc(26.5) = 4×10⁻³⁰⁷; the inverse of erfc is accurate to what erfc's own accuracy allows.
+- The Poisson probability P agrees with 50-digit references within 10⁻¹⁵·(1 + |ln P|) relative: 3×10⁻¹⁵ for P = 0.1,
+  and more in the far tail, where e's exponent carries its own rounding.
 - Integer functions are exact at any size.
 
 The full contract, with measurements, is

@@ -21,35 +21,57 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `src/app/*` | Presentation (platform-neutral MVVM), Rendering.Skia, the WPF host |
 | `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`) and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
-| `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references, CsCheck properties, manual values |
+| `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
-| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, plugins, integrals against PeterO.Numbers, evaluation properties |
+| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, matrices and vectors, statistics, distributions, plugins, integrals against PeterO.Numbers, evaluation properties |
+| `tests/Barbatos.Pallas.LinearAlgebra.Tests` | Exact determinants, inverses and linear systems against the Leibniz formula and multiplication back |
+| `tests/Barbatos.Pallas.Statistics.Tests` | Exact sums, variances and fits against the manual's fractions, two-pass definitions and normal equations; quartile ranks |
+| `tests/Barbatos.Pallas.Solvers.Tests` | Integer polynomials against polynomials built from known roots (sign, square-free part, Sturm count, division); iterated roots against those roots |
+| `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
 | `docs/CALCULATOR-CATALOG.md` | Everything the calculator does, with manual pages |
-| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors (U1-U11), deliberate deviations (D1-D7) |
+| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors and working assumptions (U1-U26), deliberate deviations (D1-D7) |
 | `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
+| `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
 
 ## Current phase
 
-**Phase 3 - Engine is complete** (roadmap in docs/ARCHITECTURE.md §11).
+**Phase 4 - domain applications ✅ complete** (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4
+Equation/Inequality/Ratio, M5 Spreadsheet and Table, M6 hardening). **Phase 5 - the WPF app - is next** (roadmap in
+docs/ARCHITECTURE.md §11). Every application but Math Box, which is Phase 6, works end to end.
 
-- Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal` and
-  `AngleUnit`.
+- Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal`, `AngleUnit`,
+  `ErrorFunction` and `PoissonDistribution`.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
   It evaluates nothing.
 - Engine binds, compiles and evaluates that tree: `Value` with the precision rule, exact display forms, sessions and
   memory, the formatter and the FORMAT conversions, calculus, Verify, Complex and Base-N, and the plugin API.
 - Data ships the CODATA 2022 constants, the NIST SP 811 unit conversions and the CIAAW atomic weights;
   DependencyInjection ships `AddPallas()`.
+- LinearAlgebra holds exact elimination of `decimal` matrices (`ExactLinearAlgebra`); the Matrix and Vector
+  applications live in Engine (`MatrixValue`, `VectorValue`, MatA-MatD, VctA-VctD).
+- Statistics holds exact statistics of `decimal` data scaled to integers (`ExactSample`, `Quartiles`), with no
+  `double`; the Statistics application lives in Engine (`StatisticsData`, `RegressionModel`, the statistic variables
+  as names in the input).
+- The Distribution application is a form of `CalculatorSession` (`CalculateDistribution`, `DistributionKind`,
+  `DistributionParameters`): binomial exact on `BigInteger`, normal through `ErrorFunction`, Poisson through
+  `PoissonDistribution`.
+- Spreadsheet holds the sheet (`SpreadsheetGrid`, `SpreadsheetCell`) and the number table (`NumberTable`,
+  `TableType`), both driven through a session; the engine only reads cells, through `CalculatorSession.CellValues`
+  and `CellAddress`, and calculates without storing anything through `CalculatorSession.Evaluate`.
+- Solvers holds polynomial algebra and nothing else, with no dependencies: exact integer polynomials
+  (`IntegerPolynomial`: the sign at a rational point, Sturm's count of the real roots, the square-free part, division
+  by a rational root) and the iterated roots of a polynomial (`PolynomialRoots`, Aberth, the only place `double` is
+  allowed there). The Equation, Inequality and Ratio applications live in Engine (`SolveSimultaneous`,
+  `SolvePolynomial`, `SolveEquation`, `SolveInequality`, `SolveRatio`), which is why Engine references Solvers and
+  not the other way round (decision of 22 Sep 2026).
 
-Next: **Phase 4 - domain applications** (Statistics, Distribution, Equation, Inequality, Matrix, Vector, Ratio,
-Spreadsheet, Table). Those packages are empty skeletons; their conformance cases are skipped with the phase that
-implements them.
+Math Box, the last application, has its conformance cases skipped with Phase 6, which implements it.
 
 ## Build and test
 
@@ -76,7 +98,7 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 7 test projects × 3 frameworks = 21 assemblies.
+  (a net8.0-only compile error). A full run is 11 test projects × 3 frameworks = 33 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
   Packing one project does not pack its project references.
 - **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
@@ -90,7 +112,9 @@ Things that will save time:
   ```
 
   Run both from `tests/Barbatos.Pallas.Numerics.Tests`, `tests/Barbatos.Pallas.Expressions.Tests`,
-  `tests/Barbatos.Pallas.Engine.Tests` or `tests/Barbatos.Pallas.DependencyInjection.Tests`, whose
+  `tests/Barbatos.Pallas.Engine.Tests`, `tests/Barbatos.Pallas.LinearAlgebra.Tests`,
+  `tests/Barbatos.Pallas.Statistics.Tests`, `tests/Barbatos.Pallas.Solvers.Tests`,
+  `tests/Barbatos.Pallas.Spreadsheet.Tests` or `tests/Barbatos.Pallas.DependencyInjection.Tests`, whose
   `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Data
   has no Stryker run: it is all static initialization (below). Stryker builds the test project it runs from, so a
   `dotnet test` of that project during a run replaces the mutated assembly, and a deliberately failing scratch test
@@ -164,7 +188,7 @@ Things that will save time:
   reaches the caller with the span the calculator would put the cursor at.
 - **Every long loop counts against the budget** (`EvaluationContext.TryIterate`): Σ, Π, ∫ and the integrator. A
   budget that runs out is Time Out, never a hang.
-- **A behavior the manual does not state is an assumption**, listed as U12-U19 in docs/CONFORMANCE.md, not a quiet
+- **A behavior the manual does not state is an assumption**, listed as U12-U26 in docs/CONFORMANCE.md, not a quiet
   choice in the code.
 
 ### Expressions
@@ -194,7 +218,7 @@ Things that will save time:
 - **Derived expected values are computed exactly** (rationals, integer square roots), never with `double`.
   Transcendental values (`expectationSource: reference`) come from PeterO.Numbers series at 60 digits, cross-checked
   against a known constant (docs/CONFORMANCE.md §5), never from `System.Math` or the code under test.
-- **An assumption is a `note`,** listed under U1-U11 in docs/CONFORMANCE.md. A deliberate difference from the
+- **An assumption is a `note`,** listed under U1-U26 in docs/CONFORMANCE.md. A deliberate difference from the
   calculator is a D-entry there, never a silent engine change.
 
 ### Build and style
@@ -212,7 +236,8 @@ Things that will save time:
 - **XML docs on every public member** (CS1591). `<remarks>` carries the *why*, including the measurement or
   failure that produced a rule.
 - **`Directory.Build.targets` must exist** even where it adds nothing. **`.editorconfig` keeps `root = true`.**
-- **A public API change updates the package's `README.md`** (and later `API-REFERENCE.md`).
+- **A public API change updates the package's `README.md`** (and later `API-REFERENCE.md`), and every example a
+  README shows is run by that package's `ReadmeTests`: a README that drifts from the API is a defect.
 
 ### Identity
 
