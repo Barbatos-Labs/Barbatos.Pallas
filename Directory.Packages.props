@@ -27,8 +27,7 @@
     <PackageVersion Include="Barbatos.i18n.Wpf" Version="1.2.0" />
     <PackageVersion Include="Barbatos.i18n.DependencyInjection" Version="1.2.0" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="SkiaSharp" Version="4.152.0" />
-    <PackageVersion Include="SkiaSharp.Views.WPF" Version="4.152.0" />
+    <PackageVersion Include="WpfMath" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">

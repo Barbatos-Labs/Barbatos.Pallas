@@ -28,11 +28,26 @@
 
   <ItemGroup>
     <PackageReference Include="Barbatos.Wpf.Core" />
+    <PackageReference Include="Barbatos.Wpf.Aquarius" />
+    <PackageReference Include="Barbatos.Wpf.AquariusRouter" />
+    <PackageReference Include="Barbatos.i18n.DependencyInjection" />
+    <PackageReference Include="Barbatos.i18n.Wpf" />
+    <PackageReference Include="WpfMath" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Barbatos.i18n reads its files out of the assembly by assembly name plus file name, so each one is
+         embedded under exactly that name rather than under the root namespace MSBuild would prefix.
+         WithCulture=false because a file named for a culture (Locales.en-US.yaml) is otherwise taken for a
+         satellite resource and compiled into en-US\Barbatos.Pallas.resources.dll, where the reader - which looks
+         in the assembly itself - cannot find it (measured 22 Sep 2026). -->
+    <EmbeddedResource LogicalName="$(AssemblyName).%(Filename)%(Extension)" WithCulture="false" Include="Locales\*.yaml" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Rendering.Skia\Barbatos.Pallas.Rendering.Skia.csproj" />
+    <!-- AddPallas(): the engine, the reference data and every application the host offers. -->
+    <ProjectReference Include="..\..\core\Barbatos.Pallas.DependencyInjection\Barbatos.Pallas.DependencyInjection.csproj" />
   </ItemGroup>
 
 </Project>

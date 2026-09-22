@@ -1,0 +1,51 @@
+# The text of the application, in English. The keys are the ones the presentation layer names
+# (CalculatorApps.NameKey), so a screen never spells a language out.
+home.title: Barbatos Pallas
+home.settings: Settings
+home.later: Arriving in a later release
+
+app.calculate: Calculate
+app.statistics: Statistics
+app.distribution: Distribution
+app.spreadsheet: Spreadsheet
+app.table: Table
+app.equation: Equation
+app.inequality: Inequality
+app.complex: Complex
+app.base-n: Base-N
+app.matrix: Matrix
+app.vector: Vector
+app.ratio: Ratio
+app.math-box: Math Box
+app.screenLater: The engine of this application is finished; its screen is being built.
+
+settings.title: Calculator settings
+settings.back: Back
+settings.reset: Reset to the initial settings
+
+setting.inputOutput: Input and output
+setting.angleUnit: Angle unit
+setting.numberFormat: Number format
+setting.fractionResult: Fractions
+setting.complexResult: Complex results
+setting.decimalMark: Decimal mark
+setting.engineerSymbol: Engineering symbols
+setting.digitSeparator: Group digits in threes
+setting.complexRoots: Show complex roots of a polynomial
+setting.verify: Verify an equation or an inequality
+
+# The values of a setting: an enum value is its own key, so one template shows any of them.
+setting:
+  MathIMathO: MathI/MathO
+  MathIDecimalO: MathI/DecimalO
+  LineILineO: LineI/LineO
+  LineIDecimalO: LineI/DecimalO
+  Degree: Degree
+  Radian: Radian
+  Gradian: Gradian
+  Improper: Improper
+  Mixed: Mixed
+  Rectangular: a+bi
+  Polar: r∠θ
+  Dot: Dot
+  Comma: Comma

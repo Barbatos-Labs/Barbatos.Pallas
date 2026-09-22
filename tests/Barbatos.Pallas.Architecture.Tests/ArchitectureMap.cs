@@ -27,8 +27,7 @@ internal static class ArchitectureMap
         ["Barbatos.Pallas.Graphing"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Solvers"],
         ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Solvers", "Barbatos.Pallas.Spreadsheet", "Barbatos.Pallas.Data", "Barbatos.Pallas.Graphing"],
         ["Barbatos.Pallas.Presentation"] = ["Barbatos.Pallas.Engine"],
-        ["Barbatos.Pallas.Rendering.Skia"] = ["Barbatos.Pallas.Presentation"],
-        ["Barbatos.Pallas.Wpf"] = ["Barbatos.Pallas.Presentation", "Barbatos.Pallas.Rendering.Skia"],
+        ["Barbatos.Pallas.Wpf"] = ["Barbatos.Pallas.Presentation", "Barbatos.Pallas.DependencyInjection"],
     };
 
     /// <summary>Projects under src/core: shipped to NuGet and platform-neutral; binary floating point only where allow-listed.</summary>
@@ -50,7 +49,6 @@ internal static class ArchitectureMap
     public static readonly string[] PortableAppProjects =
     [
         "Barbatos.Pallas.Presentation",
-        "Barbatos.Pallas.Rendering.Skia",
     ];
 
     /// <summary>
@@ -61,7 +59,6 @@ internal static class ArchitectureMap
     {
         ["Barbatos.Pallas.DependencyInjection"] = ["Microsoft.Extensions.DependencyInjection.Abstractions", "Microsoft.Extensions.Options"],
         ["Barbatos.Pallas.Presentation"] = ["CommunityToolkit.Mvvm"],
-        ["Barbatos.Pallas.Rendering.Skia"] = ["CommunityToolkit.Mvvm", "SkiaSharp"],
     };
 
     /// <summary>Framework assemblies that tie code to a UI stack or to Windows GDI.</summary>

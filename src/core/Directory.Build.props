@@ -3,7 +3,7 @@
 
   <!--
     src/core: the engine packages that ship to nuget.org. Platform-neutral on purpose - the same
-    assemblies serve the WPF app, a future MAUI app on Android/iOS and a Web API.
+    assemblies serve the WPF app and anything else that calculates: a Web API, a service, a test harness.
   -->
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>

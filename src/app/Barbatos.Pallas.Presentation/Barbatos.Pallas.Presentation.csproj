@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Platform-neutral presentation layer shared by the WPF app and the future MAUI app: view models, the
-    on-screen keypad model, the structural math-input editor and the calculator-app registry.
-    It must never reference WPF, MAUI or SkiaSharp - Architecture.Tests enforces that.
+    The presentation layer of the calculator: view models, the on-screen keypad model, the structural
+    math-input editor and the calculator-app registry. It references no UI framework - Architecture.Tests
+    enforces that - so every one of them is tested without a window.
   -->
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>

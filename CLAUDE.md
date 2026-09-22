@@ -1,7 +1,7 @@
 # Barbatos.Pallas - working agreement
 
 A precise scientific calculation engine for .NET built on `decimal`, `double` and `BigInteger`, published as NuGet
-packages, plus the desktop (WPF, later MAUI) calculator built on it. Its functional reference is a scientific
+packages, plus the desktop (WPF) calculator built on it. Its functional reference is a scientific
 calculator, called *the reference calculator* everywhere, and its manual: *what* the calculator does, never *how*
 Pallas implements it.
 
@@ -18,7 +18,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | Path | What |
 |---|---|
 | `src/core/*` | The ten NuGet packages: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF` |
-| `src/app/*` | Presentation (platform-neutral MVVM), Rendering.Skia, the WPF host |
+| `src/app/*` | Presentation (MVVM with no UI framework, so it is unit-tested), the WPF host (Barbatos.Wpf.Core, Aquarius, AquariusRouter, Barbatos.i18n.Wpf, WpfMath) |
 | `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`) and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
@@ -30,6 +30,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, and the stored session written, read back and restored |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -41,10 +42,14 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 
 ## Current phase
 
-**Phase 4 - domain applications ✅ complete** (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4
-Equation/Inequality/Ratio, M5 Spreadsheet and Table, M6 hardening). **Phase 5 - the WPF app - is next** (roadmap in
-docs/ARCHITECTURE.md §11). Every application but Math Box, which is Phase 6, works end to end.
+**Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
+M2 keypad and MathInput, M3 Calculate end to end, M4 the other screens, M5 persistence and shortcuts, M6 hardening
+and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to end.
 
+- The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
+  route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
+  between runs (`PreferencesSessionStore` in the host). The host is `WpfProgram` + `AppRoutes` + `Views/`, with the
+  text in `Locales/*.yaml`. Screens of applications whose own screen is still to come render `AppScreenView`.
 - Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal`, `AngleUnit`,
   `ErrorFunction` and `PoissonDistribution`.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
@@ -98,7 +103,7 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 11 test projects × 3 frameworks = 33 assemblies.
+  (a net8.0-only compile error). A full run is 12 test projects × 3 frameworks = 36 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
   Packing one project does not pack its project references.
 - **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
@@ -114,7 +119,8 @@ Things that will save time:
   Run both from `tests/Barbatos.Pallas.Numerics.Tests`, `tests/Barbatos.Pallas.Expressions.Tests`,
   `tests/Barbatos.Pallas.Engine.Tests`, `tests/Barbatos.Pallas.LinearAlgebra.Tests`,
   `tests/Barbatos.Pallas.Statistics.Tests`, `tests/Barbatos.Pallas.Solvers.Tests`,
-  `tests/Barbatos.Pallas.Spreadsheet.Tests` or `tests/Barbatos.Pallas.DependencyInjection.Tests`, whose
+  `tests/Barbatos.Pallas.Spreadsheet.Tests`, `tests/Barbatos.Pallas.DependencyInjection.Tests` or
+  `tests/Barbatos.Pallas.Presentation.Tests`, whose
   `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Data
   has no Stryker run: it is all static initialization (below). Stryker builds the test project it runs from, so a
   `dotnet test` of that project during a run replaces the mutated assembly, and a deliberately failing scratch test

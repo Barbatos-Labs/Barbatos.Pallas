@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Presentation is tested without a window: the view models are plain objects over a session, so
+    every rule of the shell - which applications open, what a setting writes, what a stored session brings back -
+    is checked here rather than by clicking.
+      * the application registry against the engine's CalculatorApp;
+      * the settings screen against CalculatorSettings, property by property;
+      * the shell: opening, routing, and the snapshot round trip through ISessionStore;
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

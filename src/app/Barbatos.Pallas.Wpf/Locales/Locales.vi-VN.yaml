@@ -1,0 +1,49 @@
+# The text of the application, in Vietnamese.
+home.title: Barbatos Pallas
+home.settings: Cài đặt
+home.later: Sẽ có trong bản sau
+
+app.calculate: Tính toán
+app.statistics: Thống kê
+app.distribution: Phân phối
+app.spreadsheet: Bảng tính
+app.table: Bảng giá trị
+app.equation: Phương trình
+app.inequality: Bất phương trình
+app.complex: Số phức
+app.base-n: Hệ cơ số
+app.matrix: Ma trận
+app.vector: Vectơ
+app.ratio: Tỉ lệ
+app.math-box: Hộp toán học
+app.screenLater: Phần tính toán đã xong; màn hình của ứng dụng này đang được dựng.
+
+settings.title: Cài đặt máy tính
+settings.back: Quay lại
+settings.reset: Đặt lại như ban đầu
+
+setting.inputOutput: Nhập và xuất
+setting.angleUnit: Đơn vị góc
+setting.numberFormat: Dạng số
+setting.fractionResult: Phân số
+setting.complexResult: Kết quả số phức
+setting.decimalMark: Dấu thập phân
+setting.engineerSymbol: Ký hiệu kỹ thuật
+setting.digitSeparator: Nhóm ba chữ số
+setting.complexRoots: Hiện nghiệm phức của đa thức
+setting.verify: Kiểm tra đẳng thức, bất đẳng thức
+
+setting:
+  MathIMathO: MathI/MathO
+  MathIDecimalO: MathI/DecimalO
+  LineILineO: LineI/LineO
+  LineIDecimalO: LineI/DecimalO
+  Degree: Độ
+  Radian: Radian
+  Gradian: Grad
+  Improper: Phân số không thực sự
+  Mixed: Hỗn số
+  Rectangular: a+bi
+  Polar: r∠θ
+  Dot: Dấu chấm
+  Comma: Dấu phẩy

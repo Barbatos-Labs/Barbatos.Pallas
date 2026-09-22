@@ -34,9 +34,7 @@ Barbatos.Pallas/
 │  │  ├─ Barbatos.Pallas.Engine              └─ Barbatos.Pallas.DependencyInjection
 │  └─ app/
 │     ├─ Barbatos.Pallas.Presentation        net8.0;net9.0;net10.0 · no UI framework
-│     ├─ Barbatos.Pallas.Rendering.Skia      net8.0;net9.0;net10.0 · SkiaSharp
-│     ├─ Barbatos.Pallas.Wpf                 net10.0-windows10.0.17763.0 · WinExe
-│     └─ Barbatos.Pallas.Maui                (Phase 8)
+│     └─ Barbatos.Pallas.Wpf                 net10.0-windows10.0.17763.0 · WinExe
 └─ tests/
    ├─ Barbatos.Pallas.Architecture.Tests     dependency graph + floating-point scan
    ├─ Barbatos.Pallas.Conformance.Tests      worked examples of the manual, as data
@@ -47,11 +45,10 @@ Barbatos.Pallas/
 
 ```
  src/app ─────────────────────────────────────────────────────────────────────────
-   Barbatos.Pallas.Wpf  (Barbatos.Wpf.Core · Aquarius · AquariusRouter · i18n.Wpf)
-   Barbatos.Pallas.Maui (Phase 8)
-          │
+   Barbatos.Pallas.Wpf  (Barbatos.Wpf.Core · Aquarius · AquariusRouter · i18n.Wpf · WpfMath)
+          │             └──────────────────────────────────► DependencyInjection: AddPallas()
           ▼
-   Barbatos.Pallas.Rendering.Skia ──► Barbatos.Pallas.Presentation (CommunityToolkit.Mvvm)
+   Barbatos.Pallas.Presentation (CommunityToolkit.Mvvm)
                                                  │
  src/core ───────────────────────────────────────┼────────────────────────────────
                     Barbatos.Pallas.DependencyInjection  (references all below)
@@ -92,9 +89,8 @@ Change the map and this diagram together.
 | **Data** | CODATA constant sets; NIST SP 811 unit conversions with exact factors; CIAAW standard atomic weights (embedded resources) |
 | **Graphing** | Viewport; adaptive sampling; asymptote and discontinuity detection; roots, extrema and intersections |
 | **DependencyInjection** | `AddPallas()`, validated options, module registration |
-| **Presentation** | View models; keypad model; structural math-input editor; calculator-app registry; history |
-| **Rendering.Skia** | Math layout engine (box model, OpenType MATH font); math and graph renderers shared by WPF and MAUI |
-| **Wpf** | The desktop host on Barbatos.Wpf.Core |
+| **Presentation** | The shell (`CalculatorShellViewModel`: the one session, which application is open, the stored session) and the Calc Settings screen (`SettingsViewModel`); the calculator-app registry (`CalculatorApps`); the stored session as text (`SessionSnapshotJson`, `ISessionStore`); the keypad model, the structural math-input editor and the history as they land. No UI framework, so every one of them is unit-tested and mutation-tested like the core |
+| **Wpf** | The desktop host on Barbatos.Wpf.Core: the composition root (`WpfProgram`), the route table built from the registry (`AppRoutes`), the screens, the session in the preferences (`PreferencesSessionStore`) and the English and Vietnamese text (`Locales/`) |
 
 ## 4. Clean Architecture rules
 
@@ -103,7 +99,7 @@ Change the map and this diagram together.
 | Domain | Numerics, LinearAlgebra, Statistics, Solvers | Pure mathematics: no I/O, no state, no knowledge of calculators |
 | Application | Expressions, Engine, Spreadsheet, Graphing | Calculator semantics; depend inward only |
 | Infrastructure | Data, DependencyInjection, session persistence | Datasets, composition, storage adapters |
-| Presentation | Presentation, Rendering.Skia, Wpf, Maui | Never referenced by `src/core` |
+| Presentation | Presentation, Wpf | Never referenced by `src/core` |
 
 Rules that cut across all rings:
 
@@ -208,20 +204,30 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
   - A template tree (fraction, mixed fraction, root, power, abs, logₐb, ∫, Σ, Π, d/dx) with a cursor path,
     undo/redo, and insert/overwrite modes.
   - Serializes to Canonical Linear Syntax: one road into the parser.
-- **Applications.** `ICalculatorApp` has thirteen implementations. The home screen lists the registry, so adding an
-  application touches no other.
+- **Applications.** `CalculatorApps.All` is the registry: one entry per application, with its route and the
+  localization key of its name, in the order of the calculator's own home screen. The home screen, the route table
+  and the application menu all read it, so adding an application touches no other. An application this build has no
+  engine for (Math Box, until Phase 6) is listed and disabled, never hidden.
+- **The shell.** `CalculatorShellViewModel` owns the one session every screen works on and opens applications
+  through it; `SettingsViewModel` is the Calc Settings screen over `CalculatorSettings`. Which application the
+  session is in follows the route, through a single navigation guard in the host, so a link, a shortcut and a
+  restored session all reach it the same way.
+- **The stored session.** `SessionSnapshotJson` writes a `SessionSnapshot` as JSON of plain strings and flags and
+  reads it back; `ISessionStore` is where the host puts it (`PreferencesSessionStore` over Barbatos.Wpf's
+  `IPreferences`). It is a stored format: names are fixed, enums are written by name rather than by number, and
+  what a later build cannot read falls back to what a new calculator has rather than refusing to start.
 - **Shared memory.** A-F, x, y, z, MatA-D, VctA-D, f and g live in the Engine's observable `CalculatorSession`: on
   the reference calculator they persist across applications.
-- **Rendering.**
-  - One `MathLayoutEngine` (box model over an OpenType MATH font such as STIX Two Math) drawn with SkiaSharp by
-    `SKElement` in WPF and `SKCanvasView` in MAUI.
-  - LaTeX is for copy and export only.
-  - WpfMath 2.1.0 is the WPF-only fallback. CSharpMath is not chosen: stable 0.5.1, 1.0 still prerelease as of Sep
-    2026.
-  - The choice is confirmed by a spike in Phase 5.
+- **Rendering: WpfMath 2.1.0** (maintainer, 22 Sep 2026), which draws LaTeX into WPF visuals.
+  - The road to the screen is the tree: `LatexPrinter` prints what the editor holds, WpfMath draws it. The same tree
+    prints to Canonical Linear Syntax for the engine, so what is displayed and what is calculated cannot drift.
+  - WpfMath has no hit-testing of its own, so the caret is part of what is printed: the editor puts a marker at the
+    cursor path and the formula is drawn again on every keystroke.
+  - There is no `MathLayoutEngine` of our own and no SkiaSharp: an own box model over an OpenType MATH font would
+    only have paid for itself with a second host, and there is none (Phase 8 dropped).
 - **Graphs.**
   - Core sampling and asymptote detection, with `double` screen coordinates (an allow-list entry for Graphing, added
-    in Phase 6).
+    in Phase 6); the drawing itself is WPF's own, in the host.
   - Trace, root, min/max and intersection values are always recomputed by the Engine.
 - **WPF host.**
   - Barbatos.Wpf.Core: `WpfApp`, DI, Preferences for settings, SingleInstance.
@@ -290,10 +296,9 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | **2 Expressions** ✅ | Lexer, Pratt parser, syntax tree, diagnostics with spans, vocabulary, linear and LaTeX printers; Canonical Linear Syntax final (docs/LINEAR-SYNTAX.md) | Every conformance input parses in its application; print-and-reparse property in 7 application contexts; fuzzing never throws or hangs; lexing allocates nothing; every branch covered but one documented; mutation score ≥ 90% |
 | **3 Engine** ✅ | Binder, plugins, RPN evaluator, exact display forms, formatter, memory and sessions, calculus, Verify, Base-N, Complex, the CODATA/NIST/CIAAW data sets and `AddPallas()` | The 111 Calculate, Complex and Base-N conformance cases pass; evaluation of any generated tree ends in a value or a named error within its budget; integrals agree with 50-digit references; mutation score ≥ 90% |
 | **4 Domain apps** ✅ (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4 Equation, Inequality and Ratio, M5 Spreadsheet and Table, M6 hardening) | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Met: every conformance case of those applications passes (only the four Math Box cases are skipped, for Phase 6); the normal distribution, the Poisson probability and the polynomial roots agree with 50-digit PeterO.Numbers references; every package with code is above the 90% mutation gate |
-| 5 WPF | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
+| 5 WPF (in progress: **M1 shell ✅**, M2 keypad and MathInput, M3 Calculate, M4 the other screens, M5 persistence and shortcuts, M6 hardening and installer) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
 | 6 Graph and Math Box | Graphing; Dice, Coin, Number Line, Circle | Math Box conformance cases pass |
 | 7 Hardening | Benchmarks and gates, API docs, public API tracking, publish pipeline, installer | 0.x preview on nuget.org |
-| 8 MAUI | Android and iOS | Same conformance results on device |
 
 ## 12. Decision log
 
@@ -345,3 +350,8 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | 22 Sep 2026 | M6 robustness. Every application of Phase 4 now has a property that holds for any input: a polynomial, an inequality, a system, a distribution and a statistic each end in a value or an error the calculator has a name for, never an exception; a sheet of random constants and formulas, cycles included, ends the same way and shows the same values however often it is calculated. Cancellation was found missing between the rows of a number table - each row is a short calculation, so the budget's own check was never reached - and the token is now read between rows, as it already is inside a long one. |
 | 22 Sep 2026 | M6 documentation. Every package whose README shows an example now runs that example as a test (`ReadmeTests`), which closed the four that did not: Expressions, LinearAlgebra, Data and DependencyInjection. The Data tests gained a reference to Engine for it, because the README shows the data sets in use. |
 | 22 Sep 2026 | M6 leaves two things as they are, with a reason. A form of an application (Distribution, Equation, Spreadsheet) reports its error without a span, because the calculator puts the cursor on a parameter screen rather than in a line of text; a span of 0 would name a place that is not where the user is. And the Extended profile keeps the calculator's 4 unknowns and degree 4 for Equation, because the calculator names x, y, z and t, and the exact factoring of a polynomial is designed for those degrees. |
+| 22 Sep 2026 | Phase 5 plan approved, with two changes by the maintainer. (3) **WpfMath 2.1.0 draws the mathematics**, not a box model of our own on SkiaSharp: the tree the editor holds prints to LaTeX for the screen and to Canonical Linear Syntax for the engine, and the caret is drawn as part of the formula, because WpfMath hit-tests nothing. (8) **Phase 8 (MAUI) is dropped**, which is what an own layout engine would have been for. Consequently `Barbatos.Pallas.Rendering.Skia` is removed, SkiaSharp with it, and the graphs of Phase 6 are drawn by WPF itself; Presentation still references no UI framework, now so that its view models can be tested without a window. The other decisions stand: view models and the math-input editor in Presentation, the keypad as data with the hardware keys in the same table, a session snapshot in Engine, English and Vietnamese through Barbatos.i18n.Wpf, twelve application screens (Math Box with its engine in Phase 6), and a Presentation test project under the same 90% mutation gate. |
+| 22 Sep 2026 | **Phase 5 M1: the shell.** The application registry (`CalculatorApps`) is the only list of what the calculator does: the home screen, the route table and the session all read it, and the routes are built from it rather than written out. One navigation guard in the host switches the session to the application a route names and refuses a route this build has no engine for, so a link, a shortcut and a restored session cannot disagree. The window starts on the home screen even when a session was restored: the session says which application the memories belong to, not which screen the user asked for this time. |
+| 22 Sep 2026 | **A stored session is JSON in Presentation, not in Engine.** `SessionSnapshotJson` turns the engine's `SessionSnapshot` into one string of plain strings and flags, and `ISessionStore` is where a host puts it - over `IPreferences` in the WPF app. Engine stays free of a serializer (AOT, no reflection); the format is fixed - names spelled out, enums written by name, a number where a name is expected refused - and anything a later build cannot read falls back to what a new calculator has rather than refusing to start. The serializer is source-generated for the same reason the engine takes no reflection-based shortcuts. |
+| 22 Sep 2026 | **One session, resolved from the engine.** `AddPallas()` registers a session per request, which is right for a service and wrong for a calculator - the memories are one set - so the host registers it as a singleton. It is resolved from the engine and not read back off the shell that owns it: a factory that asks the container for the shell while the container is building the shell is a startup that never finishes, measured the same day. |
+| 22 Sep 2026 | **The locale files are embedded under the assembly name, with `WithCulture=false`.** A file named for a culture (`Locales.en-US.yaml`) is otherwise taken for a satellite resource and compiled into `en-USBarbatos.Pallas.resources.dll`, where Barbatos.i18n - which reads the assembly itself - cannot find it. Measured the same day, after the application refused to start. |

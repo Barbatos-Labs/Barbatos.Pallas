@@ -10,9 +10,11 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
   distributions, equations, inequalities, complex numbers, Base-N, matrices, vectors, spreadsheet, tables and more,
   checked by a conformance suite built from the calculator's own worked examples.
 
-> **Status: Phase 4 - domain applications - complete.** Every application but Math Box works end to end - Calculate,
-> Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and Table - and
-> every one of their conformance cases passes. The desktop app is next. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> **Status: Phase 5 - the desktop app - in progress.** The engine is complete for every application but Math Box -
+> Calculate, Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and
+> Table - and every one of their conformance cases passes. The WPF app has its shell: the home screen, the settings
+> and a session that survives a restart; the screens follow milestone by milestone. See the
+> [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ```csharp
 CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();

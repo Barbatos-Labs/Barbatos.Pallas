@@ -482,6 +482,82 @@ public sealed class CalculatorSession
         return new Calculation(input, App, _settings, Profile, CalculationKind.Value, x.Value, null, null, null, []);
     }
 
+    /// <summary>Takes everything the session holds, as text an application can store (manual pp. 36-40).</summary>
+    /// <returns>The snapshot: the application, the settings, the memory, the defined functions and the statistics data.</returns>
+    /// <remarks>The history is not part of it; an application that keeps a history across runs keeps it itself.</remarks>
+    public SessionSnapshot Capture()
+    {
+        return new SessionSnapshot
+        {
+            App = App,
+            Settings = _settings,
+            Regression = _regression,
+            Variables = [.. _variables.Select(value => ValueText.Write(value, Profile))],
+            Ans = ValueText.Write(Ans, Profile),
+            PreAns = ValueText.Write(PreAns, Profile),
+            Matrices = [.. _matrices.Select(Captured)],
+            Vectors = [.. _vectors.Select(Captured)],
+            FunctionF = _definitions.TryGetValue(DefinedFunction.F, out SyntaxNode? f) ? f.ToString() : null,
+            FunctionG = _definitions.TryGetValue(DefinedFunction.G, out SyntaxNode? g) ? g.ToString() : null,
+            StatisticsX = [.. StatisticsData.X.Select(value => ValueText.Write(value, Profile))],
+            StatisticsY = StatisticsData.IsTwoVariable ? [.. StatisticsData.Y.Select(value => ValueText.Write(value, Profile))] : [],
+            StatisticsFrequencies = StatisticsData.HasFrequencies
+                ? [.. StatisticsData.Frequencies.Select(value => ValueText.Write(value, Profile))]
+                : [],
+        };
+    }
+
+    /// <summary>Puts back what <see cref="Capture"/> took, over whatever the session holds now.</summary>
+    /// <param name="snapshot">The snapshot.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="snapshot"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The snapshot was written by a later version of the format.</exception>
+    /// <exception cref="NotSupportedException">The snapshot is of an application this engine does not have.</exception>
+    /// <remarks>
+    /// Anything the snapshot cannot say - a value whose text is not one, a definition that no longer parses - is left
+    /// as the session had it, so a snapshot that has aged badly loses what it cannot carry and nothing more.
+    /// </remarks>
+    public void Restore(SessionSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (snapshot.Version > SessionSnapshot.CurrentVersion)
+        {
+            throw new ArgumentOutOfRangeException(nameof(snapshot), snapshot.Version, $"This engine reads snapshots up to version {SessionSnapshot.CurrentVersion}.");
+        }
+
+        RequireSupported(snapshot.App);
+
+        // The values are read in Calculate, where every spelling of the vocabulary is available, and the application
+        // the snapshot names is entered once they are in.
+        App = CalculatorApp.Calculate;
+        _settings = snapshot.Settings;
+        Regression = snapshot.Regression;
+        for (int i = 0; i < _variables.Length && i < snapshot.Variables.Length; i++)
+        {
+            _variables[i] = ValueText.Read(snapshot.Variables[i], this) ?? _variables[i];
+        }
+
+        Ans = ValueText.Read(snapshot.Ans, this) ?? Ans;
+        PreAns = ValueText.Read(snapshot.PreAns, this) ?? PreAns;
+        for (int i = 0; i < _matrices.Length && i < snapshot.Matrices.Length; i++)
+        {
+            _matrices[i] = Restored(snapshot.Matrices[i]);
+        }
+
+        for (int i = 0; i < _vectors.Length && i < snapshot.Vectors.Length; i++)
+        {
+            _vectors[i] = RestoredVector(snapshot.Vectors[i]);
+        }
+
+        RestoreDefinition(DefinedFunction.F, snapshot.FunctionF);
+        RestoreDefinition(DefinedFunction.G, snapshot.FunctionG);
+        SetStatisticsData(new StatisticsData(
+            snapshot.StatisticsX.Select(text => ValueText.Read(text, this) ?? Value.Zero),
+            snapshot.StatisticsY.IsEmpty ? null : snapshot.StatisticsY.Select(text => ValueText.Read(text, this) ?? Value.Zero),
+            snapshot.StatisticsFrequencies.IsEmpty ? null : snapshot.StatisticsFrequencies.Select(text => ValueText.Read(text, this) ?? Value.Zero)));
+
+        App = snapshot.App;
+    }
+
     /// <summary>Displays a calculation with the current settings, converted by the FORMAT menu.</summary>
     /// <param name="calculation">The calculation.</param>
     /// <param name="target">The conversion, or <see langword="null"/> for the display of the settings.</param>
@@ -856,6 +932,72 @@ public sealed class CalculatorSession
         // The solution becomes the variable's value, as it does on the calculator's Solver screen (p. 121).
         SetVariable((MemoryVariable)(int)slot, solution);
         return new Calculation(input, App, _settings, Profile, CalculationKind.Solution, solution, value.Value, null, null, [.. context.Integrals]);
+    }
+
+    /// <summary>A matrix or a vector as a snapshot of its size and its entries.</summary>
+    private MatrixSnapshot? Captured(MatrixValue? matrix)
+    {
+        if (matrix is null)
+        {
+            return null;
+        }
+
+        List<string> entries = [];
+        for (int row = 0; row < matrix.Rows; row++)
+        {
+            for (int column = 0; column < matrix.Columns; column++)
+            {
+                entries.Add(ValueText.Write(matrix[row, column], Profile));
+            }
+        }
+
+        return new MatrixSnapshot(matrix.Rows, matrix.Columns, [.. entries]);
+    }
+
+    /// <summary>A vector as a snapshot of one row.</summary>
+    private MatrixSnapshot? Captured(VectorValue? vector)
+    {
+        return vector is null
+            ? null
+            : new MatrixSnapshot(1, vector.Dimension, [.. vector.Elements.Select(element => ValueText.Write(element, Profile))]);
+    }
+
+    /// <summary>The vector a snapshot of one row holds, or <see langword="null"/>.</summary>
+    private VectorValue? RestoredVector(MatrixSnapshot? snapshot)
+    {
+        return snapshot is null || snapshot.Rows != 1 || snapshot.Columns != snapshot.Entries.Length
+            ? null
+            : new VectorValue([.. snapshot.Entries.Select(entry => ValueText.Read(entry, this) ?? Value.Zero)]);
+    }
+
+    /// <summary>The matrix a snapshot holds, or <see langword="null"/> when it holds none or cannot be read.</summary>
+    private MatrixValue? Restored(MatrixSnapshot? snapshot)
+    {
+        if (snapshot is null || snapshot.Rows < 1 || snapshot.Columns < 1 || snapshot.Entries.Length != snapshot.Rows * snapshot.Columns)
+        {
+            return null;
+        }
+
+        Value[,] entries = new Value[snapshot.Rows, snapshot.Columns];
+        for (int row = 0; row < snapshot.Rows; row++)
+        {
+            for (int column = 0; column < snapshot.Columns; column++)
+            {
+                entries[row, column] = ValueText.Read(snapshot.Entries[(row * snapshot.Columns) + column], this) ?? Value.Zero;
+            }
+        }
+
+        return new MatrixValue(entries);
+    }
+
+    /// <summary>Defines f(x) or g(x) again, or leaves it undefined where the snapshot has none or one that no longer parses.</summary>
+    private void RestoreDefinition(DefinedFunction function, string? body)
+    {
+        _definitions.Remove(function);
+        if (body is not null)
+        {
+            _ = Define(function, body);
+        }
     }
 
     private Calculation Line(string name, Value value)

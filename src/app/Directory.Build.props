@@ -2,9 +2,10 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <!--
-    src/app: the calculator applications and their shared, platform-neutral presentation layer.
+    src/app: the calculator applications and the presentation layer they share.
     Not published to NuGet. Each project sets its own TargetFrameworks, because a WPF host needs the
-    SDK-versioned Windows moniker while Presentation stays platform-neutral for MAUI.
+    SDK-versioned Windows moniker while Presentation references no UI framework at all, which is what
+    makes its view models testable.
   -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>

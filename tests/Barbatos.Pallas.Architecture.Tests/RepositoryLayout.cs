@@ -16,7 +16,7 @@ internal static class RepositoryLayout
 
     public static string ProjectFile(string project)
     {
-        string tier = project is "Barbatos.Pallas.Presentation" or "Barbatos.Pallas.Rendering.Skia" or "Barbatos.Pallas.Wpf" ? "app" : "core";
+        string tier = project is "Barbatos.Pallas.Presentation" or "Barbatos.Pallas.Wpf" ? "app" : "core";
         return Path.Combine(RepositoryRoot, "src", tier, project, project + ".csproj");
     }
 

@@ -48,7 +48,7 @@ jobs:
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
-          $expected = 33   # 11 test projects x 3 target frameworks
+          $expected = 36   # 12 test projects x 3 target frameworks
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
@@ -91,6 +91,10 @@ jobs:
       - name: Mutation testing (DependencyInjection)
         working-directory: tests/Barbatos.Pallas.DependencyInjection.Tests
         run: dotnet stryker --skip-version-check --output ../../StrykerOutput/DependencyInjection
+
+      - name: Mutation testing (Presentation)
+        working-directory: tests/Barbatos.Pallas.Presentation.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Presentation
 
       - name: Upload mutation reports
         if: always()
@@ -170,3 +174,6 @@ jobs:
 
       - name: Dependency injection tests
         run: dotnet test --project tests/Barbatos.Pallas.DependencyInjection.Tests --configuration Release
+
+      - name: Presentation tests
+        run: dotnet test --project tests/Barbatos.Pallas.Presentation.Tests --configuration Release

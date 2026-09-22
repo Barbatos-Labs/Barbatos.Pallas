@@ -35,7 +35,6 @@
   <Folder Name="/src/app/">
     <File Path="src/app/Directory.Build.props" />
     <Project Path="src/app/Barbatos.Pallas.Presentation/Barbatos.Pallas.Presentation.csproj" />
-    <Project Path="src/app/Barbatos.Pallas.Rendering.Skia/Barbatos.Pallas.Rendering.Skia.csproj" />
     <Project Path="src/app/Barbatos.Pallas.Wpf/Barbatos.Pallas.Wpf.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -51,5 +50,6 @@
     <Project Path="tests/Barbatos.Pallas.Data.Tests/Barbatos.Pallas.Data.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.DependencyInjection.Tests/Barbatos.Pallas.DependencyInjection.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Numerics.Tests/Barbatos.Pallas.Numerics.Tests.csproj" />
+    <Project Path="tests/Barbatos.Pallas.Presentation.Tests/Barbatos.Pallas.Presentation.Tests.csproj" />
   </Folder>
 </Solution>

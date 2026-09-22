@@ -18,7 +18,6 @@
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.DependencyInjection\Barbatos.Pallas.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
-    <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Rendering.Skia\Barbatos.Pallas.Rendering.Skia.csproj" />
   </ItemGroup>
 
 </Project>
