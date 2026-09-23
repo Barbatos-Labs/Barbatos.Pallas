@@ -17,7 +17,7 @@ namespace Barbatos.Pallas.Conformance.Tests;
 public sealed class CalculatorConformanceTests
 {
     private static readonly HashSet<string> ImplementedApps =
-        ["Calculate", "Complex", "BaseN", "Matrix", "Vector", "Statistics", "Distribution", "Equation", "Inequality", "Ratio", "Spreadsheet", "Table"];
+        ["Calculate", "Complex", "BaseN", "Matrix", "Vector", "Statistics", "Distribution", "Equation", "Inequality", "Ratio", "Spreadsheet", "Table", "MathBox"];
 
     public static TheoryData<string> CaseIds => [.. ConformanceCatalog.Cases.Select(conformanceCase => conformanceCase.Id)];
 

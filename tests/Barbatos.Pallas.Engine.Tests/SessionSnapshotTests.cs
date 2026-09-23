@@ -179,12 +179,23 @@ public sealed class SessionSnapshotTests
     }
 
     [Fact]
-    public void ASnapshotOfAnApplicationThisEngineHasNot_IsRefused()
+    public void ASnapshotOfAnApplicationThatIsNotOne_IsRefused()
+    {
+        CalculatorSession session = Session();
+        SessionSnapshot unknown = session.Capture() with { App = (CalculatorApp)99 };
+
+        session.Invoking(s => s.Restore(unknown)).Should().Throw<ArgumentOutOfRangeException>().WithParameterName("app");
+    }
+
+    [Fact]
+    public void ASnapshotOfMathBox_IsRestored()
     {
         CalculatorSession session = Session();
         SessionSnapshot mathBox = session.Capture() with { App = CalculatorApp.MathBox };
 
-        session.Invoking(s => s.Restore(mathBox)).Should().Throw<NotSupportedException>();
+        session.Restore(mathBox);
+
+        session.App.Should().Be(CalculatorApp.MathBox);
     }
 
     [Fact]

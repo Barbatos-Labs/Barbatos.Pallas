@@ -90,7 +90,7 @@ public sealed class LatexRenderingTests
     public void EveryResultOfTheManualIsDrawn(string input, CalculatorApp app)
     {
         // The Calculate screen draws the result as mathematics too, and the formatter writes that LaTeX itself.
-        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession(app == CalculatorApp.MathBox ? CalculatorApp.Calculate : app);
+        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession(app);
         Calculation calculation = session.Calculate(input);
         if (!calculation.Succeeded)
         {

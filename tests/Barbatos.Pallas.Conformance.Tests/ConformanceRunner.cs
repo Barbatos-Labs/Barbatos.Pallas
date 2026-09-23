@@ -128,6 +128,9 @@ internal static class ConformanceRunner
             case "ratio":
                 RunRatio(conformanceCase, session);
                 break;
+            case "mathbox":
+                RunMathBox(conformanceCase, session);
+                break;
             case "spreadsheet":
                 RunSpreadsheet(conformanceCase, session);
                 break;
@@ -788,4 +791,126 @@ internal static class ConformanceRunner
     private static MemoryVariable Variable(string name) => Enum.Parse<MemoryVariable>(name, ignoreCase: true);
 
     private static Value Parse(string text) => Value.FromDecimal(decimal.Parse(text, CultureInfo.InvariantCulture));
+
+    // The nine forms of a Number Line expression, as the calculator's list writes them (p. 153).
+    private static readonly Dictionary<string, NumberLineForm> NumberLineForms = new(StringComparer.Ordinal)
+    {
+        ["x<a"] = NumberLineForm.Less,
+        ["x≤a"] = NumberLineForm.LessOrEqual,
+        ["x=a"] = NumberLineForm.Equal,
+        ["x>a"] = NumberLineForm.Greater,
+        ["x≥a"] = NumberLineForm.GreaterOrEqual,
+        ["a<x<b"] = NumberLineForm.Between,
+        ["a≤x<b"] = NumberLineForm.FromIncluded,
+        ["a<x≤b"] = NumberLineForm.ToIncluded,
+        ["a≤x≤b"] = NumberLineForm.BetweenIncluded,
+    };
+
+    /// <summary>
+    /// A form of the Math Box application (pp. 146-161): a simulation, one Number Line expression or several, a
+    /// View-Window set by hand, an angle on a circle, or an hour on the clock.
+    /// </summary>
+    private static void RunMathBox(ConformanceCase conformanceCase, CalculatorSession session)
+    {
+        JsonElement given = conformanceCase.Given!.Value;
+        CalcError? error = null;
+        NumberLineView? view = null;
+        CircleAngle? angle = null;
+        ClockAngles? clock = null;
+
+        if (given.TryGetProperty("simulation", out JsonElement simulation))
+        {
+            bool dice = simulation.GetString() == "Dice Roll";
+            int count = given.GetProperty(dice ? "dice" : "coins").GetInt32();
+            error = session.Simulate(dice ? SimulationKind.DiceRoll : SimulationKind.CoinToss, count, Parse(given.GetProperty("attempts").GetString()!)).Error;
+        }
+        else if (given.TryGetProperty("numberLine", out _))
+        {
+            error = Axis(given).Error;
+        }
+        else if (given.TryGetProperty("numberLines", out JsonElement lines))
+        {
+            NumberLineAxis[] axes = [.. lines.EnumerateArray().Select(Axis)];
+            axes.Should().OnlyContain(axis => axis.Succeeded, "{0}: every expression registers", conformanceCase);
+            view = NumberLine.Fit(axes);
+        }
+        else if (given.TryGetProperty("viewWindow", out JsonElement window))
+        {
+            view = NumberLine.View(Parse(window.GetProperty("center").GetString()!), Parse(window.GetProperty("scale").GetString()!));
+            error = view.Error;
+        }
+        else if (given.TryGetProperty("circle", out JsonElement circle))
+        {
+            CircleKind kind = circle.GetString() == "Unit Circle" ? CircleKind.UnitCircle : CircleKind.HalfCircle;
+            angle = session.CircleAngle(kind, Parse(given.GetProperty("angle").GetString()!));
+            error = angle.Error;
+        }
+        else if (given.TryGetProperty("clock", out JsonElement hour))
+        {
+            clock = session.Clock(hour.GetInt32());
+        }
+        else
+        {
+            Assert.Fail($"{conformanceCase}: the runner does not know this Math Box form.");
+        }
+
+        JsonElement expect = conformanceCase.Expect!.Value;
+        if (expect.TryGetProperty("error", out JsonElement expected))
+        {
+            error.Should().NotBeNull("{0} should fail with {1}", conformanceCase, expected.GetString());
+            error!.Value.Kind.ToString().Should().Be(expected.GetString(), "{0}", conformanceCase);
+        }
+        else
+        {
+            error.Should().BeNull("{0} should succeed", conformanceCase);
+        }
+
+        foreach (JsonProperty member in expect.EnumerateObject())
+        {
+            string because = $"{conformanceCase}: {member.Name}";
+            switch (member.Name)
+            {
+                case "error":
+                    break;
+                case "view":
+                    foreach (JsonProperty part in member.Value.EnumerateObject())
+                    {
+                        decimal actual = part.Name switch
+                        {
+                            "scale" => view!.Scale,
+                            "center" => view!.Center,
+                            "minimum" => view!.Minimum,
+                            "maximum" => view!.Maximum,
+                            _ => throw new InvalidOperationException($"{because}: the view has no '{part.Name}'."),
+                        };
+                        actual.Should().Be(decimal.Parse(part.Value.GetString()!, CultureInfo.InvariantCulture), "{0} {1}", because, part.Name);
+                    }
+
+                    break;
+                case "sin":
+                    angle!.Sine!.Display.Text.Should().Be(member.Value.GetString(), because);
+                    break;
+                case "cos":
+                    angle!.Cosine!.Display.Text.Should().Be(member.Value.GetString(), because);
+                    break;
+                case "tan":
+                    angle!.Tangent!.Display.Text.Should().Be(member.Value.GetString(), because);
+                    break;
+                case "angles":
+                    ((string[])[clock!.Smaller.Display.Text, clock.Larger.Display.Text]).Should()
+                        .Equal(member.Value.EnumerateArray().Select(text => text.GetString()), because);
+                    break;
+                default:
+                    Assert.Fail($"{because}: the runner does not know this expectation.");
+                    break;
+            }
+        }
+
+        static NumberLineAxis Axis(JsonElement expression)
+        {
+            NumberLineForm form = NumberLineForms[expression.GetProperty("numberLine").GetString()!];
+            Value? b = expression.TryGetProperty("b", out JsonElement upper) ? Parse(upper.GetString()!) : null;
+            return NumberLine.Define(form, Parse(expression.GetProperty("a").GetString()!), b);
+        }
+    }
 }

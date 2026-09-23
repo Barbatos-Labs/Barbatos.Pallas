@@ -70,7 +70,8 @@ public sealed class CalculatorShellViewModelTests
         CalculatorShellViewModel shell = Shell.Create();
         List<string?> changed = shell.Changes();
 
-        shell.Open(CalculatorApps.Of(CalculatorApp.MathBox));
+        // Every application has its engine now; an entry a later build lists before its engine exists is disabled.
+        shell.Open(CalculatorApps.Of(CalculatorApp.MathBox) with { IsAvailable = false });
 
         shell.CurrentApp.App.Should().Be(CalculatorApp.Calculate, "a disabled entry does nothing rather than throwing");
         shell.Session.App.Should().Be(CalculatorApp.Calculate);
@@ -90,7 +91,7 @@ public sealed class CalculatorShellViewModelTests
     [Theory]
     [InlineData("/vector", true, CalculatorApp.Vector)]
     [InlineData("ratio", true, CalculatorApp.Ratio)]
-    [InlineData("/math-box", false, CalculatorApp.Calculate)]
+    [InlineData("/math-box", true, CalculatorApp.MathBox)]
     [InlineData("/nowhere", false, CalculatorApp.Calculate)]
     [InlineData(null, false, CalculatorApp.Calculate)]
     public void ARouteOpensItsApplication(string? route, bool opened, CalculatorApp expected)
@@ -153,7 +154,7 @@ public sealed class CalculatorShellViewModelTests
     {
         // A calculator that will not start because of what it remembers is worse than one that starts empty.
         CalculatorSession session = Shell.Session();
-        StoredSnapshot store = new(session.Capture() with { App = CalculatorApp.MathBox });
+        StoredSnapshot store = new(session.Capture() with { App = (CalculatorApp)99 });
         CalculatorShellViewModel shell = new(session, store);
 
         shell.Load().Should().BeFalse();

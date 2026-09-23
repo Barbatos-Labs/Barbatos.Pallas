@@ -185,16 +185,29 @@ public sealed class SessionTests
     }
 
     [Fact]
-    public void ApplicationsWithoutAnEngine_AreRefused()
+    public void EveryApplication_HasItsEngine()
     {
         PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();
 
-        // Math Box is the last application without an engine; it arrives in Phase 6.
-        Action create = () => engine.CreateSession(CalculatorApp.MathBox);
-        Action switchApp = () => engine.CreateSession().SwitchApp(CalculatorApp.MathBox);
+        foreach (CalculatorApp app in Enum.GetValues<CalculatorApp>())
+        {
+            engine.CreateSession(app).App.Should().Be(app);
+            CalculatorSession session = engine.CreateSession();
+            session.SwitchApp(app);
+            session.App.Should().Be(app);
+        }
+    }
 
-        create.Should().Throw<NotSupportedException>();
-        switchApp.Should().Throw<NotSupportedException>();
+    [Fact]
+    public void AnApplicationThatIsNotOne_IsRefused()
+    {
+        PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();
+
+        Action create = () => engine.CreateSession((CalculatorApp)99);
+        Action switchApp = () => engine.CreateSession().SwitchApp((CalculatorApp)99);
+
+        create.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("app");
+        switchApp.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("app");
     }
 
     [Fact]

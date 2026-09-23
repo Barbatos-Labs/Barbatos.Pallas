@@ -202,6 +202,28 @@ A polynomial with complex roots gives them as a real and an imaginary part, each
 (`-3⌟4+√(23)⌟4i`), because a complex value holds two `double` numbers and cannot carry those forms. With Complex Roots
 off, only the real roots are shown, and `SolutionOutcome.NoRealRoots` says there are none.
 
+## Math Box
+
+Dice Roll and Coin Toss throw one to three dice or coins up to 250 times; Same Result #1-#3 give the same attempts on
+every copy of Pallas, as a class of calculators shows one result. A Number Line expression becomes a part of the x
+axis, and the View-Window is fitted to the expressions or set by hand. The Circle's trigonometric values are
+calculations of the session, so they keep their exact forms. An input out of range is a Range ERROR, as on p. 164.
+
+```csharp
+session.SwitchApp(CalculatorApp.MathBox);
+
+Simulation roll = session.Simulate(SimulationKind.DiceRoll, 2, N(100), SameResult.First);
+roll.Frequencies(SimulationTally.Sum).Sum(row => row.Frequency);                    // 100
+session.Simulate(SimulationKind.CoinToss, 1, N(251)).Error!.Value.Kind;             // CalcErrorKind.RangeError
+
+NumberLineAxis axis = NumberLine.Define(NumberLineForm.ToIncluded, N(-2), N(-0.5m)); // -2<x≤-0.5
+(axis.LowerIncluded, axis.UpperIncluded);                                            // (false, true)
+NumberLine.Fit([axis]).Scale;                                                        // 0.2
+
+session.CircleAngle(CircleKind.UnitCircle, N(45)).Sine!.Display.Text;               // "√(2)⌟2"
+session.Clock(3).Larger.Display.Text;                                                // "270"
+```
+
 ## Spreadsheet cells and tables
 
 The Spreadsheet application's grid is Barbatos.Pallas.Spreadsheet; the engine reads its cells. A formula of the

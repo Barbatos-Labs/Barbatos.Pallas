@@ -34,11 +34,11 @@ public sealed class PallasEngine
     internal EngineCatalog Catalog { get; }
 
     /// <summary>Creates a calculator session: its own memory, history and settings.</summary>
-    /// <param name="app">The application: Calculate, Complex or Base-N.</param>
+    /// <param name="app">The application; every one of the thirteen has its engine.</param>
     /// <param name="profile">The profile.</param>
     /// <param name="randomSeed">A seed for Ran# and RanInt#, to reproduce a sequence; <see langword="null"/> for an unpredictable one.</param>
     /// <returns>The session.</returns>
-    /// <exception cref="NotSupportedException"><paramref name="app"/> is an application whose engine is not implemented yet.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="app"/> is not a defined value.</exception>
     public CalculatorSession CreateSession(CalculatorApp app = CalculatorApp.Calculate, CalculatorProfile profile = CalculatorProfile.Standard, int? randomSeed = null)
     {
         return new CalculatorSession(this, app, profile, randomSeed);

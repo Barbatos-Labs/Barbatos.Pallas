@@ -181,6 +181,13 @@ public readonly struct Value : IEquatable<Value>
         };
     }
 
+    /// <summary>
+    /// Returns a real number as <see cref="decimal"/>: exactly when it is held as one, and through the conversion of its
+    /// <see cref="double"/> otherwise, which only a value below 10⁻¹⁴ or beyond 7.9×10²⁸ is.
+    /// </summary>
+    /// <remarks>For a caller that has already kept the magnitude within the range of <see cref="decimal"/>: a Math Box bound.</remarks>
+    internal decimal ToDecimalNearest() => Kind == ValueKind.DoubleReal ? (decimal)ToDouble() : ToDecimal();
+
     /// <summary>Returns the real number as <see cref="double"/>.</summary>
     /// <returns>The number; a value with an exact form is computed from the form, so π÷2 is exactly <c>double.Pi / 2</c>.</returns>
     /// <exception cref="InvalidOperationException">The value is a complex number, a matrix or a vector.</exception>

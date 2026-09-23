@@ -36,7 +36,7 @@ The PDF itself is the manufacturer's copyrighted work. It stays out of the repos
 | Matrix | MatA-MatD, MatAns; `+ − ×`, scalar product, ², ³, ⁻¹, Det, Trn, Identity(n), Abs (element-wise) | Up to 4×4 | 132-139 |
 | Vector | VctA-VctD, VctAns; `+ − ×`, scalar product, dot, cross, Angle, Unit Vector, Abs | 2 or 3 dimensions | 139-145 |
 | Ratio | `A:B = X:D`, `A:B = C:X`. In Pallas: `CalculatorSession.SolveRatio` with `RatioForm`; the result goes to Ans | A zero coefficient is a Math ERROR | 145-146 |
-| Math Box | Dice Roll and Coin Toss (1-3 dice/coins, 1-250 attempts, List/Relative Freq, "Same Result" #1-#3 seeds); Number Line (three axes, nine forms `x<a` … `a≤x≤b`, View-Window); Circle (Unit Circle, Half Circle, Clock) | Number-line bounds ±10¹⁰ | 146-161 |
+| Math Box | Dice Roll and Coin Toss (1-3 dice/coins, 1-250 attempts, List/Relative Freq, "Same Result" #1-#3 seeds); Number Line (three axes, nine forms `x<a` … `a≤x≤b`, View-Window); Circle (Unit Circle, Half Circle, Clock). In Pallas: `CalculatorSession.Simulate` with `Simulation` and its `Frequencies`, `NumberLine.Define`, `Fit` and `View`, and `CalculatorSession.CircleAngle` and `Clock`, whose values are calculations of the session | Attempts 1-250; number-line bounds and center ±10¹⁰, scale 10⁻¹⁰-10¹⁰; the Unit Circle -10000 < θ < 10000, the Half Circle 0-180°, π or 200 grad | 146-161 |
 
 Verify is available in Calculate, Table, Equation and Complex (p. 73).
 
@@ -181,7 +181,7 @@ marked *planned* are designed in their phase and may change.
 | Prime factorization | ≤ 10 digits; large factors left unfactored | Trial division on `long` (the `Standard` profile reproduces the calculator's display) |
 | Matrices | ≤ 4×4; accuracy suffers near det = 0 | Entries follow the precision rule; determinant and inverse exact by fraction-free elimination on `BigInteger`, rounded once; up to 64×64 in the `Extended` profile |
 | Distributions | 6 significant digits | Binomial exactly on `BigInteger`; normal through `ErrorFunction`; Poisson by Loader's saddle-point form |
-| Random numbers | Device PRNG; "Same Result" presets | *Planned:* `System.Random`; a seeded instance reproduces its sequence |
+| Random numbers | Device PRNG; "Same Result" presets | `System.Random`: the session's own for Ran#, RanInt# and a simulation, and one seeded with its number for each Same Result preset, which .NET keeps stable across versions - the same results on every copy of Pallas, not the calculator's (D8) |
 
 ## 10. Out of scope
 

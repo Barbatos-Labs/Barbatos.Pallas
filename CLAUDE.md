@@ -23,7 +23,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
-| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, matrices and vectors, statistics, distributions, plugins, integrals against PeterO.Numbers, evaluation properties |
+| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, matrices and vectors, statistics, distributions, Math Box (the Same Result presets pinned value by value), plugins, integrals against PeterO.Numbers, evaluation properties |
 | `tests/Barbatos.Pallas.LinearAlgebra.Tests` | Exact determinants, inverses and linear systems against the Leibniz formula and multiplication back |
 | `tests/Barbatos.Pallas.Statistics.Tests` | Exact sums, variances and fits against the manual's fractions, two-pass definitions and normal equations; quartile ranks |
 | `tests/Barbatos.Pallas.Solvers.Tests` | Integer polynomials against polynomials built from known roots (sign, square-free part, Sturm count, division); iterated roots against those roots |
@@ -36,7 +36,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
 | `docs/CALCULATOR-CATALOG.md` | Everything the calculator does, with manual pages |
-| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors and working assumptions (U1-U26), deliberate deviations (D1-D7) |
+| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors and working assumptions (U1-U31), deliberate deviations (D1-D8) |
 | `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
 | `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
@@ -50,8 +50,12 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M4.5 the calculator's face (a layout
 and look ✅, b a keypad per application ✅, c CATALOG, FORMAT, RCL and STO ✅), M5 persistence and shortcuts ✅,
 M6 hardening and the installer (in progress: the installer is built, signed and verified; the installed app is still to
-be walked). Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
-end.
+be walked). Phase 4 is complete.
+
+**Phase 6 - Graph and Math Box - in progress** (plan approved 24 Sep 2026). Milestones: M1 Math Box in Engine ✅,
+M2 its screens, M3 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for
+screen coordinates, and a compiled-expression API in Engine), M4 the graph as a view of the Table application, M5
+hardening. Since M1 every application has its engine and every conformance case runs, none skipped.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
   route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
@@ -84,7 +88,9 @@ end.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
   It evaluates nothing.
 - Engine binds, compiles and evaluates that tree: `Value` with the precision rule, exact display forms, sessions and
-  memory, the formatter and the FORMAT conversions, calculus, Verify, Complex and Base-N, and the plugin API.
+  memory, the formatter and the FORMAT conversions, calculus, Verify, Complex and Base-N, the plugin API, and the Math
+  Box application: `CalculatorSession.Simulate` (Dice Roll and Coin Toss, with the Same Result presets of D8),
+  `NumberLine` and `CalculatorSession.CircleAngle` and `Clock`.
 - Data ships the CODATA 2022 constants, the NIST SP 811 unit conversions and the CIAAW atomic weights;
   DependencyInjection ships `AddPallas()`.
 - LinearAlgebra holds exact elimination of `decimal` matrices (`ExactLinearAlgebra`); the Matrix and Vector
@@ -105,7 +111,7 @@ end.
   `SolvePolynomial`, `SolveEquation`, `SolveInequality`, `SolveRatio`), which is why Engine references Solvers and
   not the other way round (decision of 22 Sep 2026).
 
-Math Box, the last application, has its conformance cases skipped with Phase 6, which implements it.
+Math Box, the last application, has its engine since Phase 6 M1; its screens come in M2.
 
 ## Build and test
 
@@ -243,7 +249,7 @@ Things that will save time:
   reaches the caller with the span the calculator would put the cursor at.
 - **Every long loop counts against the budget** (`EvaluationContext.TryIterate`): Σ, Π, ∫ and the integrator. A
   budget that runs out is Time Out, never a hang.
-- **A behavior the manual does not state is an assumption**, listed as U12-U26 in docs/CONFORMANCE.md, not a quiet
+- **A behavior the manual does not state is an assumption**, listed as U12-U31 in docs/CONFORMANCE.md, not a quiet
   choice in the code.
 
 ### Expressions
@@ -279,7 +285,7 @@ Things that will save time:
 - **Derived expected values are computed exactly** (rationals, integer square roots), never with `double`.
   Transcendental values (`expectationSource: reference`) come from PeterO.Numbers series at 60 digits, cross-checked
   against a known constant (docs/CONFORMANCE.md §5), never from `System.Math` or the code under test.
-- **An assumption is a `note`,** listed under U1-U26 in docs/CONFORMANCE.md. A deliberate difference from the
+- **An assumption is a `note`,** listed under U1-U31 in docs/CONFORMANCE.md. A deliberate difference from the
   calculator is a D-entry there, never a silent engine change.
 
 ### The window

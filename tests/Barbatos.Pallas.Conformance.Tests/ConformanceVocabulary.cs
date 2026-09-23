@@ -31,7 +31,7 @@ internal static class ConformanceVocabulary
     public static readonly HashSet<string> Kinds =
     [
         "expression", "sequence", "calc", "property", "statistics", "distribution", "spreadsheet", "table",
-        "simultaneous", "polynomial", "solver", "inequality", "ratio",
+        "simultaneous", "polynomial", "solver", "inequality", "ratio", "mathbox",
     ];
 
     /// <summary>

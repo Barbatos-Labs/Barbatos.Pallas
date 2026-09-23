@@ -53,12 +53,15 @@ public sealed class AddPallasTests
     }
 
     [Fact]
-    public void ASessionOfMathBox_IsRefusedWhereItIsResolved()
+    public void ASessionOfMathBox_IsResolved()
     {
-        // p. 146: the Math Box application arrives in Phase 6; until then the engine says so rather than pretending.
+        // p. 146: the Math Box application has its engine since Phase 6.
         using ServiceProvider provider = new ServiceCollection().AddPallas(options => options.App = CalculatorApp.MathBox).Services.BuildServiceProvider();
 
-        provider.Invoking(p => p.GetRequiredService<CalculatorSession>()).Should().Throw<NotSupportedException>();
+        CalculatorSession session = provider.GetRequiredService<CalculatorSession>();
+
+        session.App.Should().Be(CalculatorApp.MathBox);
+        session.Clock(3).Smaller.Display.Text.Should().Be("90");
     }
 
     [Fact]

@@ -44,7 +44,7 @@ public sealed class CalculatorSession
 
     internal CalculatorSession(PallasEngine engine, CalculatorApp app, CalculatorProfile profile, int? randomSeed)
     {
-        RequireSupported(app);
+        RequireDefined(app);
         _engine = engine;
         App = app;
         Profile = profile;
@@ -227,10 +227,10 @@ public sealed class CalculatorSession
     /// VctAns; the history is cleared (pp. 35, 37, 137, 144).
     /// </summary>
     /// <param name="app">The application.</param>
-    /// <exception cref="NotSupportedException"><paramref name="app"/> is an application whose engine is not implemented yet.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="app"/> is not a defined value.</exception>
     public void SwitchApp(CalculatorApp app)
     {
-        RequireSupported(app);
+        RequireDefined(app);
         if (App == CalculatorApp.Calculate && app != CalculatorApp.Calculate)
         {
             PreAns = Value.Zero;
@@ -482,6 +482,113 @@ public sealed class CalculatorSession
         return new Calculation(input, App, _settings, Profile, CalculationKind.Value, x.Value, null, null, null, []);
     }
 
+    /// <summary>Runs a Dice Roll or Coin Toss of the Math Box application (manual pp. 147-153).</summary>
+    /// <param name="kind">Dice or coins.</param>
+    /// <param name="count">How many dice or coins each attempt throws, 1 to 3.</param>
+    /// <param name="attempts">How many attempts, as typed: a whole number from 1 to 250.</param>
+    /// <param name="sameResult">Off for a random simulation, or the preset whose results every copy of Pallas repeats (p. 150).</param>
+    /// <returns>Every attempt, or the Range ERROR of attempts out of range or not whole (p. 164).</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="kind"/> or <paramref name="sameResult"/> is not defined, or <paramref name="count"/> is not 1 to 3.</exception>
+    /// <exception cref="InvalidOperationException">The session is not in the Math Box application.</exception>
+    /// <remarks>
+    /// Off draws from the session's own generator, so a session created with a seed repeats its simulations too. A
+    /// preset draws from a generator of its own, seeded with its number: .NET keeps the sequence of a seeded
+    /// <see cref="Random"/> the same across versions, which is what makes the results the same on every copy. Nothing
+    /// goes to Ans; the application stores a relative frequency where the user asks (p. 149).
+    /// </remarks>
+    public Simulation Simulate(SimulationKind kind, int count, Value attempts, SameResult sameResult = SameResult.Off)
+    {
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a defined SimulationKind value.");
+        }
+
+        if (!Enum.IsDefined(sameResult))
+        {
+            throw new ArgumentOutOfRangeException(nameof(sameResult), sameResult, "Not a defined SameResult value.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, Simulation.MinimumCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, Simulation.MaximumCount);
+        RequireApp(CalculatorApp.MathBox);
+
+        // Compared as a double first, which holds any real value; then exactly, as a decimal.
+        bool whole = attempts.IsReal
+            && attempts.ToDouble() is >= 1d and <= Simulation.MaximumAttempts
+            && attempts.ToDecimal() == decimal.Truncate(attempts.ToDecimal());
+        if (!whole)
+        {
+            return Simulation.Failed(kind, count);
+        }
+
+        Random random = sameResult == SameResult.Off ? _random : new Random((int)sameResult);
+        return Simulation.Run(kind, count, (int)attempts.ToDecimal(), random);
+    }
+
+    /// <summary>Draws an angle of the Circle application on a circle, with its trigonometric values (manual pp. 157-160).</summary>
+    /// <param name="kind">The Unit Circle or the Half Circle.</param>
+    /// <param name="angle">θ1 or θ2, in the angle unit of the session.</param>
+    /// <param name="cancellationToken">Cancels the calculation.</param>
+    /// <returns>The angle with sin, cos and tan, or the Range ERROR of an angle outside its circle (p. 159).</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="kind"/> is not a defined value.</exception>
+    /// <exception cref="InvalidOperationException">The session is not in the Math Box application.</exception>
+    /// <remarks>
+    /// The range is p. 159's: strictly between -10000 and 10000 on the Unit Circle in every unit, and from 0 to 180°,
+    /// π or 200 gradians on the Half Circle, π being the 3.1415926535897932384626 of its footnote. Nothing goes to Ans.
+    /// </remarks>
+    public CircleAngle CircleAngle(CircleKind kind, Value angle, CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a defined CircleKind value.");
+        }
+
+        RequireApp(CalculatorApp.MathBox);
+        if (!OnCircle(kind, angle, _settings.AngleUnit))
+        {
+            return new CircleAngle(kind, angle, null, null, null, new CalcError(CalcErrorKind.RangeError, default));
+        }
+
+        EvaluationContext context = Context(cancellationToken);
+        // The angle as the display writes it - 45, or 1⌟6π in radians - which is Canonical Linear Syntax too.
+        string text = PallasEngine.Format(angle, _settings, Profile)!.Text;
+        return new CircleAngle(kind, angle, Trigonometric(Operation.Sin, "sin"), Trigonometric(Operation.Cos, "cos"), Trigonometric(Operation.Tan, "tan"), null);
+
+        Calculation Trigonometric(Operation operation, string name)
+        {
+            string input = name + "(" + text + ")";
+            EvalResult value = Operations.Evaluate(operation, [angle], context);
+            return value.Succeeded
+                ? new Calculation(input, App, _settings, Profile, CalculationKind.Value, value.Value, null, null, null, [])
+                : Failed(input, new CalcError(value.Error!.Value, default));
+        }
+    }
+
+    /// <summary>The Clock screen of the Circle application: the angles between the hands at an hour (manual pp. 158, 161).</summary>
+    /// <param name="hour">The hour, 1 to 12; the clock starts at 12, and ▲ and ▼ move the hour hand by one.</param>
+    /// <returns>θ1 and θ2, the smaller and the larger angle between the hands, in the angle unit of the session.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="hour"/> is not 1 to 12.</exception>
+    /// <exception cref="InvalidOperationException">The session is not in the Math Box application.</exception>
+    public ClockAngles Clock(int hour)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(hour, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(hour, 12);
+        RequireApp(CalculatorApp.MathBox);
+
+        // The minute hand stays on 12, so the hour hand is 30° an hour past it.
+        decimal turned = 30m * (hour % 12);
+        decimal smaller = Math.Min(turned, 360m - turned);
+        EvaluationContext context = Context(CancellationToken.None);
+        return new ClockAngles(hour, Angle(smaller), Angle(360m - smaller));
+
+        Calculation Angle(decimal degrees)
+        {
+            // In degrees, radians or gradians; a radian angle keeps π in its form, so 90° is π⌟2 (p. 161).
+            Value angle = ValueMath.ConvertAngle(Value.FromDecimal(degrees), AngleUnit.Degree, _settings.AngleUnit, context).Value;
+            return new Calculation(PallasEngine.Format(angle, _settings, Profile)!.Text, App, _settings, Profile, CalculationKind.Value, angle, null, null, null, []);
+        }
+    }
+
     /// <summary>Takes everything the session holds, as text an application can store (manual pp. 36-40).</summary>
     /// <returns>The snapshot: the application, the settings, the memory, the defined functions and the statistics data.</returns>
     /// <remarks>The history is not part of it; an application that keeps a history across runs keeps it itself.</remarks>
@@ -511,7 +618,7 @@ public sealed class CalculatorSession
     /// <param name="snapshot">The snapshot.</param>
     /// <exception cref="ArgumentNullException"><paramref name="snapshot"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">The snapshot was written by a later version of the format.</exception>
-    /// <exception cref="NotSupportedException">The snapshot is of an application this engine does not have.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The snapshot names an application that is not a defined value.</exception>
     /// <remarks>
     /// Anything the snapshot cannot say - a value whose text is not one, a definition that no longer parses - is left
     /// as the session had it, so a snapshot that has aged badly loses what it cannot carry and nothing more.
@@ -524,7 +631,7 @@ public sealed class CalculatorSession
             throw new ArgumentOutOfRangeException(nameof(snapshot), snapshot.Version, $"This engine reads snapshots up to version {SessionSnapshot.CurrentVersion}.");
         }
 
-        RequireSupported(snapshot.App);
+        RequireDefined(snapshot.App);
 
         // The values are read in Calculate, where every spelling of the vocabulary is available, and the application
         // the snapshot names is entered once they are in.
@@ -1102,11 +1209,31 @@ public sealed class CalculatorSession
         return Enum.IsDefined(variable) ? variable : throw new ArgumentOutOfRangeException(nameof(variable), variable, "Not a defined VectorVariable value.");
     }
 
-    private static void RequireSupported(CalculatorApp app)
+    private static void RequireDefined(CalculatorApp app)
     {
-        if (app == CalculatorApp.MathBox)
+        if (!Enum.IsDefined(app))
         {
-            throw new NotSupportedException($"The {app} application is implemented in Phase 6; every other application is supported.");
+            throw new ArgumentOutOfRangeException(nameof(app), app, "Not a defined CalculatorApp value.");
         }
+    }
+
+    // p. 159: the Unit Circle takes -10000 < θ < 10000 in every unit; the Half Circle 0 ≤ θ ≤ 180°, π or 200 gradians,
+    // π being the value of its footnote.
+    private static bool OnCircle(CircleKind kind, Value angle, AngleUnit unit)
+    {
+        if (!angle.IsReal || Math.Abs(angle.ToDouble()) >= 10000d)
+        {
+            return false;
+        }
+
+        decimal theta = angle.ToDecimalNearest();
+        decimal halfTurn = unit switch
+        {
+            AngleUnit.Degree => 180m,
+            AngleUnit.Radian => 3.1415926535897932384626m,
+            _ => 200m,
+        };
+
+        return kind == CircleKind.UnitCircle || (theta >= 0m && theta <= halfTurn);
     }
 }

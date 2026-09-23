@@ -167,6 +167,26 @@ public sealed class ReadmeTests
     }
 
     [Fact]
+    public void MathBox()
+    {
+        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
+        static Value N(decimal value) => Value.FromDecimal(value);
+
+        session.SwitchApp(CalculatorApp.MathBox);
+
+        Simulation roll = session.Simulate(SimulationKind.DiceRoll, 2, N(100), SameResult.First);
+        roll.Frequencies(SimulationTally.Sum).Sum(row => row.Frequency).Should().Be(100);
+        session.Simulate(SimulationKind.CoinToss, 1, N(251)).Error!.Value.Kind.Should().Be(CalcErrorKind.RangeError);
+
+        NumberLineAxis axis = NumberLine.Define(NumberLineForm.ToIncluded, N(-2), N(-0.5m));
+        (axis.LowerIncluded, axis.UpperIncluded).Should().Be((false, true));
+        NumberLine.Fit([axis]).Scale.Should().Be(0.2m);
+
+        session.CircleAngle(CircleKind.UnitCircle, N(45)).Sine!.Display.Text.Should().Be("√(2)⌟2");
+        session.Clock(3).Larger.Display.Text.Should().Be("270");
+    }
+
+    [Fact]
     public void SpreadsheetCellsAndTables()
     {
         PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();

@@ -57,7 +57,7 @@ rather than copied into the engine.
 | `id` | yes | Unique, kebab-case, stable forever (a case is referred to by id) |
 | `page` | yes | Printed page of the manual (1-174) |
 | `app` | yes | `Calculate`, `Statistics`, `Distribution`, `Spreadsheet`, `Table`, `Equation`, `Inequality`, `Complex`, `BaseN`, `Matrix`, `Vector`, `Ratio`, `MathBox` |
-| `kind` | yes | `expression`, `sequence`, `calc`, `property`, `statistics`, `distribution`, `spreadsheet`, `table`, `simultaneous`, `polynomial`, `solver`, `inequality`, `ratio` |
+| `kind` | yes | `expression`, `sequence`, `calc`, `property`, `statistics`, `distribution`, `spreadsheet`, `table`, `simultaneous`, `polynomial`, `solver`, `inequality`, `ratio`, `mathbox` |
 | `status` | yes | §4 |
 | `profile` | no | `Standard` (default) or `Extended` |
 | `settings` | no | Calc settings differing from the initial state (see below) |
@@ -89,6 +89,7 @@ A setting that is not listed has its initial value (manual p. 22).
 - **Structured results:** `matrix`, `vector`, `roots`, `extremum`, `solution`, `rows`, `values`, `formulas`, and
   statistic names such as `Σx`, `σx`, `a`, `r`.
 - **Random functions** (`kind: property`): `range` and `step`.
+- **Math Box forms** (`kind: mathbox`, whose `given` names one form: `simulation` with `dice` or `coins` and `attempts`; `numberLine` with `a` and `b`, or `numberLines`; `viewWindow` with `center` and `scale`; `circle` with `angle`; `clock`): `view` (`scale`, `center`, `minimum`, `maximum`), `sin`, `cos`, `tan`, `angles` (θ1 and θ2), and `error`.
 
 The JSON reader is strict. An unknown member (a typo such as `expcet`) fails the data tests instead of silently
 dropping an expectation.
@@ -126,9 +127,10 @@ the display, the FORMAT conversions, the variables after the calculation, the Ve
 of a table or a sheet, and the range and step of a random function. An expectation the runner does not know fails the
 case, so nothing passes because part of it was ignored.
 
-Since Phase 4 closed, every application but Math Box runs: Calculate, Complex and Base-N (Phase 3), then Matrix,
-Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and Table. The four Math Box cases are
-reported as skipped with Phase 6, which implements them.
+Since Phase 6 M1 every application runs and no case is skipped: Calculate, Complex and Base-N (Phase 3), then
+Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and Table (Phase 4), and Math Box
+(Phase 6), whose four cases grew to eleven: the two errors that were the only Math Box forms in the data became cases
+of `kind: mathbox`, and the Circle, Clock and Number Line examples of pp. 155-161 joined them.
 
 ## 5. How derived values were computed
 
@@ -197,9 +199,14 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 | U24 | The domains of the Distribution parameters the manual does not give (p. 98 gives 0 ≤ p ≤ 1, σ > 0, 0 ≤ Area ≤ 1) | x and N are whole numbers with 0 ≤ x ≤ N; Poisson's x is a whole number of 0 or more and λ > 0; Lower ≤ Upper; Area 0 and 1 give an infinite x, which is a Math ERROR. A value outside is a Math ERROR of that calculation, "ERROR" in its row of a list (p. 97). A binomial whose fraction has too many digits for the budget is a Time Out (p. 165 lists Time Out for Distribution) | The manufacturer's official emulator |
 | U25 | What the Equation and Inequality applications do where the manual only shows a screen (pp. 114-125) | The roots of a polynomial come by decreasing real part, a conjugate pair with the positive imaginary part first, and a repeated root as often as it is a root; a leading coefficient of 0 is a Math ERROR, because the degree is the one the application asked for; Complex Roots off leaves the real roots, and none of them is "No Real Roots"; a cubic has its two extrema by increasing x, and a double root of the derivative is "No Local Max/Min"; the solution of a system stays in the result, and only the Solver stores what it found, in the variable it solved for; the Solver settles when a step no longer reaches the digits the solution is held to, and reports Cannot Solve after 200 steps; an inequality satisfied only at a root is written `x=1` | The manufacturer's official emulator |
 | U26 | What the Spreadsheet and Table applications do where the manual only shows a screen (pp. 100-113) | An empty cell reads as 0, and every cell of a range counts in Mean; a cell displays its value with the settings in effect, so MathI/MathO shows a fraction where the calculator's screens show whole numbers; a range may be written either way round (`Sum(A3:A1)`); a cell in error carries its error to the cells that read it; the sheet holds 1,700 bytes, an input 49, and more is a Memory ERROR; a table steps through decimals, so a Start, End or Step that is no decimal is a Range ERROR, as are a step of 0 and one that leads away from the end; generating a table leaves Ans and the history alone, as entering a cell does | The manufacturer's official emulator |
+| U27 | How a relative frequency of a simulation is shown (pp. 148-153) | As a decimal under every Input/Output setting: p. 150 shows 46 of 250 as 0.184 where MathI/MathO would give 23⌟125. The value is the exact decimal quotient; the application formats it with decimal output. With one coin, the Relative Freq rows are tails then heads, the order in which two and three coins count their heads (from ●×0 up) | The manufacturer's official emulator |
+| U28 | Number Line bounds that are equal (p. 165 names only a > b, as 10<x≤5) | a = b is a Range ERROR in every form with two bounds: it is an empty set, or the one point x=a already draws | The manufacturer's official emulator |
+| U29 | The View-Window the Number Line application sets by itself (p. 156 shows one example, not the rule) | The smallest scale of 1, 2 or 5 times a power of ten whose eight ticks on each side span the bounds of every expression, and the center the middle of the bounds rounded to a tick: the example of p. 156 (x≤-1.5, x>-1.0, -2.0<x≤-0.5) gives Scale 0.2 and Center -1.2, as the manual shows. A single bound spans the larger of its distance from 0 and 1; no expression is the view of 0 with Scale 1 | The manufacturer's official emulator, with other expressions |
+| U30 | A trigonometric value of the Circle application that does not exist (tan 90°) | That value is its Math ERROR, and the angle is still drawn with its sine and cosine | The manufacturer's official emulator |
+| U31 | The Clock at 12:00 and at 6:00 (pp. 158, 161 show 3:00) | At 12:00, θ1 = 0 and θ2 is a full turn; at 6:00 both are half a turn | The manufacturer's official emulator |
 
 Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3), U1, U4, U11-U13, U18, U20, U22,
-U24, U25 and U26 by the engine and the applications, U14-U17, U21 and U23 by the formatter.
+U24-U31 by the engine and the applications, U14-U17, U21 and U23 by the formatter.
 
 ## 7. Deliberate deviations from the calculator
 
@@ -214,6 +221,7 @@ These are decisions, not bugs. They apply to both profiles unless stated.
 | D5 | `d/dx` at a non-differentiable point is a Math ERROR; the calculator's numerical derivative returns a number | Automatic differentiation is exact and refuses rather than guesses |
 | D6 | *Withdrawn 17 Sep 2026.* Was: Verify of an undecidable irrational comparison is `Undetermined`. Without certified arithmetic nothing is undecidable; values compare at 15 significant digits ([PRECISION.md §9](PRECISION.md#9-equality-and-verify)) | The id stays reserved |
 | D7 | Prime factorization is complete | `Extended` profile only; `Standard` keeps `2×(1018081)` |
+| D8 | "Same Result" #1-#3 of Dice Roll and Coin Toss give Pallas's own results: the same on every copy of Pallas and every version of .NET, but not the reference calculator's | The calculator does not publish its sequences (p. 150). Each preset is a `System.Random` seeded with its number, whose seeded sequence .NET keeps stable; `MathBoxTests` pins it (decision of 24 Sep 2026) |
 
 ## 8. Adding a case
 

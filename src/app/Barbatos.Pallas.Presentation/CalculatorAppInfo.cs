@@ -42,7 +42,7 @@ public static class CalculatorApps
         Entry(CalculatorApp.Matrix, "matrix"),
         Entry(CalculatorApp.Vector, "vector"),
         Entry(CalculatorApp.Ratio, "ratio"),
-        Entry(CalculatorApp.MathBox, "math-box", available: false),
+        Entry(CalculatorApp.MathBox, "math-box"),
     ];
 
     /// <summary>Gets the applications this build can open.</summary>

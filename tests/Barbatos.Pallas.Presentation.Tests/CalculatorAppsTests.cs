@@ -61,13 +61,11 @@ public sealed class CalculatorAppsTests
     }
 
     [Fact]
-    public void MathBoxIsListedAndDisabledUntilPhaseSix()
+    public void EveryApplicationHasItsEngineSincePhaseSix()
     {
-        CalculatorAppInfo mathBox = CalculatorApps.Of(CalculatorApp.MathBox);
-
-        mathBox.IsAvailable.Should().BeFalse();
-        CalculatorApps.Available.Should().NotContain(mathBox).And.HaveCount(CalculatorApps.All.Length - 1);
-        CalculatorApps.Available.Should().OnlyContain(app => app.IsAvailable);
+        // Math Box was the last to be listed and disabled; its engine arrived in Phase 6 M1.
+        CalculatorApps.Of(CalculatorApp.MathBox).IsAvailable.Should().BeTrue();
+        CalculatorApps.Available.Should().Equal(CalculatorApps.All);
     }
 
     [Theory]
