@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:wpfmath="clr-namespace:WpfMath.Controls;assembly=WpfMath"
+             xmlns:presentation="clr-namespace:Barbatos.Pallas.Presentation;assembly=Barbatos.Pallas.Presentation"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
     <UserControl.Resources>
         <Style x:Key="WhenResult" TargetType="FrameworkElement">
@@ -51,6 +52,38 @@
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center" />
 
+                <!-- What the next key will mean, as the calculator marks it at the top of its display (p. 18), and
+                     what the last STO did. -->
+                <StackPanel Grid.Row="0"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            TextElement.FontSize="11"
+                            TextElement.FontWeight="SemiBold">
+                    <TextBlock Margin="0,0,8,0" Foreground="{StaticResource LcdInkMuted}" FontFamily="{StaticResource MonoFont}" Text="{Binding Notice}" />
+                    <TextBlock>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Input.Mode}" Value="{x:Static presentation:KeyMode.Shift}">
+                                        <Setter Property="Text" Value="S" />
+                                        <Setter Property="Foreground" Value="{StaticResource LcdShift}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Input.Mode}" Value="{x:Static presentation:KeyMode.Alpha}">
+                                        <Setter Property="Text" Value="A" />
+                                        <Setter Property="Foreground" Value="{StaticResource LcdAlpha}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Input.Mode}" Value="{x:Static presentation:KeyMode.Store}">
+                                        <Setter Property="Text" Value="STO" />
+                                        <Setter Property="Foreground" Value="{StaticResource LcdShift}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
                 <!-- What the engine will read, under what the screen shows: the two are the same tree. -->
                 <TextBlock Grid.Row="1"
                            Text="{Binding Input.Linear}"
@@ -89,6 +122,20 @@
             </Grid>
         </Border>
 
-        <views:KeypadView Grid.Row="1" DataContext="{Binding Input}" />
+        <views:KeypadView x:Name="Keys" Grid.Row="1" DataContext="{Binding Input}" />
+
+        <!-- A menu is drawn over the keys it was opened from, as the calculator draws it on its display. -->
+        <views:CalculatorMenuView x:Name="Menu" Grid.Row="1">
+            <views:CalculatorMenuView.Style>
+                <Style TargetType="views:CalculatorMenuView">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Menu}" Value="{x:Static presentation:CalculatorMenu.None}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </views:CalculatorMenuView.Style>
+        </views:CalculatorMenuView>
     </Grid>
 </UserControl>

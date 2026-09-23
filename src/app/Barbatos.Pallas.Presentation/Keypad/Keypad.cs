@@ -84,7 +84,9 @@ public static class Keypad
         new KeyDefinition(KeyId.Percent, "%", new InsertSymbol("%"), new InsertSymbol("Ran#"), "Ran#"),
         new KeyDefinition(KeyId.Integral, "∫", new InsertTemplate(MathTemplateKind.Integral), new InsertTemplate(MathTemplateKind.Derivative), "d/dx"),
         new KeyDefinition(KeyId.Sum, "Σ", new InsertTemplate(MathTemplateKind.Sum), new InsertTemplate(MathTemplateKind.Product), "Π"),
-        Command(KeyId.SwapForm, "S⇔D", KeyCommand.SwapForm),
+        new KeyDefinition(KeyId.SwapForm, "S⇔D", new RunCommand(KeyCommand.SwapForm), new RunCommand(KeyCommand.Format), "FORMAT", Group: KeyGroup.Control),
+        Command(KeyId.Catalog, "CATALOG", KeyCommand.Catalog),
+        new KeyDefinition(KeyId.Recall, "RCL", new RunCommand(KeyCommand.Recall), new RunCommand(KeyCommand.Store), "STO", Group: KeyGroup.Control),
 
         // Base-N (pp. 51-56). The hexadecimal digits are keys of their own, because the variables A to F do not
         // exist there: what the key types is read as a digit by the lexer in this application (assumption U12).
@@ -128,10 +130,11 @@ public static class Keypad
 
     // Every application's keypad has the cursor rows above and the number rows below; what differs is between them.
     // These are declared before the tables built from them: static fields are initialized in the order they appear.
+    // Six keys a row, so that ▲ stands over ▼ with ◀ and ▶ either side of it, as the calculator's cursor keys do.
     private static readonly ImmutableArray<ImmutableArray<KeyId>> CursorRows =
     [
-        [KeyId.Shift, KeyId.Alpha, KeyId.Up, KeyId.Home, KeyId.Settings],
-        [KeyId.Left, KeyId.Down, KeyId.Right, KeyId.Delete, KeyId.ClearAll],
+        [KeyId.Shift, KeyId.Alpha, KeyId.Up, KeyId.Catalog, KeyId.Home, KeyId.Settings],
+        [KeyId.Recall, KeyId.Left, KeyId.Down, KeyId.Right, KeyId.Delete, KeyId.ClearAll],
     ];
 
     private static readonly ImmutableArray<ImmutableArray<KeyId>> FunctionRows =
@@ -163,16 +166,6 @@ public static class Keypad
         [KeyId.Zero, KeyId.Execute],
     ];
 
-    // The applications that calculate expressions of their own keep every key of Calculate and add one row of
-    // their own, directly under the cursor: the names only they have (pp. 90, 129, 135, 138).
-    private static readonly FrozenDictionary<CalculatorApp, ImmutableArray<KeyId>> OwnRows = new Dictionary<CalculatorApp, ImmutableArray<KeyId>>
-    {
-        [CalculatorApp.Statistics] = [KeyId.DataCount, KeyId.MeanX, KeyId.MeanY, KeyId.EstimateX, KeyId.Probability],
-        [CalculatorApp.Complex] = [KeyId.Imaginary, KeyId.Polar, KeyId.Conjugate],
-        [CalculatorApp.Matrix] = [KeyId.MatrixA, KeyId.MatrixB, KeyId.MatrixC, KeyId.MatrixD, KeyId.Determinant, KeyId.Identity],
-        [CalculatorApp.Vector] = [KeyId.VectorA, KeyId.VectorB, KeyId.VectorC, KeyId.VectorD, KeyId.DotProduct, KeyId.VectorAngle],
-    }.ToFrozenDictionary();
-
     // In Base-N a key is only what it is: |x| and the comma after Shift belong to the CATALOG commands, which Base-N
     // has not (p. 51), and so do nPr and nCr - where nCr would be worse than refused, because C is a digit there and
     // the key would type the number twelve under a legend that says combinations (found by ApplicationKeypadTests).
@@ -195,14 +188,20 @@ public static class Keypad
     /// </remarks>
     public static ImmutableArray<ImmutableArray<KeyId>> RowsFor(CalculatorApp app)
     {
-        if (app is CalculatorApp.BaseN)
+        // The applications that calculate expressions of their own keep every key of Calculate and add one row of
+        // their own, directly under the cursor: the names only they have (pp. 90, 129, 135, 138).
+        ImmutableArray<KeyId> own = app switch
         {
-            return BaseNRows;
-        }
+            CalculatorApp.Statistics => [KeyId.DataCount, KeyId.MeanX, KeyId.MeanY, KeyId.EstimateX, KeyId.Probability],
+            CalculatorApp.Complex => [KeyId.Imaginary, KeyId.Polar, KeyId.Conjugate],
+            CalculatorApp.Matrix => [KeyId.MatrixA, KeyId.MatrixB, KeyId.MatrixC, KeyId.MatrixD, KeyId.Determinant, KeyId.Identity],
+            CalculatorApp.Vector => [KeyId.VectorA, KeyId.VectorB, KeyId.VectorC, KeyId.VectorD, KeyId.DotProduct, KeyId.VectorAngle],
+            _ => [],
+        };
 
-        return OwnRows.TryGetValue(app, out ImmutableArray<KeyId> own)
-            ? [.. CursorRows, own, .. FunctionRows, .. NumberRows]
-            : Rows;
+        return app is CalculatorApp.BaseN ? BaseNRows
+            : own.IsEmpty ? Rows
+            : [.. CursorRows, own, .. FunctionRows, .. NumberRows];
     }
 
     /// <summary>Returns whether an application's keypad has a key.</summary>

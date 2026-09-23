@@ -202,11 +202,34 @@ public sealed class MathInputViewModelTests
     {
         MathInputViewModel input = Pressed(KeyId.One, KeyId.Two);
         input.Undo();
+        List<string?> changed = input.Changes();
 
         input.Press(KeyId.Three);
 
         input.CanRedo.Should().BeFalse();
+        changed.Should().Contain(nameof(MathInputViewModel.CanRedo), "a redo button that was lit has to go out");
         input.Linear.Should().Be("13");
+    }
+
+    [Fact]
+    public void WhatIsPutBackCanBeTakenBackAgain()
+    {
+        MathInputViewModel input = Pressed(KeyId.One, KeyId.Two);
+        input.Undo();
+        input.Redo();
+
+        input.Undo();
+
+        input.Linear.Should().Be("1", "redo is an edit that undo takes back, like any other");
+        input.CanRedo.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TheLineIsDrawnWithItsCursor()
+    {
+        MathInputViewModel input = Pressed(KeyId.One);
+
+        input.Latex.Should().Contain(@"\color{red}{|}", "the screen draws the caret as part of the formula");
     }
 
     [Fact]

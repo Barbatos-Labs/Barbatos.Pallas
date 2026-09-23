@@ -299,6 +299,62 @@
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     </Style>
 
+    <!-- ── Menus on the display: CATALOG, FORMAT, the variables ────────────────────────────────────────────── -->
+
+    <Style x:Key="MenuPanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Bezel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Edge}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource PanelCorner}" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Focusable" Value="True" />
+    </Style>
+
+    <!-- One entry of a menu: what it puts on the line, chosen with a click. -->
+    <Style x:Key="MenuEntry" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="MinWidth" Value="64" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+
+    <!-- Focusable, unlike a history row: a ListBoxItem selects itself on a click only when it can take the focus. -->
+    <Style x:Key="GroupRow" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{StaticResource InkMuted}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Face"
+                            Padding="10,6"
+                            Margin="0,1"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource SmallCorner}"
+                            TextElement.Foreground="{TemplateBinding Foreground}">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Face" Property="Background" Value="{StaticResource Surface}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Face" Property="Background" Value="{StaticResource SurfaceRaised}" />
+                            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GroupList" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource GroupRow}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+
     <!-- One line of what an application solved: its name, and what it came to. Four screens show the same shape. -->
     <DataTemplate x:Key="NamedValueRow">
         <DockPanel Margin="0,3">

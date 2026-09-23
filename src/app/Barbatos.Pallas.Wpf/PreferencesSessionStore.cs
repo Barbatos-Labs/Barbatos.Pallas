@@ -35,8 +35,8 @@ public sealed class PreferencesSessionStore : ISessionStore
     }
 
     /// <inheritdoc/>
-    public SessionSnapshot? Load() => SessionSnapshotJson.Read(_preferences.Get(Key, string.Empty));
+    public StoredSession? Load() => SessionSnapshotJson.ReadSession(_preferences.Get(Key, string.Empty));
 
     /// <inheritdoc/>
-    public void Save(SessionSnapshot snapshot) => _preferences.Set(Key, SessionSnapshotJson.Write(snapshot));
+    public void Save(StoredSession session) => _preferences.Set(Key, SessionSnapshotJson.Write(session));
 }

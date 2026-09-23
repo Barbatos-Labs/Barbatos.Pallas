@@ -3,8 +3,10 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
+using System.ComponentModel;
 using System.Windows;
 using Barbatos.Wpf.AquariusRouter.Routing;
+using Barbatos.Wpf.Storage;
 
 namespace Barbatos.Pallas.Wpf;
 
@@ -14,17 +16,22 @@ namespace Barbatos.Pallas.Wpf;
 public partial class MainWindow : Window
 {
     private readonly Router _router;
+    private readonly IPreferences _preferences;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class.
     /// </summary>
     /// <param name="router">The router whose current route this window shows.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="router"/> is <see langword="null"/>.</exception>
-    public MainWindow(Router router)
+    /// <param name="preferences">The preferences where the window was when it was last closed is kept.</param>
+    /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
+    public MainWindow(Router router, IPreferences preferences)
     {
         ArgumentNullException.ThrowIfNull(router);
+        ArgumentNullException.ThrowIfNull(preferences);
         _router = router;
+        _preferences = preferences;
         InitializeComponent();
+        WindowPlacement.Restore(this, preferences);
     }
 
     /// <inheritdoc />
@@ -36,5 +43,15 @@ public partial class MainWindow : Window
         // calculator starts on its home screen even when a session was restored: the session says which application
         // the memories belong to, not which screen the user asked for this time.
         await _router.Start("/");
+    }
+
+    /// <inheritdoc />
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (!e.Cancel)
+        {
+            WindowPlacement.Keep(this, _preferences);
+        }
     }
 }

@@ -40,10 +40,14 @@ public sealed partial class MathInputViewModel : ObservableObject
     /// </remarks>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Rows))]
+    [NotifyPropertyChangedFor(nameof(Latex))]
     private CalculatorApp _app = CalculatorApp.Calculate;
 
     /// <summary>Raised for a key the input cannot carry out itself, such as Execute or the home screen.</summary>
     public event EventHandler<KeyCommand>? Requested;
+
+    /// <summary>Raised when STO and then a key name a variable, with what that key types (<c>A</c>, <c>x</c>).</summary>
+    public event EventHandler<string>? StoreRequested;
 
     /// <summary>Gets the keys of the application row by row, as the screen draws them.</summary>
     public ImmutableArray<ImmutableArray<KeyDefinition>> Rows =>
@@ -53,7 +57,7 @@ public sealed partial class MathInputViewModel : ObservableObject
     public string Linear => MathLinearWriter.Write(Document);
 
     /// <summary>Gets the input as LaTeX, with the cursor drawn in it, which is what the screen shows.</summary>
-    public string Latex => MathLatexWriter.Write(Document);
+    public string Latex => MathLatexWriter.Write(Document, caret: true, App);
 
     /// <summary>Gets whether nothing has been typed.</summary>
     public bool IsEmpty => Document.IsEmpty;
@@ -74,7 +78,8 @@ public sealed partial class MathInputViewModel : ObservableObject
             return;
         }
 
-        KeyAction? action = Keypad.Of(id, App).In(Mode);
+        KeyMode mode = Mode;
+        KeyAction? action = Keypad.Of(id, App).In(mode);
 
         // A mode lasts for one key: Shift and then a key is that key's second meaning, and nothing after it.
         Mode = KeyMode.Primary;
@@ -83,6 +88,32 @@ public sealed partial class MathInputViewModel : ObservableObject
             return;
         }
 
+        if (mode is KeyMode.Store)
+        {
+            // After STO the key is not typed: it names where the answer goes, which is the screen's to decide - A
+            // is a variable in Calculate and a digit in Base-N.
+            if (action is InsertSymbol variable)
+            {
+                StoreRequested?.Invoke(this, variable.Text);
+            }
+
+            return;
+        }
+
+        Apply(action);
+    }
+
+    /// <summary>Puts what a key or a menu entry types on the line, as pressing it would.</summary>
+    /// <param name="action">What is typed.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The CATALOG and the variable list type through this, so what they put on the line is undone as a key is. A
+    /// null action is refused by <see cref="InputCommandRouter"/>, the only place a key becomes an edit.
+    /// </remarks>
+    public void Type(KeyAction action) => Apply(action);
+
+    private void Apply(KeyAction action)
+    {
         KeyResult result = InputCommandRouter.Apply(Document, action);
         switch (result.Request)
         {
@@ -101,6 +132,9 @@ public sealed partial class MathInputViewModel : ObservableObject
                 return;
             case KeyCommand.Alpha:
                 Mode = KeyMode.Alpha;
+                return;
+            case KeyCommand.Store:
+                Mode = KeyMode.Store;
                 return;
             case KeyCommand.Undo:
                 Undo();

@@ -28,6 +28,8 @@
     <SolidColorBrush x:Key="LcdInk" Color="#111A10" />
     <SolidColorBrush x:Key="LcdInkMuted" Color="#4A5946" />
     <SolidColorBrush x:Key="LcdError" Color="#8C231C" />
+    <SolidColorBrush x:Key="LcdShift" Color="#8A5300" />
+    <SolidColorBrush x:Key="LcdAlpha" Color="#1F4E9A" />
 
     <!-- The second and third meaning of a key, in the two colours the calculator prints them in (p. 18). -->
     <SolidColorBrush x:Key="ShiftInk" Color="#F2A93B" />

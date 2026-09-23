@@ -38,7 +38,7 @@
                                        Margin="8,0,0,0"
                                        FontFamily="{StaticResource MonoFont}"
                                        Foreground="{StaticResource Ink}"
-                                       Text="{Binding Display.Text}" />
+                                       Text="{Binding Text}" />
                             <TextBlock FontFamily="{StaticResource MonoFont}"
                                        Foreground="{StaticResource InkMuted}"
                                        TextTrimming="CharacterEllipsis"

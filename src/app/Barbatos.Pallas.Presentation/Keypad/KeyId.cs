@@ -150,8 +150,14 @@ public enum KeyId
     /// <summary>A sum, and a product after Shift.</summary>
     Sum,
 
-    /// <summary>Turns the result between its exact form and its decimal (S⇔D, manual p. 42).</summary>
+    /// <summary>Turns the result between its exact form and its decimal (S⇔D, manual p. 42), and FORMAT after Shift.</summary>
     SwapForm,
+
+    /// <summary>Opens the CATALOG (manual pp. 51-69).</summary>
+    Catalog,
+
+    /// <summary>Recalls a variable (RCL), and stores the last answer in one after Shift (STO).</summary>
+    Recall,
 
     // Base-N (manual pp. 51-56). The hexadecimal digits are keys of their own there, because the variables A to F
     // do not exist in Base-N (assumption U12).

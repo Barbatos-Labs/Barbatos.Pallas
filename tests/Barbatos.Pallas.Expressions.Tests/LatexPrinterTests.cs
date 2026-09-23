@@ -52,6 +52,7 @@ public sealed class LatexPrinterTests
     [Theory]
     [InlineData(CalculatorApp.Complex, "2∠45+3i", @"2\angle 45+3 i")]
     [InlineData(CalculatorApp.BaseN, "1010 and 1100 or h1F xor b1 xnor d9-o7", @"1010\;\mathrm{and}\;1100\;\mathrm{or}\;\mathrm{h1F}\;\mathrm{xor}\;\mathrm{b1}\;\mathrm{xnor}\;\mathrm{d9}-\mathrm{o7}")]
+    [InlineData(CalculatorApp.BaseN, "1F+A", @"\mathrm{1F}+\mathrm{A}")]
     [InlineData(CalculatorApp.Vector, "VctA•VctB", @"\mathrm{VctA}\cdot \mathrm{VctB}")]
     [InlineData(CalculatorApp.Statistics, "5.5ŷ+2x̂+3x̂₁+4x̂₂+2▶t", @"5.5\,\hat{y}+2\,\hat{x}+3\,\hat{x}_{1}+4\,\hat{x}_{2}+2\blacktriangleright t")]
     [InlineData(CalculatorApp.Statistics, "x̄+ȳ+σ²x+Σx²+Q1", @"\bar{x}+\bar{y}+\sigma ^{2}x+\Sigma x^{2}+\mathrm{Q1}")]
@@ -123,9 +124,54 @@ public sealed class LatexPrinterTests
     [Fact]
     public void Print_RejectsNull()
     {
-        Action act = () => LatexPrinter.Print(null!);
+        Action act = () => LatexPrinter.Print((SyntaxNode)null!);
         act.Should().Throw<ArgumentNullException>();
     }
+
+    [Theory]
+    [InlineData("@h", "h")]
+    [InlineData("@N_A", "N_{A}")]
+    [InlineData("_k", @"\mathrm{k}")]
+    [InlineData("x̄", @"\bar{x}")]
+    [InlineData("MatA", @"\mathrm{MatA}")]
+    [InlineData("°F▶°C", @"\mathrm{{}^{\circ}F\blacktriangleright {}^{\circ}C}")]
+    [InlineData("π", @"\pi ")]
+    [InlineData("Ans", @"\mathrm{Ans}")]
+    public void PrintSymbol_DrawsANameAsATreeDrawsIt(string text, string expected)
+    {
+        LatexPrinter.Print(Symbol(text)).Should().Be(expected);
+    }
+
+    [Fact]
+    public void PrintSymbol_DrawsEveryNameOnItsOwnAsItIsDrawnInACalculation()
+    {
+        // What an editor draws a symbol at a time and what the history draws from the tree are the same drawing.
+        foreach (SyntaxSymbol symbol in SyntaxVocabulary.Standard.Symbols.Where(IsName))
+        {
+            CalculatorApp app = symbol.Applications.IsEmpty ? CalculatorApp.Calculate : symbol.Applications[0];
+            string inTree = symbol.Kind is SymbolKind.EngineeringSymbol or SymbolKind.UnitConversion
+                ? LatexPrinter.Print(Parse("1" + symbol.Text, new SyntaxContext(app)))[@"1\,".Length..]
+                : LatexPrinter.Print(Parse(symbol.Text, new SyntaxContext(app)));
+
+            LatexPrinter.Print(symbol).Should().Be(inTree, "'{0}' is drawn the same on its own and in a calculation", symbol.Text);
+        }
+    }
+
+    [Fact]
+    public void PrintSymbol_RefusesWhatIsNotAName()
+    {
+        Action op = () => LatexPrinter.Print(Symbol("×"));
+        Action none = () => LatexPrinter.Print((SyntaxSymbol)null!);
+
+        op.Should().Throw<ArgumentException>().WithParameterName("symbol");
+        none.Should().Throw<ArgumentNullException>().WithParameterName("symbol");
+    }
+
+    private static bool IsName(SyntaxSymbol symbol) =>
+        ReferenceEquals(symbol.Canonical, symbol)
+        && symbol.Kind is SymbolKind.Constant or SymbolKind.ScientificConstant or SymbolKind.Variable or SymbolKind.Memory
+            or SymbolKind.MatrixVariable or SymbolKind.VectorVariable or SymbolKind.StatisticsVariable
+            or SymbolKind.EngineeringSymbol or SymbolKind.UnitConversion;
 
     private static SyntaxSymbol Symbol(string text) => SyntaxVocabulary.Standard.Symbols.Single(symbol => symbol.Text == text);
 

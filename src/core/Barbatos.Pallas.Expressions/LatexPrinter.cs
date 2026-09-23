@@ -58,7 +58,10 @@ public static class LatexPrinter
         ['⁴'] = "^{4}",
         ['₁'] = "_{1}",
         ['₅'] = "_{5}",
-        ['°'] = @"^{\circ}",
+        // Inside a name - °F▶°C - the degree sign can open the group, and a script with nothing before it is refused;
+        // it is given an empty base. Found by drawing every CATALOG entry: the temperature conversions had never been
+        // drawn, in a result or in the history, since Phase 2 (23 Sep 2026).
+        ['°'] = @"{}^{\circ}",
         ['·'] = @"\cdot ",
         ['▶'] = @"\blacktriangleright ",
         ['#'] = @"\#",
@@ -78,6 +81,40 @@ public static class LatexPrinter
 
         StringBuilder latex = new();
         Write(latex, node, 0);
+        return latex.ToString();
+    }
+
+    /// <summary>Prints one name as it is drawn in a printed tree: a constant, a variable, a unit conversion.</summary>
+    /// <param name="symbol">The name.</param>
+    /// <returns>LaTeX math-mode source, without surrounding delimiters.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="symbol"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="symbol"/> is not a name: an operator or punctuation.</exception>
+    /// <remarks>
+    /// An editor that draws what is being typed a symbol at a time - before it is a tree - draws a name through this,
+    /// so that <c>@h</c> on the line and <c>@h</c> in the history are the same h. An engineering symbol and a unit
+    /// conversion are drawn as they follow a number: <c>_k</c> as an upright k, <c>cm▶in</c> as upright text.
+    /// </remarks>
+    public static string Print(SyntaxSymbol symbol)
+    {
+        ArgumentNullException.ThrowIfNull(symbol);
+
+        StringBuilder latex = new();
+        switch (symbol.Kind)
+        {
+            case SymbolKind.EngineeringSymbol:
+                AppendRoman(latex, symbol.Text[1..]);
+                break;
+            case SymbolKind.UnitConversion:
+                AppendRoman(latex, symbol.Text);
+                break;
+            case SymbolKind.Constant or SymbolKind.ScientificConstant or SymbolKind.Variable or SymbolKind.Memory
+                or SymbolKind.MatrixVariable or SymbolKind.VectorVariable or SymbolKind.StatisticsVariable:
+                WriteName(latex, symbol);
+                break;
+            default:
+                throw new ArgumentException("Only a name is printed on its own; an operator is printed with its operands.", nameof(symbol));
+        }
+
         return latex.ToString();
     }
 
@@ -170,6 +207,14 @@ public static class LatexPrinter
 
     private static void WriteNumber(StringBuilder latex, string text)
     {
+        if (text.Any(char.IsAsciiLetter))
+        {
+            // Only Base-N has letters in a number - 1F, A - and there they are digits: upright, as a prefixed literal
+            // is, and not in the italics of a variable that Base-N does not have (assumption U12).
+            latex.Append(@"\mathrm{").Append(text).Append('}');
+            return;
+        }
+
         int open = text.IndexOf('(', StringComparison.Ordinal);
         if (open < 0)
         {

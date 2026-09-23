@@ -45,9 +45,32 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         Session = session;
         _store = store;
         _currentApp = CalculatorApps.Of(session.App);
+        History = new SessionHistory(session);
         Settings = new SettingsViewModel(session);
-        Calculate = Line(new CalculateViewModel(session));
+        Calculate = Line(new CalculateViewModel(session, History));
     }
+
+    /// <summary>Gets the history of the session, which every screen of the shell shows and the store keeps.</summary>
+    public SessionHistory History { get; }
+
+    /// <summary>The language that follows the one Windows is in.</summary>
+    public const string SystemLanguage = "system";
+
+    /// <summary>Gets the languages the application speaks: Windows' own, English and Vietnamese.</summary>
+    public static ImmutableArray<string> Languages { get; } = [SystemLanguage, "en-US", "vi-VN"];
+
+    /// <summary>Gets or sets the language of the application, as a culture name or <see cref="SystemLanguage"/>.</summary>
+    /// <remarks>
+    /// The application's and not the calculator's: it is not in <see cref="CalculatorSettings"/>, Reset leaves it
+    /// alone, and the host keeps it in its preferences and applies it.
+    /// </remarks>
+    [ObservableProperty]
+    private string _language = SystemLanguage;
+
+    /// <summary>Returns a language this application speaks: the one named, or Windows' own for anything else.</summary>
+    /// <param name="name">What was stored, which a later or an earlier build may have written.</param>
+    /// <returns>A value of <see cref="Languages"/>.</returns>
+    public static string KnownLanguage(string? name) => name is not null && Languages.Contains(name) ? name : SystemLanguage;
 
     /// <summary>Gets the session every application of the shell works on.</summary>
     public CalculatorSession Session { get; }
@@ -59,16 +82,16 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     public CalculateViewModel Calculate { get; }
 
     /// <summary>Gets the Base-N screen.</summary>
-    public BaseNViewModel BaseN => _baseN ??= Wire(new BaseNViewModel(Session));
+    public BaseNViewModel BaseN => _baseN ??= Wire(new BaseNViewModel(Session, History));
 
     /// <summary>Gets the Matrix screen.</summary>
-    public MatrixViewModel Matrix => _matrix ??= Wire(new MatrixViewModel(Session));
+    public MatrixViewModel Matrix => _matrix ??= Wire(new MatrixViewModel(Session, History));
 
     /// <summary>Gets the Vector screen.</summary>
-    public VectorViewModel Vector => _vector ??= Wire(new VectorViewModel(Session));
+    public VectorViewModel Vector => _vector ??= Wire(new VectorViewModel(Session, History));
 
     /// <summary>Gets the Statistics screen.</summary>
-    public StatisticsViewModel Statistics => _statistics ??= Wire(new StatisticsViewModel(Session));
+    public StatisticsViewModel Statistics => _statistics ??= Wire(new StatisticsViewModel(Session, History));
 
     /// <summary>Gets the Distribution screen.</summary>
     public DistributionViewModel Distribution => _distribution ??= new DistributionViewModel(Session);
@@ -109,6 +132,13 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
             return;
         }
 
+        // The engine forgets its history when the application changes (pp. 35, 37), and what was kept from an
+        // earlier run belonged to the application that is being left.
+        if (app.App != Session.App)
+        {
+            History.Forget();
+        }
+
         Session.SwitchApp(app.App);
         CurrentApp = app;
 
@@ -117,6 +147,19 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         Settings.Refresh();
         Calculate.Refresh();
     }
+
+    /// <summary>Returns the line of the calculator on the screen a route shows, which is where a shortcut types.</summary>
+    /// <param name="route">The route, such as <c>/matrix</c>.</param>
+    /// <returns>The line, or <see langword="null"/> for a screen that has none - the home screen, the settings, a form.</returns>
+    public CalculateViewModel? LineOf(string? route) => CalculatorApps.ByRoute(route)?.App switch
+    {
+        CalculatorApp.Calculate or CalculatorApp.Complex => Calculate,
+        CalculatorApp.BaseN => BaseN.Calculate,
+        CalculatorApp.Matrix => Matrix.Calculate,
+        CalculatorApp.Vector => Vector.Calculate,
+        CalculatorApp.Statistics => Statistics.Calculate,
+        _ => null,
+    };
 
     /// <summary>Opens the application a route names, if this build has it.</summary>
     /// <param name="route">The route, such as <c>/statistics</c>.</param>
@@ -128,8 +171,8 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         return app is not null && app.IsAvailable;
     }
 
-    /// <summary>Writes the session to the store, as the application closes.</summary>
-    public void Save() => _store.Save(Session.Capture());
+    /// <summary>Writes the session and its history to the store, as the application closes.</summary>
+    public void Save() => _store.Save(new StoredSession(Session.Capture(), History.ToKeep));
 
     /// <summary>Reads back the session that was stored, if there is one.</summary>
     /// <returns><see langword="true"/> when a session was restored.</returns>
@@ -139,22 +182,24 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     /// </remarks>
     public bool Load()
     {
-        if (_store.Load() is not { } snapshot)
+        if (_store.Load() is not { } stored)
         {
             return false;
         }
 
         try
         {
-            Session.Restore(snapshot);
+            Session.Restore(stored.Snapshot);
         }
         catch (Exception exception) when (exception is ArgumentException or NotSupportedException)
         {
             return false;
         }
 
+        History.Restore(stored.History);
         CurrentApp = CalculatorApps.Of(Session.App);
         Settings.Refresh();
+        Calculate.Refresh();
         return true;
     }
 

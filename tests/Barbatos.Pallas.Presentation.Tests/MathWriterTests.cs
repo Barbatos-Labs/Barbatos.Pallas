@@ -120,11 +120,55 @@ public sealed class MathWriterTests
     [InlineData("▶t", @"\blacktriangleright t")]
     [InlineData("σ²x", @"\sigma ^{2}x", "a statistic name with a square in it, as the CATALOG will type")]
     [InlineData("x̂₁", @"\hat{x}_{1}")]
+    [InlineData("(", "(", "a lone bracket, as a line read back as characters has, is not the start of a function")]
+    [InlineData("beamlength", @"\mathrm{beamlength}", "a name the standard vocabulary has not - a plugin's - is upright")]
+    [InlineData("′", "{}'", "a minute mark with nothing before it is a script without a base, which TeX refuses")]
+    [InlineData("″", "{}''")]
+    [InlineData("@c", "c", "a constant is drawn by its name, as the history draws it")]
+    [InlineData("@N_A", "N_{A}")]
+    [InlineData("_k", @"\mathrm{k}")]
+    [InlineData("÷R", @"\div_{\mathrm{R}} ")]
     [InlineData("and", @"\;\mathrm{and}\;", "a logic operator is a word between two numbers, spaced as the history spaces it")]
     [InlineData("xnor", @"\;\mathrm{xnor}\;")]
     public void ASymbolIsDrawnAsTheCalculatorWritesIt(string symbol, string latex, string? because = null)
     {
         MathLatexWriter.Write(MathDocument.Empty.Insert(symbol), caret: false).Should().Be(latex, because ?? string.Empty);
+    }
+
+    [Fact]
+    public void EveryNameIsDrawnOnTheLineAsTheHistoryDrawsIt()
+    {
+        foreach (SyntaxSymbol name in SyntaxVocabulary.Standard.Symbols.Where(symbol => ReferenceEquals(symbol.Canonical, symbol)
+            && symbol.Kind is SymbolKind.Constant or SymbolKind.ScientificConstant or SymbolKind.Variable or SymbolKind.Memory
+                or SymbolKind.MatrixVariable or SymbolKind.VectorVariable or SymbolKind.StatisticsVariable
+                or SymbolKind.EngineeringSymbol or SymbolKind.UnitConversion))
+        {
+            MathLatexWriter.Write(MathDocument.Empty.Insert(name.Text), caret: false)
+                .Should().Be(LatexPrinter.Print(name), "'{0}' is one name, drawn one way", name.Text);
+        }
+    }
+
+    [Theory]
+    [InlineData("A", @"\mathrm{A}")]
+    [InlineData("F", @"\mathrm{F}")]
+    [InlineData("x", "x", "x is a variable in Base-N too")]
+    public void InBaseNTheLettersOfANumberAreDrawnUprightAsDigitsAre(string symbol, string latex, string? because = null)
+    {
+        MathLatexWriter.Write(MathDocument.Empty.Insert(symbol), caret: false, CalculatorApp.BaseN).Should().Be(latex, because ?? string.Empty);
+        MathLatexWriter.Write(MathDocument.Empty.Insert("A"), caret: false, CalculatorApp.Calculate).Should().Be("A", "elsewhere A is the variable");
+    }
+
+    [Fact]
+    public void TheLineIsDrawnForItsApplication()
+    {
+        MathInputViewModel input = new() { App = CalculatorApp.BaseN };
+        input.Press(KeyId.HexA);
+        input.Latex.Should().Contain(@"\mathrm{A}");
+
+        List<string?> changed = input.Changes();
+        input.App = CalculatorApp.Calculate;
+
+        changed.Should().Contain(nameof(MathInputViewModel.Latex), "the same letter is drawn another way in another application");
     }
 
     [Fact]
@@ -185,6 +229,9 @@ public sealed class MathWriterTests
         Action row = () => MathLinearWriter.Write((MathRow)null!);
         Action latex = () => MathLatexWriter.Write(null!);
         Action latexWithout = () => MathLatexWriter.Write(null!, caret: false);
+        Action latexOfAnApplication = () => MathLatexWriter.Write(null!, caret: false, CalculatorApp.BaseN);
+
+        latexOfAnApplication.Should().Throw<ArgumentNullException>().WithParameterName("document");
 
         linear.Should().Throw<ArgumentNullException>();
         row.Should().Throw<ArgumentNullException>();

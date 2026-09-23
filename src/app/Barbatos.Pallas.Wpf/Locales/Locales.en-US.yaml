@@ -22,6 +22,7 @@ app.screenLater: The engine of this application is finished; its screen is being
 settings.title: Calculator settings
 settings.back: Back
 settings.reset: Reset to the initial settings
+settings.language: Language
 
 setting.inputOutput: Input and output
 setting.angleUnit: Angle unit
@@ -79,6 +80,24 @@ statistics.frequencies: Frequencies
 statistics.apply: Apply
 statistics.addRow: Add row
 statistics.removeRow: Remove row
+
+# The menus the display shows over the keypad: the CATALOG (pp. 51-69), FORMAT and the variables.
+catalog.title: CATALOG
+catalog.search: Search the CATALOG
+catalog.FunctionAnalysis: Func Analysis
+catalog.Probability: Probability
+catalog.NumericCalc: Numeric Calc
+catalog.AngleCoordinates: Angle/Coord/Sexa
+catalog.Trigonometry: Hyperbolic/Trig
+catalog.EngineerSymbols: Engineer Symbol
+catalog.ScientificConstants: Sci Constants
+catalog.UnitConversions: Unit Conversions
+catalog.AtomicTable: Atomic Table
+catalog.Relations: Relations
+catalog.Other: Other
+format.title: FORMAT
+recall.title: Variables
+menu.close: Close
 
 setting:
   MathIMathO: MathI/MathO
@@ -141,3 +160,19 @@ choice:
   InfiniteSolutions: Infinitely many solutions
   NoRealRoots: No real roots
   AllRealNumbers: All real numbers
+  Standard: Standard
+  DecimalValue: Decimal
+  PrimeFactor: Prime factors
+  RecurringDecimal: Recurring decimal
+  Rectangular: Rectangular a+bi
+  Polar: Polar r∠θ
+  ImproperFraction: Improper fraction
+  MixedFraction: Mixed fraction
+  Engineering: ENG notation
+  Sexagesimal: Degrees, minutes, seconds
+
+# The languages of the application: each is named in itself, Windows' own in the language on the screen.
+language:
+  system: The language of Windows
+  en-US: English
+  vi-VN: Tiếng Việt

@@ -23,12 +23,13 @@ public sealed partial class BaseNViewModel : ObservableObject
 
     /// <summary>Creates the screen over a session.</summary>
     /// <param name="session">The session that calculates.</param>
+    /// <param name="history">The session's history, shared by its screens; <see langword="null"/> for this run's alone.</param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public BaseNViewModel(CalculatorSession session)
+    public BaseNViewModel(CalculatorSession session, SessionHistory? history = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
-        Calculate = new CalculateViewModel(session);
+        Calculate = new CalculateViewModel(session, history);
     }
 
     /// <summary>Gets the bases there are: decimal, hexadecimal, binary and octal.</summary>

@@ -5,6 +5,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Barbatos.Pallas.Engine;
+using Barbatos.Pallas.Expressions;
 using Barbatos.Pallas.Presentation;
 
 namespace Barbatos.Pallas.Wpf.Tests;
@@ -43,6 +45,32 @@ public sealed class MathInputRenderingTests
         string latex = MathLatexWriter.Write(document, caret: false);
 
         Formula.Fault(latex).Should().BeNull("'{0}' draws as '{1}'", text, latex);
+    }
+
+    public static TheoryData<CalculatorApp> Applications =>
+    [
+        .. Enum.GetValues<CalculatorApp>().Where(app => app != CalculatorApp.MathBox),
+    ];
+
+    [Theory]
+    [MemberData(nameof(Applications))]
+    public void EveryEntryOfEveryCatalogIsDrawnOnTheLine(CalculatorApp app)
+    {
+        // The CATALOG types what no key does - every CODATA constant, every unit conversion - so what it puts on the
+        // line is drawn here as well as what the keys put there.
+        SyntaxVocabulary vocabulary = PallasEngineBuilder.CreateDefault().Build().Vocabulary;
+        List<string> faults = [];
+        foreach (CatalogItem item in CalculatorCatalog.For(vocabulary, app).SelectMany(section => section.Items))
+        {
+            MathDocument document = InputCommandRouter.Apply(MathDocument.Empty, item.Action).Document;
+            string latex = MathLatexWriter.Write(document, caret: false, app);
+            if (Formula.Fault(latex) is { } fault)
+            {
+                faults.Add($"{item.Label} draws as '{latex}': {fault}");
+            }
+        }
+
+        faults.Should().BeEmpty();
     }
 
     [Theory]

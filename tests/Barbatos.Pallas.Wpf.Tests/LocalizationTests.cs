@@ -87,11 +87,60 @@ public sealed class LocalizationTests
             .. Enum.GetValues<TableType>().Select(value => value.ToString()),
             .. Enum.GetValues<RegressionModel>().Select(value => value.ToString()),
             .. Enum.GetValues<SolutionOutcome>().Select(value => value.ToString()),
+            .. Enum.GetValues<FormatTarget>().Select(value => value.ToString()),
         ];
 
         foreach (string choice in choices)
         {
             text.Should().ContainKey("choice:" + choice, "a screen shows this choice by name");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void EveryGroupOfEveryCatalogHasAName(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+        SyntaxVocabulary vocabulary = PallasEngineBuilder.CreateDefault().Build().Vocabulary;
+
+        foreach (CalculatorApp app in Enum.GetValues<CalculatorApp>())
+        {
+            foreach (CatalogSection section in CalculatorCatalog.For(vocabulary, app))
+            {
+                text.Should().ContainKey(section.NameKey, "the CATALOG of {0} shows {1} by name", app, section.Group);
+            }
+        }
+
+        foreach (string key in (string[])["catalog.title", "catalog.search", "format.title", "recall.title", "menu.close"])
+        {
+            text.Should().ContainKey(key, "a menu of the display names itself");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void EveryLanguageOfTheApplicationHasAName(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+
+        text.Should().ContainKey("settings.language");
+        foreach (string choice in CalculatorShellViewModel.Languages)
+        {
+            text.Should().ContainKey("language:" + choice, "the settings offer {0} by name", choice);
+        }
+
+        // Each language in its own words, whichever one is on the screen.
+        text["language:en-US"].Should().Be("English");
+        text["language:vi-VN"].Should().Be("Tiếng Việt");
+    }
+
+    [Fact]
+    public void EveryLanguageOfTheApplicationHasItsText()
+    {
+        foreach (string choice in CalculatorShellViewModel.Languages.Where(name => name != CalculatorShellViewModel.SystemLanguage))
+        {
+            File.Exists(Path.Combine(RepositoryRoot(), "src", "app", "Barbatos.Pallas.Wpf", "Locales", $"Locales.{choice}.yaml"))
+                .Should().BeTrue("the settings offer {0}", choice);
         }
     }
 

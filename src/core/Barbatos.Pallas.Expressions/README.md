@@ -55,6 +55,14 @@ LatexPrinter.Print(tree);                              // @"\sqrt{2}\times \pi "
 
 Compare trees by structure with `SyntaxEquivalence.AreEquivalent`, which looks through parentheses and ignores spans.
 
+An editor that draws a line a symbol at a time, before it is a tree, draws a name the way a tree draws it:
+
+```csharp
+SyntaxSymbol avogadro = SyntaxVocabulary.Standard.Symbols.First(symbol => symbol.Text == "@N_A");
+
+LatexPrinter.Print(avogadro);                          // "N_{A}" - as in a printed calculation
+```
+
 ## Add names
 
 A plugin function needs its name in the vocabulary, so that `beam(` is read as one token:

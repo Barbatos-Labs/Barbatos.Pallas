@@ -30,8 +30,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), and properties over random sequences of keys in a random application |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, every screen is built with the theme loaded (`ScreenResourceTests`), and the session in the preferences |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded (`ScreenResourceTests`), and the session, the window's place and the language in the preferences |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -45,14 +45,18 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 
 **Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
 M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M4.5 the calculator's face (a layout
-and look ✅, b a keypad per application ✅, c CATALOG), M5 persistence and shortcuts,
+and look ✅, b a keypad per application ✅, c CATALOG, FORMAT, RCL and STO ✅), M5 persistence and shortcuts ✅,
 M6 hardening and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
 end.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
   route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
-  between runs (`PreferencesSessionStore` in the host). The host is `WpfProgram` + `AppRoutes` + `Views/`, with the
-  text in `Locales/*.yaml`. Every application has its own view model over that session (`MatrixViewModel`,
+  between runs (`PreferencesSessionStore` in the host), with the history beside the engine's snapshot
+  (`SessionHistory`, `StoredSession`): the engine's snapshot leaves it out on purpose. The host is `WpfProgram` +
+  `AppRoutes` + `Views/`, with the text in `Locales/*.yaml`; it also keeps the window's place (`WindowPlacement`) and
+  the language (`AppLanguage`, over `CalculatorShellViewModel.Language`) in the preferences, and binds the window's
+  shortcuts through Barbatos.Wpf.Core's input system (`Shortcuts`, reaching a screen's line through
+  `CalculatorShellViewModel.LineOf`). Every application has its own view model over that session (`MatrixViewModel`,
   `VectorViewModel`, `StatisticsViewModel`, `DistributionViewModel`, `EquationViewModel`, `InequalityViewModel`,
   `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`), built the first time it is opened
   and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was typed through the
@@ -64,8 +68,11 @@ end.
   the engine's own parser. The keypad is the table in `Keypad`, and each application draws its own rows of it
   (`Keypad.RowsFor`): the keys of what it reads and no others - Base-N has no functions, only Matrix has MatA. The
   keyboard maps onto the same table (`KeyboardMap`) through the same filter (`Keypad.Has`), and
-  `InputCommandRouter` is the only place a key becomes an edit. `CalculateViewModel` calculates, shows the result
-  (FORMAT and S⇔D), walks the history, and puts the cursor where an error says it is.
+  `InputCommandRouter` is the only place a key becomes an edit. CATALOG, FORMAT and RCL are menus drawn over the
+  keys (`CalculateViewModel.Menu`); the CATALOG is built from the engine's vocabulary (`CalculatorCatalog`), and the
+  editor draws a name through `LatexPrinter.Print(SyntaxSymbol)`, as the history does. `CalculateViewModel`
+  calculates, shows the result (FORMAT and S⇔D), walks the history, copies the answer and pastes a line, and puts the
+  cursor where an error says it is.
 - Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal`, `AngleUnit`,
   `ErrorFunction` and `PoissonDistribution`.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
@@ -148,7 +155,10 @@ Things that will save time:
   - the MTP runner cannot switch mutants inside static initialization, so they are all reported as survivors.
     `StandardVocabulary.cs` is data built once for `SyntaxVocabulary.Standard` and is excluded from mutation.
     Deleting one of its lines by hand fails 13 to 18 tests (17 Sep 2026); the vocabulary tests and the conformance
-    inputs are what guard it. A lookup table is written out rather than built by a loop (`DecimalDigits.PowersOfTen`);
+    inputs are what guard it. A lookup table is written out rather than built by a loop (`DecimalDigits.PowersOfTen`),
+    and a small table of strings is a `switch` in a method rather than a dictionary in a field; a filter over the
+    vocabulary belongs in the method that uses it, not in a static `.Where` (Presentation fell to 89% on 23 Sep 2026
+    from exactly these, and came back to 92.6% once they were switches);
   - a property test that samples thousands of cases makes Stryker's *initial* run report failures that a plain
     `dotnet test` never shows (Presentation, 23 Sep 2026: four CsCheck properties at 2000 iterations). Keep a
     property at a few hundred iterations, or the run never starts;

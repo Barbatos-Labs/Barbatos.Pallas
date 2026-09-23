@@ -1,0 +1,141 @@
+<UserControl x:Class="Barbatos.Pallas.Wpf.Views.CalculatorMenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
+             xmlns:presentation="clr-namespace:Barbatos.Pallas.Presentation;assembly=Barbatos.Pallas.Presentation">
+    <!-- The menus of the calculator, drawn over its keys: what is chosen goes onto the line above them. The data
+         context is the CalculateViewModel whose line it is. -->
+    <UserControl.Resources>
+        <Style x:Key="WhenCatalog" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Menu}" Value="{x:Static presentation:CalculatorMenu.Catalog}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenFormat" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Menu}" Value="{x:Static presentation:CalculatorMenu.Format}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenRecall" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Menu}" Value="{x:Static presentation:CalculatorMenu.Recall}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <ItemsPanelTemplate x:Key="Flow">
+            <WrapPanel />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+
+    <Border x:Name="Panel" Style="{StaticResource MenuPanel}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource ActionButton}"
+                        Command="{Binding CloseMenuCommand}"
+                        Content="{i18n:StringLocalizer Text='menu.close'}" />
+                <Grid VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource WhenCatalog}" FontWeight="SemiBold" Foreground="{StaticResource Accent}" Text="{i18n:StringLocalizer Text='catalog.title'}" />
+                    <TextBlock Style="{StaticResource WhenFormat}" FontWeight="SemiBold" Foreground="{StaticResource Accent}" Text="{i18n:StringLocalizer Text='format.title'}" />
+                    <TextBlock Style="{StaticResource WhenRecall}" FontWeight="SemiBold" Foreground="{StaticResource Accent}" Text="{i18n:StringLocalizer Text='recall.title'}" />
+                </Grid>
+            </DockPanel>
+
+            <!-- CATALOG: the groups on the left, and what is in the chosen one - or what matches the search - on the
+                 right. -->
+            <!-- Shown by the screen's menu, laid out over the CATALOG's own data: two elements, because a style that
+                 reads Menu cannot sit on an element whose data context is the CATALOG. -->
+            <Border Grid.Row="1" Style="{StaticResource WhenCatalog}">
+            <Grid DataContext="{Binding Catalog}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MaxWidth="170" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ListBox Grid.Column="0"
+                         Style="{StaticResource GroupList}"
+                         Margin="0,0,8,0"
+                         ItemsSource="{Binding Sections}"
+                         SelectedItem="{Binding Section}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding NameKey}}" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBox x:Name="Search"
+                             Grid.Row="0"
+                             Style="{StaticResource CellBox}"
+                             Margin="3,0,3,6"
+                             ToolTip="{i18n:StringLocalizer Text='catalog.search'}"
+                             Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Items}" ItemsPanel="{StaticResource Flow}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource MenuEntry}"
+                                            Content="{Binding Label}"
+                                            ToolTip="{Binding Text}"
+                                            Command="{Binding DataContext.ChooseCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+            </Border>
+
+            <!-- FORMAT: every conversion, as the calculator lists them; one that does not apply changes nothing. -->
+            <ScrollViewer Grid.Row="1" Style="{StaticResource WhenFormat}" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Formats}" ItemsPanel="{StaticResource Flow}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource MenuEntry}"
+                                    FontFamily="{x:Static SystemFonts.MessageFontFamily}"
+                                    Content="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}"
+                                    Command="{Binding DataContext.ChooseFormatCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- RCL: the variables and what they hold; choosing one puts its name on the line. -->
+            <ScrollViewer Grid.Row="1" Style="{StaticResource WhenRecall}" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Variables}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource MenuEntry}"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding DataContext.ChooseVariableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Left" MinWidth="36" Foreground="{StaticResource Accent}" Text="{Binding Name}" />
+                                    <TextBlock Text="{Binding Text}" />
+                                </DockPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

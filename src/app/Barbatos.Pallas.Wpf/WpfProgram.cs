@@ -14,6 +14,8 @@ using Barbatos.Pallas.Wpf.Views;
 using Barbatos.Wpf.Aquarius.Composition;
 using Barbatos.Wpf.AquariusRouter.Routing;
 using Barbatos.Wpf.Hosting;
+using Barbatos.Wpf.Input;
+using Barbatos.Wpf.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Barbatos.Pallas.Wpf;
@@ -37,6 +39,10 @@ public static class WpfProgram
         WpfAppBuilder builder = WpfApp.CreateBuilder();
 
         builder.ConfigureSingleInstance();
+
+        // The window's own shortcuts - undo, copy, paste, the CATALOG, the settings - through the host's input
+        // system; the keys of the calculator are the keypad table.
+        builder.ConfigureInputSystem(Shortcuts.Configure);
 
         // The engine, with the reference data (CODATA 2022, NIST SP 811, CIAAW) it ships with.
         builder.Services.AddPallas();
@@ -79,15 +85,23 @@ public static class WpfProgram
 
         WpfApp app = builder.Build();
 
-        app.Services.UseWpfLocalization().SetLocalizationCulture(CultureInfo.CurrentUICulture);
+        // The language of Windows is read before a stored choice is applied, after which it is all there is to read.
+        CultureInfo windows = CultureInfo.CurrentUICulture;
+        CalculatorShellViewModel shell = app.Services.GetRequiredService<CalculatorShellViewModel>();
+        app.Services.UseWpfLocalization();
+        AppLanguage.Follow(
+            shell,
+            app.Services.GetRequiredService<IPreferences>(),
+            windows,
+            culture => app.Services.SetLocalizationCulture(culture));
         app.Services.UseAquarius();
         Router router = app.Services.UseAquariusRouter();
 
-        CalculatorShellViewModel shell = app.Services.GetRequiredService<CalculatorShellViewModel>();
         router.BeforeEach((to, _) => Task.FromResult<NavigationGuardResult>(Opens(shell, to.Path)));
 
         // The keypad has keys for the home screen and the settings; the shell says where, the router goes there.
         shell.NavigationRequested += (_, route) => router.Push(route);
+        Shortcuts.Wire(app.Services.GetRequiredService<IInputSystemService>(), shell, router);
 
         return app;
     }

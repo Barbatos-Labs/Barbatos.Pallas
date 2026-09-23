@@ -38,7 +38,7 @@ public sealed record KeyDefinition(
         return mode switch
         {
             KeyMode.Shift => Shift,
-            KeyMode.Alpha => Alpha,
+            KeyMode.Alpha or KeyMode.Store => Alpha,
             _ => Primary,
         };
     }
@@ -51,7 +51,7 @@ public sealed record KeyDefinition(
         return mode switch
         {
             KeyMode.Shift => ShiftGlyph,
-            KeyMode.Alpha => AlphaGlyph,
+            KeyMode.Alpha or KeyMode.Store => AlphaGlyph,
             _ => Glyph,
         };
     }
@@ -70,4 +70,7 @@ public enum KeyMode
 
     /// <summary>After Alpha.</summary>
     Alpha,
+
+    /// <summary>After STO: the next key names the variable the last answer is stored in, as it does after Alpha.</summary>
+    Store,
 }

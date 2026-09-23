@@ -37,6 +37,21 @@ public static class SessionSnapshotJson
     public static string Write(SessionSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        return Write(new StoredSession(snapshot));
+    }
+
+    /// <summary>Writes a session and its history as JSON.</summary>
+    /// <param name="session">The session.</param>
+    /// <returns>The JSON text.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The history is a field of its own, next to what the snapshot holds, and one a session written before it was
+    /// kept does not have: such a session is read with an empty history, so no version is needed for it.
+    /// </remarks>
+    public static string Write(StoredSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        SessionSnapshot snapshot = session.Snapshot;
 
         SnapshotDocument document = new()
         {
@@ -67,15 +82,21 @@ public static class SessionSnapshotJson
             StatisticsX = [.. snapshot.StatisticsX],
             StatisticsY = [.. snapshot.StatisticsY],
             StatisticsFrequencies = [.. snapshot.StatisticsFrequencies],
+            History = [.. session.History.Select(entry => new HistoryDocument { Input = entry.Input, Text = entry.Text })],
         };
 
         return JsonSerializer.Serialize(document, SnapshotJsonContext.Default.SnapshotDocument);
     }
 
-    /// <summary>Reads back what <see cref="Write"/> produced.</summary>
+    /// <summary>Reads back the snapshot of what <c>Write</c> produced.</summary>
     /// <param name="json">The JSON text, or <see langword="null"/>.</param>
     /// <returns>The snapshot, or <see langword="null"/> when the text is not one.</returns>
-    public static SessionSnapshot? Read(string? json)
+    public static SessionSnapshot? Read(string? json) => ReadSession(json)?.Snapshot;
+
+    /// <summary>Reads back what <c>Write</c> produced: the snapshot and the history beside it.</summary>
+    /// <param name="json">The JSON text, or <see langword="null"/>.</param>
+    /// <returns>The session, or <see langword="null"/> when the text is not one.</returns>
+    public static StoredSession? ReadSession(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -99,7 +120,7 @@ public static class SessionSnapshotJson
 
         SettingsDocument settings = document.Settings ?? new SettingsDocument();
         CalculatorSettings initial = CalculatorSettings.Initial;
-        return new SessionSnapshot
+        SessionSnapshot snapshot = new()
         {
             Version = document.Version,
             App = Parsed(document.App, CalculatorApp.Calculate),
@@ -129,6 +150,13 @@ public static class SessionSnapshotJson
             StatisticsY = Read(document.StatisticsY),
             StatisticsFrequencies = Read(document.StatisticsFrequencies),
         };
+
+        // A line with no input is nothing to recall, so it is not a line; what it came to may be empty, as a
+        // calculation that failed came to nothing.
+        ImmutableArray<HistoryEntry> history = document.History is null
+            ? []
+            : [.. document.History.Where(entry => entry?.Input is { Length: > 0 }).Select(entry => new HistoryEntry(entry!.Input!, entry.Text ?? string.Empty))];
+        return new StoredSession(snapshot, history);
     }
 
     private static TEnum Parsed<TEnum>(string? text, TEnum fallback)
@@ -203,6 +231,9 @@ public sealed class SnapshotDocument
 
     /// <summary>Gets or sets the frequency column.</summary>
     public string[]? StatisticsFrequencies { get; set; }
+
+    /// <summary>Gets or sets the history of the application the session was in, oldest first; absent before it was kept.</summary>
+    public HistoryDocument?[]? History { get; set; }
 }
 
 /// <summary>The stored shape of the settings. Public only because the JSON source generator needs it.</summary>
@@ -255,9 +286,25 @@ public sealed class MatrixDocument
     public string[]? Entries { get; set; }
 }
 
+/// <summary>The stored shape of one line of the history. Public only because the JSON source generator needs it.</summary>
+public sealed class HistoryDocument
+{
+    /// <summary>Gets or sets what was typed, as Canonical Linear Syntax.</summary>
+    public string? Input { get; set; }
+
+    /// <summary>Gets or sets what it came to, as the screen showed it.</summary>
+    public string? Text { get; set; }
+}
+
 /// <summary>
 /// The serializer for the stored session, generated at compile time rather than by reflection.
 /// </summary>
+/// <remarks>
+/// The options are the stored format as much as the names are: a session written in camelCase is not read by a
+/// serializer that expects PascalCase, and every memory of it would be lost without an error. A type put between
+/// this attribute and the class it belongs to takes the attribute with it (measured 23 Sep 2026, when the history's
+/// document did exactly that and the tests of the stored text caught it).
+/// </remarks>
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(SnapshotDocument))]
 internal sealed partial class SnapshotJsonContext : JsonSerializerContext;

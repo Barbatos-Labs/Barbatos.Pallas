@@ -86,4 +86,16 @@ public enum KeyCommand
 
     /// <summary>Turn the result between its exact form and its decimal (S⇔D, manual p. 42).</summary>
     SwapForm,
+
+    /// <summary>Open the CATALOG (pp. 51-69).</summary>
+    Catalog,
+
+    /// <summary>Open the FORMAT menu of the result (pp. 42-50).</summary>
+    Format,
+
+    /// <summary>Open the list of the variables and what they hold (RCL).</summary>
+    Recall,
+
+    /// <summary>Store the last answer in the variable whose key comes next (STO).</summary>
+    Store,
 }

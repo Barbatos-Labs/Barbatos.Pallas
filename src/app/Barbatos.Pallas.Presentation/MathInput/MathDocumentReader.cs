@@ -15,8 +15,8 @@ namespace Barbatos.Pallas.Presentation;
 /// <para>
 /// The text is read by the engine's own parser and the tree is turned into structures, so there is no second parser
 /// to keep in step with the first. What has no structure of its own - a sexagesimal angle, a unit conversion, a
-/// Base-N literal, a comparison - is put back as the characters it was written with, which reads the same and can
-/// still be edited.
+/// Base-N literal, the relation of a comparison - is put back as the characters it was written with, which reads the
+/// same and can still be edited; what is on either side of a relation keeps its structures.
 /// </para>
 /// <para>
 /// Text the parser cannot read at all becomes its characters too: a line that was stored while it was still being
@@ -57,8 +57,18 @@ public static class MathDocumentReader
                 return Binary(binary, context);
             case FunctionCall call:
                 return Call(call, context);
+            case RelationChain chain:
+                // A comparison of Verify: each side keeps its structures - √(4)=2 comes back with its square root -
+                // and the relations between them are their symbols. Before, the whole chain came back as characters
+                // (found by a test of AllowRelations, which nothing could tell was on).
+                return chain.Operands.SelectMany((operand, index) => index == 0
+                    ? Elements(operand, context)
+                    : [new MathSymbol(SpellingOf(chain.Operators[index - 1])), .. Elements(operand, context)]);
             case PostfixExpression postfix:
-                return [.. Elements(postfix.Operand, context), .. Characters(Print(node, context)[Print(postfix.Operand, context).Length..]).Elements];
+                // The operator as the vocabulary spells it, after its operand. Cutting the operand's length off the
+                // printed node was wrong where the printer brackets the operand: (Σx x̂)° prints as (Σxx̂)°, and the
+                // cut came one character early (found by the random-key property, 23 Sep 2026).
+                return [.. Elements(postfix.Operand, context), .. Characters(SpellingOf(postfix.Operator)).Elements];
             default:
                 return Characters(Print(node, context)).Elements;
         }
@@ -136,6 +146,14 @@ public static class MathDocumentReader
     private static SyntaxNode Unwrap(SyntaxNode node) => node is ParenthesizedExpression parenthesized ? parenthesized.Inner : node;
 
     private static string Print(SyntaxNode node, SyntaxContext context) => LinearPrinter.Print(node, context);
+
+    /// <summary>How the vocabulary that read a postfix operator spells it: the canonical spelling, never an alias.</summary>
+    private static string SpellingOf(PostfixOperator postfix) =>
+        SyntaxVocabulary.Standard.Symbols.First(symbol => symbol.PostfixOperator == postfix).Canonical.Text;
+
+    /// <summary>How the vocabulary spells a relation.</summary>
+    private static string SpellingOf(RelationOperator relation) =>
+        SyntaxVocabulary.Standard.Symbols.First(symbol => symbol.RelationOperator == relation).Canonical.Text;
 
     private static MathRow Characters(string text) => new([.. text.Select(character => (MathElement)new MathSymbol(character.ToString()))]);
 }

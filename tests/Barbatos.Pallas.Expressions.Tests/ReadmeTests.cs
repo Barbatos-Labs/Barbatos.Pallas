@@ -56,6 +56,14 @@ public sealed class ReadmeTests
     }
 
     [Fact]
+    public void PrintingOneName()
+    {
+        SyntaxSymbol avogadro = SyntaxVocabulary.Standard.Symbols.First(symbol => symbol.Text == "@N_A");
+
+        LatexPrinter.Print(avogadro).Should().Be("N_{A}");
+    }
+
+    [Fact]
     public void AVocabularyOfOnesOwn()
     {
         SyntaxSymbol beam = SyntaxSymbol.CreateName("beam(", SymbolKind.Function);

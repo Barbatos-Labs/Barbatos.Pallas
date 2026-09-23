@@ -9,7 +9,7 @@ using Barbatos.Pallas.Presentation;
 namespace Barbatos.Pallas.Wpf.Views;
 
 /// <summary>
-/// The Calc Settings screen (manual pp. 22-25).
+/// The Calc Settings screen (manual pp. 22-25), and the language of the application under them.
 /// </summary>
 public partial class SettingsView : UserControl
 {
@@ -20,5 +20,8 @@ public partial class SettingsView : UserControl
         ArgumentNullException.ThrowIfNull(shell);
         InitializeComponent();
         DataContext = shell.Settings;
+
+        // The language is the application's and not the calculator's, so it is the shell's to hold.
+        LanguageChoice.DataContext = shell;
     }
 }

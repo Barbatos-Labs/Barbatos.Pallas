@@ -27,13 +27,14 @@ public sealed partial class StatisticsViewModel : ObservableObject
 
     /// <summary>Creates the screen over a session.</summary>
     /// <param name="session">The session that holds the data and calculates.</param>
+    /// <param name="history">The session's history, shared by its screens; <see langword="null"/> for this run's alone.</param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public StatisticsViewModel(CalculatorSession session)
+    public StatisticsViewModel(CalculatorSession session, SessionHistory? history = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
         Data = new ValueGridViewModel(session, 4, 1);
-        Calculate = new CalculateViewModel(session);
+        Calculate = new CalculateViewModel(session, history);
     }
 
     /// <summary>Gets the regressions there are (p. 84).</summary>

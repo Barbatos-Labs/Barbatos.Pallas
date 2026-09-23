@@ -9,6 +9,10 @@
         <DataTemplate x:Key="SettingName">
             <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='setting'}" />
         </DataTemplate>
+        <!-- A language is named in itself (locales: language), so it is found by someone who cannot read the other. -->
+        <DataTemplate x:Key="LanguageName">
+            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='language'}" />
+        </DataTemplate>
         <DataTemplate x:Key="NumberFormatName">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="{Binding Kind}" />
@@ -57,6 +61,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -118,6 +123,15 @@
                     <CheckBox IsChecked="{Binding Verify}"
                               Content="{i18n:StringLocalizer Text='setting.verify'}" />
                 </StackPanel>
+
+                <!-- The application's own setting, not the calculator's: Reset leaves it as it is. -->
+                <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource Label}" Margin="0,16,8,0"
+                           Text="{i18n:StringLocalizer Text='settings.language'}" />
+                <ComboBox x:Name="LanguageChoice"
+                          Grid.Row="7" Grid.Column="1" Margin="0,16,0,4"
+                          ItemsSource="{x:Static vm:CalculatorShellViewModel.Languages}"
+                          ItemTemplate="{StaticResource LanguageName}"
+                          SelectedItem="{Binding Language}" />
             </Grid>
         </ScrollViewer>
     </Grid>

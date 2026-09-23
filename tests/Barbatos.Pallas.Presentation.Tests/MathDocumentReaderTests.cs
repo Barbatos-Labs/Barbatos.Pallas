@@ -58,6 +58,9 @@ public sealed class MathDocumentReaderTests
     [InlineData(CalculatorApp.Matrix, "Det(MatA)")]
     [InlineData(CalculatorApp.Vector, "VctA•VctB")]
     [InlineData(CalculatorApp.Statistics, "Σxy+x̄")]
+    [InlineData(CalculatorApp.Statistics, "Σxx̂°")]
+    [InlineData(CalculatorApp.Statistics, "2x̂")]
+    [InlineData(CalculatorApp.Statistics, "Σxx̂")]
     [InlineData(CalculatorApp.Spreadsheet, "Sum(A1:A5)")]
     [InlineData(CalculatorApp.Calculate, "1≤1<1+1")]
     public void EveryApplicationReadsItsOwnSyntaxBack(CalculatorApp app, string text)
@@ -65,6 +68,15 @@ public sealed class MathDocumentReaderTests
         MathDocument document = MathDocumentReader.Read(text, app);
 
         MathLinearWriter.Write(document).Should().Be(text);
+    }
+
+    [Fact]
+    public void AComparisonIsReadAsACalculationAndNotAsCharacters()
+    {
+        // Verify's relations are read by the parser like anything else, so the root in √(4)=2 is a structure.
+        MathDocument document = MathDocumentReader.Read("√(4)=2");
+
+        document.Root[0].Should().BeOfType<MathStructure>().Which.Kind.Should().Be(MathTemplateKind.SquareRoot);
     }
 
     [Fact]

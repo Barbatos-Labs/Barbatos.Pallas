@@ -3,10 +3,9 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
-using System.Collections.Generic;
 using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
-using Barbatos.Wpf.Storage;
+using Barbatos.Pallas.Presentation;
 
 namespace Barbatos.Pallas.Wpf.Tests;
 
@@ -27,13 +26,15 @@ public sealed class PreferencesSessionStoreTests
         saved.SetVariable(MemoryVariable.A, Value.FromDecimal(1m / 3m));
         saved.Calculate("√(2)");
 
-        store.Save(saved.Capture());
+        store.Save(new StoredSession(saved.Capture(), [new HistoryEntry("√(2)", "√2")]));
 
+        StoredSession loaded = store.Load()!;
         CalculatorSession restored = Session();
-        restored.Restore(store.Load()!);
+        restored.Restore(loaded.Snapshot);
         restored.App.Should().Be(CalculatorApp.Statistics);
         restored.GetVariable(MemoryVariable.A).ToDecimal().Should().Be(1m / 3m);
         restored.Calculate("Ans×Ans").Display.Text.Should().Be("2");
+        loaded.History.Should().Equal(new HistoryEntry("√(2)", "√2"));
     }
 
     [Fact]
@@ -58,7 +59,7 @@ public sealed class PreferencesSessionStoreTests
     {
         FakePreferences preferences = new();
 
-        new PreferencesSessionStore(preferences).Save(Session().Capture());
+        new PreferencesSessionStore(preferences).Save(new StoredSession(Session().Capture()));
 
         preferences.Values.Should().ContainSingle().Which.Key.Should().Be("session");
     }
@@ -69,21 +70,5 @@ public sealed class PreferencesSessionStoreTests
         Action act = () => _ = new PreferencesSessionStore(null!);
 
         act.Should().Throw<ArgumentNullException>();
-    }
-
-    private sealed class FakePreferences : IPreferences
-    {
-        public Dictionary<string, object?> Values { get; } = [];
-
-        public bool ContainsKey(string key, string? sharedName = null) => Values.ContainsKey(key);
-
-        public void Remove(string key, string? sharedName = null) => Values.Remove(key);
-
-        public void Clear(string? sharedName = null) => Values.Clear();
-
-        public void Set<T>(string key, T value, string? sharedName = null) => Values[key] = value;
-
-        public T Get<T>(string key, T defaultValue, string? sharedName = null) =>
-            Values.TryGetValue(key, out object? value) && value is T stored ? stored : defaultValue;
     }
 }

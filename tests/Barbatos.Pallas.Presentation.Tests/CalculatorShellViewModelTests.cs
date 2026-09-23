@@ -216,23 +216,23 @@ public sealed class CalculatorShellViewModelTests
 
         store.Load().Should().BeNull();
         session.SetVariable(MemoryVariable.C, Value.FromDecimal(1));
-        store.Save(session.Capture());
+        store.Save(new StoredSession(session.Capture()));
         session.SetVariable(MemoryVariable.C, Value.FromDecimal(2));
-        store.Save(session.Capture());
+        store.Save(new StoredSession(session.Capture()));
 
         CalculatorSession restored = Shell.Session();
-        restored.Restore(store.Load()!);
+        restored.Restore(store.Load()!.Snapshot);
         restored.GetVariable(MemoryVariable.C).ToDecimal().Should().Be(2m);
     }
 
     private sealed class StoredSnapshot : ISessionStore
     {
-        private SessionSnapshot _snapshot;
+        private StoredSession _session;
 
-        public StoredSnapshot(SessionSnapshot snapshot) => _snapshot = snapshot;
+        public StoredSnapshot(SessionSnapshot snapshot) => _session = new StoredSession(snapshot);
 
-        public SessionSnapshot? Load() => _snapshot;
+        public StoredSession? Load() => _session;
 
-        public void Save(SessionSnapshot snapshot) => _snapshot = snapshot;
+        public void Save(StoredSession session) => _session = session;
     }
 }

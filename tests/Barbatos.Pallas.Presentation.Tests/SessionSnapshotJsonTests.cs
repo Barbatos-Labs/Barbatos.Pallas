@@ -199,10 +199,60 @@ public sealed class SessionSnapshotJsonTests
     }
 
     [Fact]
+    public void ASessionWrittenBeforeTheHistoryWasKeptIsReadWithNone()
+    {
+        // What M1 to M4.5 wrote: the same names, in camelCase, and no history field at all.
+        const string earlier = """
+            {"version":1,"app":"Calculate","settings":{"angleUnit":"Radian","numberFormat":"Fix3"},"variables":["7","0","0","0","0","0","0","0","0"],"ans":"12"}
+            """;
+
+        StoredSession read = SessionSnapshotJson.ReadSession(earlier)!;
+
+        read.History.Should().BeEmpty();
+        read.Snapshot.Settings.AngleUnit.Should().Be(AngleUnit.Radian, "the names an earlier build wrote are the names this one reads");
+        read.Snapshot.Variables[0].Should().Be("7");
+        read.Snapshot.Ans.Should().Be("12");
+    }
+
+    [Fact]
+    public void TheHistoryIsKeptBesideTheSnapshotInTheSameText()
+    {
+        StoredSession session = new(Shell.Session().Capture(), [new HistoryEntry("1+1", "2"), new HistoryEntry("1÷0", string.Empty)]);
+
+        string json = SessionSnapshotJson.Write(session);
+        StoredSession read = SessionSnapshotJson.ReadSession(json)!;
+
+        // The serializer escapes + and ÷ as it escapes every other field's; what matters is the name and the read-back.
+        json.Should().Contain("\"history\":[{\"input\":", "the field is named as the others are");
+        read.History.Should().Equal(new HistoryEntry("1+1", "2"), new HistoryEntry("1÷0", string.Empty));
+        read.History[0].Calculation.Should().BeNull("a line of an earlier run is its text");
+    }
+
+    [Fact]
+    public void ALineWithNothingToRecallIsNotALine()
+    {
+        const string stored = """
+            {"version":1,"app":"Calculate","history":[{"input":"2×3"},null,{"input":""},{"text":"5"}]}
+            """;
+
+        SessionSnapshotJson.ReadSession(stored)!.History.Should().Equal(new HistoryEntry("2×3", string.Empty));
+    }
+
+    [Fact]
+    public void ASnapshotIsReadAsTheSessionItIsPartOf()
+    {
+        SessionSnapshotJson.Read("not json").Should().BeNull();
+        SessionSnapshotJson.ReadSession(null).Should().BeNull();
+        SessionSnapshotJson.Read(SessionSnapshotJson.Write(Shell.Session(CalculatorApp.Matrix).Capture()))!.App.Should().Be(CalculatorApp.Matrix);
+    }
+
+    [Fact]
     public void ASnapshotIsRequired()
     {
-        Action act = () => SessionSnapshotJson.Write(null!);
+        Action snapshot = () => SessionSnapshotJson.Write((SessionSnapshot)null!);
+        Action session = () => SessionSnapshotJson.Write((StoredSession)null!);
 
-        act.Should().Throw<ArgumentNullException>();
+        snapshot.Should().Throw<ArgumentNullException>().WithParameterName("snapshot");
+        session.Should().Throw<ArgumentNullException>().WithParameterName("session");
     }
 }

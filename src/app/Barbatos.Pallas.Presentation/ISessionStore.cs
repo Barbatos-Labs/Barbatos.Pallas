@@ -3,6 +3,7 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
+using System.Collections.Immutable;
 using Barbatos.Pallas.Engine;
 
 namespace Barbatos.Pallas.Presentation;
@@ -18,12 +19,31 @@ namespace Barbatos.Pallas.Presentation;
 public interface ISessionStore
 {
     /// <summary>Reads the session that was stored, or <see langword="null"/> when there is none or it cannot be read.</summary>
-    /// <returns>The snapshot, or <see langword="null"/>.</returns>
-    SessionSnapshot? Load();
+    /// <returns>The session, or <see langword="null"/>.</returns>
+    StoredSession? Load();
 
     /// <summary>Stores a session, replacing what was there.</summary>
+    /// <param name="session">The session.</param>
+    void Save(StoredSession session);
+}
+
+/// <summary>
+/// What is kept of a session between runs: the engine's snapshot, and the history the application keeps itself.
+/// </summary>
+/// <param name="Snapshot">The memories, settings and data (<see cref="CalculatorSession.Capture"/>).</param>
+/// <param name="History">The history of the application the session was in, oldest first.</param>
+/// <remarks>
+/// The history is not in the snapshot because the engine does not keep a history across runs; it is stored beside it
+/// so that one string holds both and they cannot be read back from two different runs.
+/// </remarks>
+public sealed record StoredSession(SessionSnapshot Snapshot, ImmutableArray<HistoryEntry> History)
+{
+    /// <summary>Creates a stored session with no history.</summary>
     /// <param name="snapshot">The snapshot.</param>
-    void Save(SessionSnapshot snapshot);
+    public StoredSession(SessionSnapshot snapshot)
+        : this(snapshot, [])
+    {
+    }
 }
 
 /// <summary>
@@ -31,11 +51,11 @@ public interface ISessionStore
 /// </summary>
 public sealed class InMemorySessionStore : ISessionStore
 {
-    private SessionSnapshot? _snapshot;
+    private StoredSession? _session;
 
     /// <inheritdoc/>
-    public SessionSnapshot? Load() => _snapshot;
+    public StoredSession? Load() => _session;
 
     /// <inheritdoc/>
-    public void Save(SessionSnapshot snapshot) => _snapshot = snapshot;
+    public void Save(StoredSession session) => _session = session;
 }

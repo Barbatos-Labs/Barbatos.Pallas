@@ -21,6 +21,7 @@ app.screenLater: Phần tính toán đã xong; màn hình của ứng dụng nà
 settings.title: Cài đặt máy tính
 settings.back: Quay lại
 settings.reset: Đặt lại như ban đầu
+settings.language: Ngôn ngữ
 
 setting.inputOutput: Nhập và xuất
 setting.angleUnit: Đơn vị góc
@@ -77,6 +78,24 @@ statistics.frequencies: Tần số
 statistics.apply: Áp dụng
 statistics.addRow: Thêm dòng
 statistics.removeRow: Bớt dòng
+
+# Các menu hiện trên màn hình, đè lên bàn phím: CATALOG (tr. 51-69), FORMAT và các biến.
+catalog.title: CATALOG
+catalog.search: Tìm trong CATALOG
+catalog.FunctionAnalysis: Giải tích hàm
+catalog.Probability: Xác suất
+catalog.NumericCalc: Tính toán số
+catalog.AngleCoordinates: Góc/Tọa độ/Độ-phút-giây
+catalog.Trigonometry: Lượng giác/Hyperbolic
+catalog.EngineerSymbols: Ký hiệu kỹ thuật
+catalog.ScientificConstants: Hằng số khoa học
+catalog.UnitConversions: Đổi đơn vị
+catalog.AtomicTable: Bảng nguyên tử
+catalog.Relations: Quan hệ
+catalog.Other: Khác
+format.title: FORMAT
+recall.title: Các biến
+menu.close: Đóng
 
 setting:
   MathIMathO: MathI/MathO
@@ -139,3 +158,19 @@ choice:
   InfiniteSolutions: Vô số nghiệm
   NoRealRoots: Không có nghiệm thực
   AllRealNumbers: Mọi số thực
+  Standard: Chuẩn
+  DecimalValue: Thập phân
+  PrimeFactor: Thừa số nguyên tố
+  RecurringDecimal: Số thập phân tuần hoàn
+  Rectangular: Dạng đại số a+bi
+  Polar: Dạng lượng giác r∠θ
+  ImproperFraction: Phân số
+  MixedFraction: Hỗn số
+  Engineering: Ký hiệu ENG
+  Sexagesimal: Độ, phút, giây
+
+# The languages of the application: each is named in itself, Windows' own in the language on the screen.
+language:
+  system: Ngôn ngữ của Windows
+  en-US: English
+  vi-VN: Tiếng Việt
