@@ -1,0 +1,34 @@
+<UserControl x:Class="Barbatos.Pallas.Wpf.Views.BaseNView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
+             xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
+             xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
+    <DockPanel Margin="12">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <Button DockPanel.Dock="Left"
+                    Padding="10,4"
+                    Margin="0,0,12,0"
+                    Focusable="False"
+                    aqr:RouterLink.To="/"
+                    Content="{i18n:StringLocalizer Text='settings.back'}" />
+            <TextBlock FontSize="18"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Text="{i18n:StringLocalizer Text='app.base-n'}" />
+        </DockPanel>
+
+        <views:CalculationPanelView DockPanel.Dock="Bottom" DataContext="{Binding Calculate}" />
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+            <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="{i18n:StringLocalizer Text='basen.mode'}" />
+            <ComboBox MinWidth="110" Margin="0,0,8,0" ItemsSource="{Binding Bases}" SelectedItem="{Binding Mode}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

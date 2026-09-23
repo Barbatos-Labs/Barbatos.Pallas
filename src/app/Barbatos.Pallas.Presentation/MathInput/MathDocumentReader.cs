@@ -127,7 +127,9 @@ public static class MathDocumentReader
 
     private static MathStructure Structure(MathTemplateKind kind, SyntaxContext context, params SyntaxNode[] slots)
     {
-        ImmutableArray<MathRow> rows = [.. slots.Select(slot => new MathRow([.. Elements(Unwrap(slot), context)]))];
+        // A slot keeps the brackets it was written with: ((7)) is two of them, and reading it back as one would be
+        // a different tree, even if it is the same number.
+        ImmutableArray<MathRow> rows = [.. slots.Select(slot => new MathRow([.. Elements(slot, context)]))];
         return new MathStructure(kind, rows);
     }
 

@@ -128,6 +128,26 @@ public sealed class MathDocumentReaderTests
         document.Root.Count.Should().Be(text.Length);
     }
 
+    [Theory]
+    [InlineData("1÷(2+3)")]
+    [InlineData("(1+2)×(3+4)")]
+    [InlineData("1-(2-3)")]
+    [InlineData("(1+2)²")]
+    [InlineData("2^(1+2)")]
+    [InlineData("(1+2)!")]
+    [InlineData("10C(2+1)")]
+    [InlineData("(1+2)∠(3+4)")]
+    [InlineData("sin(.6((7)))")]
+    [InlineData("((7))")]
+    [InlineData("√((2))")]
+    [InlineData("2^((3))")]
+    public void BracketsThatChangeTheMeaningComeBack(string text)
+    {
+        MathDocument document = MathDocumentReader.Read(text);
+
+        MathLinearWriter.Write(document).Should().Be(text);
+    }
+
     [Fact]
     public void TextIsRequired()
     {

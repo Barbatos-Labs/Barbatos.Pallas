@@ -1,0 +1,56 @@
+<UserControl x:Class="Barbatos.Pallas.Wpf.Views.CalculationPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
+             xmlns:wpfmath="clr-namespace:WpfMath.Controls;assembly=WpfMath"
+             xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
+    <UserControl.Resources>
+        <Style x:Key="WhenResult" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasResult}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenError" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasError}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- What the calculation came to, or what went wrong with it. -->
+        <Border DockPanel.Dock="Bottom"
+                BorderBrush="#888"
+                BorderThickness="1"
+                Padding="8"
+                Margin="0,8,0,0"
+                MinHeight="52">
+            <Grid>
+                <DockPanel Style="{StaticResource WhenResult}" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Right"
+                               VerticalAlignment="Center"
+                               FontFamily="Consolas"
+                               FontSize="16"
+                               Text="{Binding Display.Text}" />
+                    <wpfmath:FormulaControl DockPanel.Dock="Left"
+                                            Formula="{Binding Display.Latex}"
+                                            Scale="20"
+                                            VerticalAlignment="Center" />
+                </DockPanel>
+                <TextBlock Style="{StaticResource WhenError}"
+                           VerticalAlignment="Center"
+                           FontSize="15"
+                           Foreground="#C00"
+                           Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+            </Grid>
+        </Border>
+
+        <views:MathInputView DataContext="{Binding Input}" />
+    </DockPanel>
+</UserControl>

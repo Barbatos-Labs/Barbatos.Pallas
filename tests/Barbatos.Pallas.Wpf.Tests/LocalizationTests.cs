@@ -10,6 +10,7 @@ using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
 using Barbatos.Pallas.Numerics;
 using Barbatos.Pallas.Presentation;
+using Barbatos.Pallas.Spreadsheet;
 
 namespace Barbatos.Pallas.Wpf.Tests;
 
@@ -66,6 +67,31 @@ public sealed class LocalizationTests
         foreach (string value in values)
         {
             text.Should().ContainKey("setting:" + value, "a setting shows its values by name");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void EveryChoiceAScreenOffersHasWords(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+        IEnumerable<string> choices =
+        [
+            .. Enum.GetValues<MatrixVariable>().Select(value => value.ToString()),
+            .. Enum.GetValues<VectorVariable>().Select(value => value.ToString()),
+            .. Enum.GetValues<NumberBase>().Select(value => value.ToString()),
+            .. Enum.GetValues<EquationKind>().Select(value => value.ToString()),
+            .. Enum.GetValues<RelationOperator>().Select(value => value.ToString()),
+            .. Enum.GetValues<RatioForm>().Select(value => value.ToString()),
+            .. Enum.GetValues<DistributionKind>().Select(value => value.ToString()),
+            .. Enum.GetValues<TableType>().Select(value => value.ToString()),
+            .. Enum.GetValues<RegressionModel>().Select(value => value.ToString()),
+            .. Enum.GetValues<SolutionOutcome>().Select(value => value.ToString()),
+        ];
+
+        foreach (string choice in choices)
+        {
+            text.Should().ContainKey("choice:" + choice, "a screen shows this choice by name");
         }
     }
 

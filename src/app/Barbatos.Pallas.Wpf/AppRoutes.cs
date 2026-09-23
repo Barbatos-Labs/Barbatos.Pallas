@@ -30,7 +30,17 @@ public static class AppRoutes
     /// <remarks>The list grows one screen per milestone; what is not here yet says so rather than pretending.</remarks>
     public static Type Screen(CalculatorApp app) => app switch
     {
-        CalculatorApp.Calculate => typeof(CalculateView),
+        CalculatorApp.Calculate or CalculatorApp.Complex => typeof(CalculateView),
+        CalculatorApp.BaseN => typeof(BaseNView),
+        CalculatorApp.Matrix => typeof(MatrixView),
+        CalculatorApp.Vector => typeof(VectorView),
+        CalculatorApp.Statistics => typeof(StatisticsView),
+        CalculatorApp.Distribution => typeof(DistributionView),
+        CalculatorApp.Equation => typeof(EquationView),
+        CalculatorApp.Inequality => typeof(InequalityView),
+        CalculatorApp.Ratio => typeof(RatioView),
+        CalculatorApp.Table => typeof(TableView),
+        CalculatorApp.Spreadsheet => typeof(SpreadsheetView),
         _ => typeof(AppScreenView),
     };
 

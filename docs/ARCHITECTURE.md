@@ -48,9 +48,8 @@ Barbatos.Pallas/
    Barbatos.Pallas.Wpf  (Barbatos.Wpf.Core · Aquarius · AquariusRouter · i18n.Wpf · WpfMath)
           │             └──────────────────────────────────► DependencyInjection: AddPallas()
           ▼
-   Barbatos.Pallas.Presentation (CommunityToolkit.Mvvm)
-                                                 │
- src/core ───────────────────────────────────────┼────────────────────────────────
+   Barbatos.Pallas.Presentation (CommunityToolkit.Mvvm) ──────► Engine · Spreadsheet
+ src/core ────────────────────────────────────────────────────────────────────────
                     Barbatos.Pallas.DependencyInjection  (references all below)
                                                  ▼
                    Spreadsheet        Graphing (→ Solvers)        Data
@@ -226,6 +225,20 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
   move the cursor; where it cannot move, they step through the history instead, which is what the calculator does
   when the cursor is already at the top of the input. An error is a `CalcErrorKind` and a span: the screen looks the
   words up under `error.<kind>` and the cursor waits where the engine stopped.
+- **The application screens.** One view model per application over the same session (`MatrixViewModel`,
+  `VectorViewModel`, `EquationViewModel`, `InequalityViewModel`, `RatioViewModel`, `DistributionViewModel`,
+  `TableViewModel`, `SpreadsheetViewModel`, `StatisticsViewModel`, `BaseNViewModel`), each holding only what its
+  screen shows: what is typed, what the session made of it, and the localization key of the error. The mathematics
+  stays in the engine - a screen calls one form of `CalculatorSession` and shows what comes back.
+  - **Numbers are typed, not parsed twice.** `ValueGridViewModel` is the one grid of numbers every application uses
+    - the entries of a matrix, the coefficients of an equation, the columns of a statistic, the x values of a
+    distribution - and each cell calculates what was typed through the session, so `2^5` and `√(2)` are entries
+    like any other and a cell that is not a number shows what was typed and names its error.
+  - **A screen exists once it is opened.** The shell builds a screen the first time its application is asked for and
+    keeps it, so what was typed is still there when the user comes back, and a session that never leaves Calculate
+    builds nothing else.
+  - **Screens of applications whose own screen is still to come** render `AppScreenView`: the application is in the
+    registry, reachable and disabled where it has no engine, rather than missing from the window.
 - **Applications.** `CalculatorApps.All` is the registry: one entry per application, with its route and the
   localization key of its name, in the order of the calculator's own home screen. The home screen, the route table
   and the application menu all read it, so adding an application touches no other. An application this build has no
@@ -323,7 +336,7 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | **2 Expressions** ✅ | Lexer, Pratt parser, syntax tree, diagnostics with spans, vocabulary, linear and LaTeX printers; Canonical Linear Syntax final (docs/LINEAR-SYNTAX.md) | Every conformance input parses in its application; print-and-reparse property in 7 application contexts; fuzzing never throws or hangs; lexing allocates nothing; every branch covered but one documented; mutation score ≥ 90% |
 | **3 Engine** ✅ | Binder, plugins, RPN evaluator, exact display forms, formatter, memory and sessions, calculus, Verify, Base-N, Complex, the CODATA/NIST/CIAAW data sets and `AddPallas()` | The 111 Calculate, Complex and Base-N conformance cases pass; evaluation of any generated tree ends in a value or a named error within its budget; integrals agree with 50-digit references; mutation score ≥ 90% |
 | **4 Domain apps** ✅ (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4 Equation, Inequality and Ratio, M5 Spreadsheet and Table, M6 hardening) | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Met: every conformance case of those applications passes (only the four Math Box cases are skipped, for Phase 6); the normal distribution, the Poisson probability and the polynomial roots agree with 50-digit PeterO.Numbers references; every package with code is above the 90% mutation gate |
-| 5 WPF (in progress: **M1 shell ✅**, **M2 keypad and math input ✅**, **M3 Calculate ✅**, M4 the other screens, M5 persistence and shortcuts, M6 hardening and installer) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
+| 5 WPF (in progress: **M1 shell ✅**, **M2 keypad and math input ✅**, **M3 Calculate ✅**, **M4 the other screens ✅**, M5 persistence and shortcuts, M6 hardening and installer) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
 | 6 Graph and Math Box | Graphing; Dice, Coin, Number Line, Circle | Math Box conformance cases pass |
 | 7 Hardening | Benchmarks and gates, API docs, public API tracking, publish pipeline, installer | 0.x preview on nuget.org |
 
@@ -386,3 +399,9 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | 23 Sep 2026 | **The keypad is a C# table, not a JSON layout** (a change from the plan in §8). A key types Canonical Linear Syntax and names a template, so a table the compiler reads catches a wrong spelling, where a JSON file would only show a dead key in the running application; the layout it needs - which keys, in which rows - is the same table. A JSON layout comes back the day a user is meant to rearrange the keypad. |
 | 23 Sep 2026 | **The math input is an immutable tree, and undo is a stack of it.** An edit returns a new document, so nothing has to be reversible and no edit can half-apply; moving the cursor is not an edit, because what undo takes back is what was typed. A structure takes the operand before it, which is the only place the editor guesses, and it guesses what the calculator itself does. |
 | 22 Sep 2026 | **The locale files are embedded under the assembly name, with `WithCulture=false`.** A file named for a culture (`Locales.en-US.yaml`) is otherwise taken for a satellite resource and compiled into `en-USBarbatos.Pallas.resources.dll`, where Barbatos.i18n - which reads the assembly itself - cannot find it. Measured the same day, after the application refused to start. |
+| 23 Sep 2026 | **Phase 5 M4: the other screens.** Ten view models over the one session - Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Table, Spreadsheet and Base-N - each holding only what its screen shows: what was typed, what the session made of it, and the localization key of the error. No mathematics moved into the app layer: a screen calls one form of `CalculatorSession` and displays what comes back. A screen is built the first time its application is opened and then kept, which is what makes what was typed still be there on the way back, and a session that never leaves Calculate builds nothing else. Measured: 403 tests in Presentation, mutation score 91.23%; 9244 tests across 37 assemblies, none failing. |
+| 23 Sep 2026 | **A number on a screen is an expression.** Every application that takes numbers takes them through the one `ValueGridViewModel`, whose cells calculate what was typed through the session: the entries of a matrix, the coefficients of an equation, the columns of a statistic and the x values of a distribution are all `2^5` or `√(2)` if the user types that, as they are on the calculator, and a cell that is not a number keeps the text and names its error rather than becoming a zero. One grid is also one place where a value is read, instead of ten. |
+| 23 Sep 2026 | **Presentation references Spreadsheet as well as Engine** (`ArchitectureMap` and the §2 diagram changed together). The sheet and the number table are driven objects - `SpreadsheetGrid` and `NumberTable` own the cells, the recalculation and the byte capacity - and the screen owns only which cell is selected and what is being typed into it. Reaching them through Engine instead would have meant a second sheet inside the session, which is what Phase 4 M5 decided against. |
+| 23 Sep 2026 | **The window is walked, not only unit-tested.** Before a milestone is reported the real application is started with a listener on WPF's binding trace and a walk that opens every route, types into every box, moves every choice and presses every button that is not a link. It found four things neither the compiler nor a view-model test saw: a distribution of the normal family calculated through the list form, which the engine refuses; the Poisson parameter passed as the mean rather than λ; the frequency column of a one-variable statistic passed as y; and a missing list of kinds on the Equation screen, which is a binding error and not a crash. What it found is now in the Presentation tests; the harness itself is temporary and is deleted with the report. The last walk of M4: fifteen routes, no binding error and no exception. |
+| 23 Sep 2026 | **Reading a calculation back leaves its brackets where they were.** `MathDocumentReader` unwrapped a parenthesized slot wherever it read one, so `sin(.6((7))` came back as `sin(.6(7))`; the print-and-reparse property found it after a few hundred random key sequences. Only the base of a power and the radicand of a root are unwrapped now, where the structure itself brackets what it holds. Everywhere else the brackets are the user's. |
+| 23 Sep 2026 | **A root of higher multiplicity is held to fewer digits.** The property that checks the iterated roots against the roots they were built from failed now and then on a random triple root. Simultaneous iteration converges linearly at a repeated root, and a root of multiplicity m is only determined to about the m-th root of the precision of the arithmetic: a triple root comes back as three values 10⁻⁴ apart in `double`, which is the arithmetic and not the iteration. The tolerance of that property now scales with the multiplicity instead of being one number for every polynomial. |

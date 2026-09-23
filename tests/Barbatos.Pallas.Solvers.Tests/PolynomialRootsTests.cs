@@ -145,7 +145,8 @@ public sealed class PolynomialRootsTests
                     found.Should().HaveCount(roots.Length);
                     foreach (double root in roots)
                     {
-                        found.Should().Contain(candidate => Complex.Abs(candidate - root) < 1e-6d * (1d + Math.Abs(root)));
+                        double tolerance = Tolerance(roots, root);
+                        found.Should().Contain(candidate => Complex.Abs(candidate - root) < tolerance);
                     }
                 },
                 iter: 500);
@@ -181,6 +182,24 @@ public sealed class PolynomialRootsTests
     }
 
     /// <summary>(x − r₁)···(x − rₙ), ascending.</summary>
+    /// <remarks>
+    /// A root of multiplicity m is only determined to about the m-th root of the precision of the arithmetic: a
+    /// triple root at -9 comes back as three values 1e-4 apart, which is right for double precision and not a
+    /// defect of the iteration (measured 23 Sep 2026, after a random sample produced one).
+    /// </remarks>
+    private static double Tolerance(double[] roots, double root)
+    {
+        int multiplicity = roots.Count(other => Math.Abs(other - root) < 1e-9d * (1d + Math.Abs(root)));
+        double relative = multiplicity switch
+        {
+            1 => 1e-6d,
+            2 => 1e-4d,
+            _ => 1e-2d,
+        };
+
+        return relative * (1d + Math.Abs(root));
+    }
+
     private static double[] FromRoots(double[] roots)
     {
         double[] polynomial = [1d];

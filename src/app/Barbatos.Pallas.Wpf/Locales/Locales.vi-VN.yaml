@@ -48,6 +48,36 @@ error.MemoryError: Lỗi bộ nhớ
 error.NoOperator: Thiếu toán tử
 error.NotDefined: Chưa định nghĩa
 
+basen.mode: Hệ cơ số
+matrix.store: Lưu
+matrix.delete: Xoá
+matrix.answer: Kết quả trước
+equation.size: Cỡ
+equation.solve: Giải
+equation.clear: Xoá hết
+distribution.values: Các giá trị x
+distribution.results: Kết quả
+distribution.trials: N (số phép thử)
+distribution.probability: p (xác suất)
+distribution.mean: Trung bình
+distribution.lambda: λ (trung bình)
+distribution.deviation: Độ lệch chuẩn
+distribution.lower: Cận dưới
+distribution.upper: Cận trên
+distribution.area: Diện tích
+table.generate: Tạo bảng
+table.range: Đầu, cuối và bước
+sheet.commit: Nhập
+sheet.clearCell: Xoá ô
+sheet.clearAll: Xoá bảng
+sheet.auto: Tự động tính
+sheet.recalculate: Tính lại
+statistics.twoVariable: Hai biến
+statistics.frequencies: Tần số
+statistics.apply: Áp dụng
+statistics.addRow: Thêm dòng
+statistics.removeRow: Bớt dòng
+
 setting:
   MathIMathO: MathI/MathO
   MathIDecimalO: MathI/DecimalO
@@ -63,3 +93,49 @@ setting:
   Dot: Dấu chấm
   Comma: Dấu phẩy
 
+# The values a screen offers to choose from: an enum value is its own key.
+choice:
+  MatA: MatA
+  MatB: MatB
+  MatC: MatC
+  MatD: MatD
+  VctA: VctA
+  VctB: VctB
+  VctC: VctC
+  VctD: VctD
+  Dec: Thập phân
+  Hex: Thập lục phân
+  Bin: Nhị phân
+  Oct: Bát phân
+  Simultaneous: Hệ phương trình
+  Polynomial: Đa thức
+  Greater: >
+  Less: <
+  GreaterOrEqual: ≥
+  LessOrEqual: ≤
+  Equal: =
+  NotEqual: ≠
+  XInSecondRatio: A:B = X:D
+  XLastInSecondRatio: A:B = C:X
+  BinomialPD: Nhị thức P(X = x)
+  BinomialCD: Nhị thức P(X ≤ x)
+  NormalPD: Mật độ chuẩn
+  NormalCD: Chuẩn P(a ≤ X ≤ b)
+  InverseNormal: Chuẩn ngược
+  PoissonPD: Poisson P(X = x)
+  PoissonCD: Poisson P(X ≤ x)
+  FunctionsFAndG: f(x) và g(x)
+  FunctionF: f(x)
+  FunctionG: g(x)
+  Linear: y = a + bx
+  Quadratic: y = a + bx + cx²
+  Logarithmic: y = a + b·ln x
+  ExponentialE: y = a·e^(bx)
+  ExponentialAB: y = a·b^x
+  Power: y = a·x^b
+  Inverse: y = a + b÷x
+  Solved: Đã giải
+  NoSolution: Vô nghiệm
+  InfiniteSolutions: Vô số nghiệm
+  NoRealRoots: Không có nghiệm thực
+  AllRealNumbers: Mọi số thực

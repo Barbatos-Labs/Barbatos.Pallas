@@ -5,6 +5,7 @@
 
 using System.Collections.Immutable;
 using Barbatos.Pallas.Engine;
+using Barbatos.Pallas.Expressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -43,6 +44,13 @@ public sealed partial class CalculateViewModel : ObservableObject
 
     /// <summary>Gets the line the user types on.</summary>
     public MathInputViewModel Input { get; }
+
+    /// <summary>Gets the localization key of the name of the application the line belongs to.</summary>
+    /// <remarks>Calculate and Complex are the same screen, and the title is how the user tells them apart.</remarks>
+    public string TitleKey => CalculatorApps.Of(_session.App).NameKey;
+
+    /// <summary>Tells the screen that the application changed, and with it its title.</summary>
+    public void Refresh() => OnPropertyChanged(nameof(TitleKey));
 
     /// <summary>Gets the last calculation, or <see langword="null"/> before the first one.</summary>
     [ObservableProperty]

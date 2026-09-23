@@ -50,6 +50,36 @@ error.NoOperator: No Operator
 error.NotDefined: Not Defined
 
 # The values of a setting: an enum value is its own key, so one template shows any of them.
+basen.mode: Number base
+matrix.store: Store
+matrix.delete: Delete
+matrix.answer: Last answer
+equation.size: Size
+equation.solve: Solve
+equation.clear: Clear
+distribution.values: Values of x
+distribution.results: Results
+distribution.trials: N (trials)
+distribution.probability: p (probability)
+distribution.mean: Mean
+distribution.lambda: λ (mean)
+distribution.deviation: Deviation
+distribution.lower: Lower
+distribution.upper: Upper
+distribution.area: Area
+table.generate: Generate
+table.range: Start, end and step
+sheet.commit: Enter
+sheet.clearCell: Clear cell
+sheet.clearAll: Clear sheet
+sheet.auto: Auto Calc
+sheet.recalculate: Recalculate
+statistics.twoVariable: Two variables
+statistics.frequencies: Frequencies
+statistics.apply: Apply
+statistics.addRow: Add row
+statistics.removeRow: Remove row
+
 setting:
   MathIMathO: MathI/MathO
   MathIDecimalO: MathI/DecimalO
@@ -65,3 +95,49 @@ setting:
   Dot: Dot
   Comma: Comma
 
+# The values a screen offers to choose from: an enum value is its own key.
+choice:
+  MatA: MatA
+  MatB: MatB
+  MatC: MatC
+  MatD: MatD
+  VctA: VctA
+  VctB: VctB
+  VctC: VctC
+  VctD: VctD
+  Dec: Decimal
+  Hex: Hexadecimal
+  Bin: Binary
+  Oct: Octal
+  Simultaneous: Simultaneous
+  Polynomial: Polynomial
+  Greater: >
+  Less: <
+  GreaterOrEqual: ≥
+  LessOrEqual: ≤
+  Equal: =
+  NotEqual: ≠
+  XInSecondRatio: A:B = X:D
+  XLastInSecondRatio: A:B = C:X
+  BinomialPD: Binomial P(X = x)
+  BinomialCD: Binomial P(X ≤ x)
+  NormalPD: Normal density
+  NormalCD: Normal P(a ≤ X ≤ b)
+  InverseNormal: Inverse normal
+  PoissonPD: Poisson P(X = x)
+  PoissonCD: Poisson P(X ≤ x)
+  FunctionsFAndG: f(x) and g(x)
+  FunctionF: f(x)
+  FunctionG: g(x)
+  Linear: y = a + bx
+  Quadratic: y = a + bx + cx²
+  Logarithmic: y = a + b·ln x
+  ExponentialE: y = a·e^(bx)
+  ExponentialAB: y = a·b^x
+  Power: y = a·x^b
+  Inverse: y = a + b÷x
+  Solved: Solved
+  NoSolution: No solution
+  InfiniteSolutions: Infinitely many solutions
+  NoRealRoots: No real roots
+  AllRealNumbers: All real numbers

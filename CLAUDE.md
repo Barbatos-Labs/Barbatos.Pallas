@@ -30,7 +30,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, and properties over random sequences of keys |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, and properties over random sequences of keys |
 | `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, and the session in the preferences |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
@@ -44,14 +44,18 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 ## Current phase
 
 **Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
-M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens, M5 persistence and shortcuts,
+M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M5 persistence and shortcuts,
 M6 hardening and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
 end.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
   route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
   between runs (`PreferencesSessionStore` in the host). The host is `WpfProgram` + `AppRoutes` + `Views/`, with the
-  text in `Locales/*.yaml`. Screens of applications whose own screen is still to come render `AppScreenView`.
+  text in `Locales/*.yaml`. Every application has its own view model over that session (`MatrixViewModel`,
+  `VectorViewModel`, `StatisticsViewModel`, `DistributionViewModel`, `EquationViewModel`, `InequalityViewModel`,
+  `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`), built the first time it is opened
+  and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was typed through the
+  session. Screens of applications whose own screen is still to come render `AppScreenView`.
 - The line the user types on is `MathDocument` (immutable, a cursor path through template slots), written as
   Canonical Linear Syntax for the engine and as LaTeX for the screen, and read back by `MathDocumentReader` through
   the engine's own parser. The keypad is the table in `Keypad`, the keyboard maps onto it (`KeyboardMap`), and

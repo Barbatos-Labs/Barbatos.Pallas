@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+    <!-- The Spreadsheet and Table screens: the sheet and the number table are those applications themselves. -->
+    <ProjectReference Include="..\..\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
   </ItemGroup>
 
 </Project>
