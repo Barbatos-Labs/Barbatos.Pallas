@@ -3,6 +3,7 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
+using Barbatos.Pallas.Expressions;
 using Barbatos.Pallas.Presentation;
 using Barbatos.Pallas.Wpf.Views;
 using Barbatos.Wpf.AquariusRouter.Routing;
@@ -23,6 +24,16 @@ public static class AppRoutes
     /// <summary>The key the matched application is carried under, for a screen to read from its route.</summary>
     public const string AppKey = "app";
 
+    /// <summary>Returns the screen an application is shown on.</summary>
+    /// <param name="app">The application.</param>
+    /// <returns>Its screen, or the one that says the screen is still to come.</returns>
+    /// <remarks>The list grows one screen per milestone; what is not here yet says so rather than pretending.</remarks>
+    public static Type Screen(CalculatorApp app) => app switch
+    {
+        CalculatorApp.Calculate => typeof(CalculateView),
+        _ => typeof(AppScreenView),
+    };
+
     /// <summary>Builds the route table.</summary>
     /// <returns>The routes, home first.</returns>
     public static IReadOnlyList<RouteRecord> Build()
@@ -39,7 +50,7 @@ public static class AppRoutes
             {
                 Path = app.Route,
                 Name = app.Route.TrimStart('/'),
-                View = typeof(AppScreenView),
+                View = Screen(app.App),
                 Meta = new Dictionary<string, object?> { [AppKey] = app },
             });
         }

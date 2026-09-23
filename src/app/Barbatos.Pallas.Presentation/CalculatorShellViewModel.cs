@@ -44,6 +44,9 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     /// <summary>Gets the settings of the calculator, as the settings screen shows them.</summary>
     public SettingsViewModel Settings { get; }
 
+    /// <summary>Gets the line the user types on, which every application of the calculator shares.</summary>
+    public MathInputViewModel Input { get; } = new();
+
     /// <summary>Gets every application, in the order of the home screen.</summary>
     public ImmutableArray<CalculatorAppInfo> Apps { get; } = CalculatorApps.All;
 

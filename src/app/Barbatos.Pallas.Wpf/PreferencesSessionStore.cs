@@ -21,7 +21,7 @@ namespace Barbatos.Pallas.Wpf;
 public sealed class PreferencesSessionStore : ISessionStore
 {
     /// <summary>The preference the session is written to. Immutable: an earlier build's session is read by this name.</summary>
-    internal const string Key = "session";
+    public const string Key = "session";
 
     private readonly IPreferences _preferences;
 

@@ -37,6 +37,8 @@ public static class LatexPrinter
         ["log("] = @"\log",
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
+    private static readonly char[] TextOnly = ['#', '$', ' '];
+
     private static readonly FrozenDictionary<char, string> Characters = new Dictionary<char, string>
     {
         ['π'] = @"\pi ",
@@ -62,7 +64,7 @@ public static class LatexPrinter
         ['#'] = @"\#",
         ['$'] = @"\$",
         ['%'] = @"\%",
-        [' '] = @"\ ",
+        [' '] = @"\;",
         ['\u0302'] = string.Empty,
         ['\u0304'] = string.Empty,
     }.ToFrozenDictionary();
@@ -105,10 +107,10 @@ public static class LatexPrinter
                 WriteName(latex, name.Symbol);
                 break;
             case CellReference cell:
-                AppendRoman(latex, cell.Text);
+                AppendUpright(latex, cell.Text);
                 break;
             case CellRange range:
-                AppendRoman(latex, range.Start.Text + ":" + range.End.Text);
+                AppendUpright(latex, range.Start.Text + ":" + range.End.Text);
                 break;
             case NegationExpression negation:
                 latex.Append('-');
@@ -266,10 +268,10 @@ public static class LatexPrinter
             BinaryOperator.ImplicitMultiply => StartsWithDigit(binary.Right) ? @"\cdot " : " ",
             BinaryOperator.Polar => @"\angle ",
             BinaryOperator.DotProduct => @"\cdot ",
-            BinaryOperator.And => @"\mathbin{\mathrm{and}} ",
-            BinaryOperator.Or => @"\mathbin{\mathrm{or}} ",
-            BinaryOperator.Xor => @"\mathbin{\mathrm{xor}} ",
-            _ => @"\mathbin{\mathrm{xnor}} ",
+            BinaryOperator.And => @"\;\mathrm{and}\;",
+            BinaryOperator.Or => @"\;\mathrm{or}\;",
+            BinaryOperator.Xor => @"\;\mathrm{xor}\;",
+            _ => @"\;\mathrm{xnor}\;",
         });
         Write(latex, binary.Right, precedence + 1);
     }
@@ -332,9 +334,7 @@ public static class LatexPrinter
         }
         else
         {
-            latex.Append(@"\operatorname{");
-            AppendCharacters(latex, name[..^1]);
-            latex.Append('}');
+            AppendUpright(latex, name[..^1]);
         }
 
         WriteArguments(latex, call.Arguments);
@@ -368,7 +368,7 @@ public static class LatexPrinter
                 latex.Append(@"\bar{y}");
                 return;
             case "Ran#":
-                latex.Append(@"\mathrm{Ran\#}");
+                AppendUpright(latex, text);
                 return;
         }
 
@@ -403,6 +403,33 @@ public static class LatexPrinter
         }
 
         AppendCharacters(latex, text);
+    }
+
+    /// <remarks>
+    /// WpfMath, the renderer of the desktop application, has no <c>\operatorname</c>, and <c>\#</c> and <c>\$</c> are
+    /// commands only <c>\text</c> carries (measured 23 Sep 2026). A name with one of those characters, or with a
+    /// space, is therefore written as <c>\text</c> and everything else as <c>\mathrm</c>.
+    /// </remarks>
+    private static void AppendUpright(StringBuilder latex, string text)
+    {
+        if (text.IndexOfAny(TextOnly) < 0)
+        {
+            AppendRoman(latex, text);
+            return;
+        }
+
+        latex.Append(@"\text{");
+        foreach (char character in text)
+        {
+            if (character is '#' or '$')
+            {
+                latex.Append('\\');
+            }
+
+            latex.Append(character);
+        }
+
+        latex.Append('}');
     }
 
     private static void AppendRoman(StringBuilder latex, string text)

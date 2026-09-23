@@ -48,7 +48,7 @@ jobs:
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
-          $expected = 36   # 12 test projects x 3 target frameworks
+          $expected = 37   # 12 test projects x 3 target frameworks, plus Wpf.Tests on Windows only
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
@@ -177,3 +177,7 @@ jobs:
 
       - name: Presentation tests
         run: dotnet test --project tests/Barbatos.Pallas.Presentation.Tests --configuration Release
+
+      # Draws every formula the printers emit with WpfMath, the renderer of the app: Windows only, one framework.
+      - name: Wpf tests
+        run: dotnet test --project tests/Barbatos.Pallas.Wpf.Tests --configuration Release

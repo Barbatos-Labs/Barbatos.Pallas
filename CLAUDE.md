@@ -30,7 +30,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, and the stored session written, read back and restored |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, and the math input with its two writers |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, and the session in the preferences |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -103,7 +104,8 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 12 test projects × 3 frameworks = 36 assemblies.
+  (a net8.0-only compile error). A full run is 12 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
+  = 37 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
   Packing one project does not pack its project references.
 - **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):

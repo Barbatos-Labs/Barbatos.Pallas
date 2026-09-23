@@ -65,6 +65,7 @@ public static class WpfProgram
         builder.Services.AddTransient<HomeView>();
         builder.Services.AddTransient<SettingsView>();
         builder.Services.AddTransient<AppScreenView>();
+        builder.Services.AddTransient<CalculateView>();
 
         WpfApp app = builder.Build();
 

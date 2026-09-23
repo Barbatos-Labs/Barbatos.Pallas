@@ -28,8 +28,8 @@ public sealed class LatexPrinterTests
     [InlineData("log(2,16)+log(1000)", @"\log_{2}\left(16\right)+\log\left(1000\right)")]
     [InlineData("sin⁻¹(1)+tanh(0)", @"\sin^{-1}\left(1\right)+\tanh\left(0\right)")]
     [InlineData("Abs(2-7)", @"\left|2-7\right|")]
-    [InlineData("GCD(28,35)", @"\operatorname{GCD}\left(28, 35\right)")]
-    [InlineData("RanInt#(1,6)+Ran#", @"\operatorname{RanInt\#}\left(1, 6\right)+\mathrm{Ran\#}")]
+    [InlineData("GCD(28,35)", @"\mathrm{GCD}\left(28, 35\right)")]
+    [InlineData("RanInt#(1,6)+Ran#", @"\text{RanInt\#}\left(1, 6\right)+\text{Ran\#}")]
     [InlineData("f(3)", @"f\left(3\right)")]
     [InlineData("10C4+10P4", @"{}_{10}\mathrm{C}_{4}+{}_{10}\mathrm{P}_{4}")]
     [InlineData("3.(021)", @"3.\overline{021}")]
@@ -39,7 +39,7 @@ public sealed class LatexPrinterTests
     [InlineData("5÷R2", @"5\div_{\mathrm{R}} 2")]
     [InlineData("@ε_0+@N_A+@atm+@R_K-90+@ħ+@R_∞", @"\varepsilon _{0}+N_{A}+\mathrm{atm}+R_{K-90}+\hbar +R_{\infty }")]
     [InlineData("5cm▶in+999_k+1_μ", @"5\,\mathrm{cm\blacktriangleright in}+999\,\mathrm{k}+1\,\mathrm{\mu }")]
-    [InlineData("2J▶cal₁₅+3kgf·m▶J+5n mile▶m", @"2\,\mathrm{J\blacktriangleright cal_{15}}+3\,\mathrm{kgf\cdot m\blacktriangleright J}+5\,\mathrm{n\ mile\blacktriangleright m}")]
+    [InlineData("2J▶cal₁₅+3kgf·m▶J+5n mile▶m", @"2\,\mathrm{J\blacktriangleright cal_{15}}+3\,\mathrm{kgf\cdot m\blacktriangleright J}+5\,\mathrm{n\;mile\blacktriangleright m}")]
     [InlineData("Ans+PreAns", @"\mathrm{Ans}+\mathrm{PreAns}")]
     [InlineData("4≠3", @"4\neq 3")]
     [InlineData("1≤2<3", @"1\leq 2<3")]
@@ -51,11 +51,11 @@ public sealed class LatexPrinterTests
 
     [Theory]
     [InlineData(CalculatorApp.Complex, "2∠45+3i", @"2\angle 45+3 i")]
-    [InlineData(CalculatorApp.BaseN, "1010 and 1100 or h1F xor b1 xnor d9-o7", @"1010\mathbin{\mathrm{and}} 1100\mathbin{\mathrm{or}} \mathrm{h1F}\mathbin{\mathrm{xor}} \mathrm{b1}\mathbin{\mathrm{xnor}} \mathrm{d9}-\mathrm{o7}")]
+    [InlineData(CalculatorApp.BaseN, "1010 and 1100 or h1F xor b1 xnor d9-o7", @"1010\;\mathrm{and}\;1100\;\mathrm{or}\;\mathrm{h1F}\;\mathrm{xor}\;\mathrm{b1}\;\mathrm{xnor}\;\mathrm{d9}-\mathrm{o7}")]
     [InlineData(CalculatorApp.Vector, "VctA•VctB", @"\mathrm{VctA}\cdot \mathrm{VctB}")]
     [InlineData(CalculatorApp.Statistics, "5.5ŷ+2x̂+3x̂₁+4x̂₂+2▶t", @"5.5\,\hat{y}+2\,\hat{x}+3\,\hat{x}_{1}+4\,\hat{x}_{2}+2\blacktriangleright t")]
     [InlineData(CalculatorApp.Statistics, "x̄+ȳ+σ²x+Σx²+Q1", @"\bar{x}+\bar{y}+\sigma ^{2}x+\Sigma x^{2}+\mathrm{Q1}")]
-    [InlineData(CalculatorApp.Spreadsheet, "Sum($A$1:B2)+C3", @"\operatorname{Sum}\left(\mathrm{\$A\$1:B2}\right)+\mathrm{C3}")]
+    [InlineData(CalculatorApp.Spreadsheet, "Sum($A$1:B2)+C3", @"\mathrm{Sum}\left(\text{\$A\$1:B2}\right)+\mathrm{C3}")]
     public void Print_TypesetsApplicationSyntax(CalculatorApp app, string input, string expected)
     {
         LatexPrinter.Print(Parse(input, new SyntaxContext(app))).Should().Be(expected);
@@ -66,7 +66,7 @@ public sealed class LatexPrinterTests
         // A negative whole part keeps its parentheses before the fraction.
         { @"\left(-1\right)\frac{1}{2}", new MixedFractionExpression(new NegationExpression(new NumberLiteral("1")), new NumberLiteral("1"), new NumberLiteral("2")) },
         // A relation chain inside a function argument is parenthesized.
-        { @"\operatorname{GCD}\left(\left(1<2\right)\right)", new FunctionCall(Symbol("GCD("), [new RelationChain([new NumberLiteral("1"), new NumberLiteral("2")], [RelationOperator.Less])]) },
+        { @"\mathrm{GCD}\left(\left(1<2\right)\right)", new FunctionCall(Symbol("GCD("), [new RelationChain([new NumberLiteral("1"), new NumberLiteral("2")], [RelationOperator.Less])]) },
         // A scientific constant whose name mixes ASCII and Greek letters is written letter by letter.
         { @"k\alpha _{0}", new NameReference(SyntaxSymbol.CreateName("@kα_0", SymbolKind.ScientificConstant)) },
     };
