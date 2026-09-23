@@ -9,7 +9,7 @@ using Barbatos.Pallas.Presentation;
 namespace Barbatos.Pallas.Wpf.Views;
 
 /// <summary>
-/// The Calculate screen. It types and draws; what the equals key does is the next milestone.
+/// The Calculate screen: the line, what it came to, and what was calculated before it.
 /// </summary>
 public partial class CalculateView : UserControl
 {
@@ -18,6 +18,6 @@ public partial class CalculateView : UserControl
     public CalculateView(CalculatorShellViewModel shell)
     {
         InitializeComponent();
-        DataContext = shell;
+        DataContext = shell.Calculate;
     }
 }

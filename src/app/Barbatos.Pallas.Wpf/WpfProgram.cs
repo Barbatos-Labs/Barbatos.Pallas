@@ -76,6 +76,9 @@ public static class WpfProgram
         CalculatorShellViewModel shell = app.Services.GetRequiredService<CalculatorShellViewModel>();
         router.BeforeEach((to, _) => Task.FromResult<NavigationGuardResult>(Opens(shell, to.Path)));
 
+        // The keypad has keys for the home screen and the settings; the shell says where, the router goes there.
+        shell.NavigationRequested += (_, route) => router.Push(route);
+
         return app;
     }
 

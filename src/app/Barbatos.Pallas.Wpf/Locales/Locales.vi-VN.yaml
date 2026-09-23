@@ -33,6 +33,21 @@ setting.digitSeparator: Nhóm ba chữ số
 setting.complexRoots: Hiện nghiệm phức của đa thức
 setting.verify: Kiểm tra đẳng thức, bất đẳng thức
 
+# Tên của lỗi, theo CalcErrorKind.
+error.SyntaxError: Lỗi cú pháp
+error.MathError: Lỗi toán học
+error.StackError: Lỗi ngăn xếp
+error.ArgumentError: Lỗi đối số
+error.DimensionError: Lỗi kích thước
+error.VariableError: Lỗi biến
+error.CannotSolve: Không giải được
+error.RangeError: Ngoài phạm vi
+error.TimeOut: Quá thời gian
+error.CircularError: Tham chiếu vòng
+error.MemoryError: Lỗi bộ nhớ
+error.NoOperator: Thiếu toán tử
+error.NotDefined: Chưa định nghĩa
+
 setting:
   MathIMathO: MathI/MathO
   MathIDecimalO: MathI/DecimalO
@@ -47,3 +62,4 @@ setting:
   Polar: r∠θ
   Dot: Dấu chấm
   Comma: Dấu phẩy
+

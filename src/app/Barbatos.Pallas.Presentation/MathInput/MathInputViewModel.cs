@@ -75,6 +75,11 @@ public sealed partial class MathInputViewModel : ObservableObject
         KeyResult result = InputCommandRouter.Apply(Document, action);
         switch (result.Request)
         {
+            case null when action is RunCommand { Command: KeyCommand.MoveUp or KeyCommand.MoveDown } move && ReferenceEquals(result.Document, Document):
+                // The cursor had nowhere to go, so the key belongs to whatever is above and below the line itself -
+                // on the Calculate screen, the calculations before this one.
+                Requested?.Invoke(this, move.Command);
+                return;
             case null:
                 Apply(result);
                 return;
@@ -110,6 +115,11 @@ public sealed partial class MathInputViewModel : ObservableObject
 
     /// <summary>Clears the line.</summary>
     public void Clear() => Set(MathDocument.Empty);
+
+    /// <summary>Moves the cursor to a place in the written line, which is where an error says it is.</summary>
+    /// <param name="offset">How many characters of <see cref="Linear"/> come before the place.</param>
+    /// <remarks>Moving the cursor is not an edit, so this is not something undo takes back.</remarks>
+    public void MoveTo(int offset) => Document = Document.MoveTo(offset);
 
     /// <summary>Takes back the last edit.</summary>
     public void Undo()

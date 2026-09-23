@@ -171,6 +171,33 @@ public sealed class CalculatorShellViewModelTests
         shell.Load().Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(KeyId.Home, "/")]
+    [InlineData(KeyId.Settings, "/settings")]
+    public void AKeyForAScreenAsksTheHostToGoThere(KeyId key, string route)
+    {
+        CalculatorShellViewModel shell = Shell.Create();
+        List<string> routes = [];
+        shell.NavigationRequested += (_, asked) => routes.Add(asked);
+
+        shell.Calculate.Input.Press(key);
+
+        routes.Should().Equal(route);
+    }
+
+    [Fact]
+    public void AKeyThatIsNotAScreenAsksForNothing()
+    {
+        CalculatorShellViewModel shell = Shell.Create();
+        List<string> routes = [];
+        shell.NavigationRequested += (_, asked) => routes.Add(asked);
+
+        shell.Calculate.Input.Press(KeyId.One);
+        shell.Calculate.Input.Press(KeyId.Execute);
+
+        routes.Should().BeEmpty();
+    }
+
     [Fact]
     public void AShellWithoutASessionOrAStoreIsRefused()
     {

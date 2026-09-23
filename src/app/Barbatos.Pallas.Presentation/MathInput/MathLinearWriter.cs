@@ -3,9 +3,17 @@
 // Copyright (C) Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors.
 // All Rights Reserved.
 
+using System.Collections.Immutable;
 using System.Text;
 
 namespace Barbatos.Pallas.Presentation;
+
+/// <summary>
+/// Where the cursor would be for a place in the written text.
+/// </summary>
+/// <param name="Offset">How many characters of the text come before it.</param>
+/// <param name="Cursor">The cursor of the input at that place.</param>
+public readonly record struct MathTextPosition(int Offset, MathCursor Cursor);
 
 /// <summary>
 /// Writes math input as Canonical Linear Syntax: the one road from the screen into the parser.
@@ -25,7 +33,7 @@ public static class MathLinearWriter
     {
         ArgumentNullException.ThrowIfNull(document);
         StringBuilder text = new();
-        Write(text, document.Root);
+        Write(text, document.Root, [], null);
         return text.ToString();
     }
 
@@ -37,86 +45,107 @@ public static class MathLinearWriter
     {
         ArgumentNullException.ThrowIfNull(row);
         StringBuilder text = new();
-        Write(text, row);
+        Write(text, row, [], null);
         return text.ToString();
     }
 
-    private static void Write(StringBuilder text, MathRow row)
+    /// <summary>
+    /// Returns where the cursor would be for each place in the written text, in the order the text is written.
+    /// </summary>
+    /// <param name="document">The document.</param>
+    /// <returns>The places, each with the cursor that belongs to it.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="document"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// This is how an error finds its place: the engine reports the span of the text it could not calculate, and the
+    /// calculator puts the cursor there (manual p. 162).
+    /// </remarks>
+    public static ImmutableArray<MathTextPosition> Positions(MathDocument document)
     {
-        foreach (MathElement element in row.Elements)
+        ArgumentNullException.ThrowIfNull(document);
+        List<MathTextPosition> positions = [];
+        Write(new StringBuilder(), document.Root, [], positions);
+        return [.. positions];
+    }
+
+    private static void Write(StringBuilder text, MathRow row, ImmutableArray<MathStep> path, List<MathTextPosition>? positions)
+    {
+        for (int index = 0; index < row.Count; index++)
         {
-            switch (element)
+            positions?.Add(new MathTextPosition(text.Length, new MathCursor(path, index)));
+            switch (row[index])
             {
                 case MathSymbol symbol:
                     text.Append(symbol.Text);
                     break;
                 case MathStructure structure:
-                    Write(text, structure);
+                    Write(text, structure, path.Add(new MathStep(index, 0)), positions);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(row), element, "Not a MathSymbol or a MathStructure.");
+                    throw new ArgumentOutOfRangeException(nameof(row), row[index], "Not a MathSymbol or a MathStructure.");
             }
         }
+
+        positions?.Add(new MathTextPosition(text.Length, new MathCursor(path, row.Count)));
     }
 
-    private static void Write(StringBuilder text, MathStructure structure)
+    private static void Write(StringBuilder text, MathStructure structure, ImmutableArray<MathStep> path, List<MathTextPosition>? positions)
     {
         switch (structure.Kind)
         {
             case MathTemplateKind.Parentheses:
-                Call(text, "(", structure, 0);
+                Call(text, "(", structure, path, positions, 0);
                 break;
             case MathTemplateKind.Fraction:
-                Operand(text, structure.Slots[0]);
+                Operand(text, structure, 0, path, positions);
                 text.Append('⌟');
-                Operand(text, structure.Slots[1]);
+                Operand(text, structure, 1, path, positions);
                 break;
             case MathTemplateKind.MixedFraction:
-                Operand(text, structure.Slots[0]);
+                Operand(text, structure, 0, path, positions);
                 text.Append('⌟');
-                Operand(text, structure.Slots[1]);
+                Operand(text, structure, 1, path, positions);
                 text.Append('⌟');
-                Operand(text, structure.Slots[2]);
+                Operand(text, structure, 2, path, positions);
                 break;
             case MathTemplateKind.SquareRoot:
-                Call(text, "√(", structure, 0);
+                Call(text, "√(", structure, path, positions, 0);
                 break;
             case MathTemplateKind.Root:
-                Operand(text, structure.Slots[0]);
+                Operand(text, structure, 0, path, positions);
                 text.Append("ˣ√(");
-                Write(text, structure.Slots[1]);
+                Slot(text, structure, 1, path, positions);
                 text.Append(')');
                 break;
             case MathTemplateKind.Power:
-                Operand(text, structure.Slots[0]);
+                Operand(text, structure, 0, path, positions);
                 text.Append("^(");
-                Write(text, structure.Slots[1]);
+                Slot(text, structure, 1, path, positions);
                 text.Append(')');
                 break;
             case MathTemplateKind.Abs:
-                Call(text, "Abs(", structure, 0);
+                Call(text, "Abs(", structure, path, positions, 0);
                 break;
             case MathTemplateKind.LogBase:
-                Call(text, "log(", structure, 0, 1);
+                Call(text, "log(", structure, path, positions, 0, 1);
                 break;
             case MathTemplateKind.Integral:
-                Call(text, "∫(", structure, 0, 1, 2);
+                Call(text, "∫(", structure, path, positions, 0, 1, 2);
                 break;
             case MathTemplateKind.Sum:
-                Call(text, "Σ(", structure, 0, 1, 2);
+                Call(text, "Σ(", structure, path, positions, 0, 1, 2);
                 break;
             case MathTemplateKind.Product:
-                Call(text, "Π(", structure, 0, 1, 2);
+                Call(text, "Π(", structure, path, positions, 0, 1, 2);
                 break;
             case MathTemplateKind.Derivative:
-                Call(text, "d/dx(", structure, 0, 1);
+                Call(text, "d/dx(", structure, path, positions, 0, 1);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(structure), structure.Kind, "Not a defined MathTemplateKind value.");
         }
     }
 
-    private static void Call(StringBuilder text, string name, MathStructure structure, params int[] slots)
+    private static void Call(StringBuilder text, string name, MathStructure structure, ImmutableArray<MathStep> path, List<MathTextPosition>? positions, params int[] slots)
     {
         text.Append(name);
         for (int index = 0; index < slots.Length; index++)
@@ -126,22 +155,27 @@ public static class MathLinearWriter
                 text.Append(',');
             }
 
-            Write(text, structure.Slots[slots[index]]);
+            Slot(text, structure, slots[index], path, positions);
         }
 
         text.Append(')');
     }
 
-    private static void Operand(StringBuilder text, MathRow row)
+    private static void Slot(StringBuilder text, MathStructure structure, int slot, ImmutableArray<MathStep> path, List<MathTextPosition>? positions)
     {
-        if (IsAtomic(row))
+        Write(text, structure.Slots[slot], path.SetItem(path.Length - 1, path[^1] with { Slot = slot }), positions);
+    }
+
+    private static void Operand(StringBuilder text, MathStructure structure, int slot, ImmutableArray<MathStep> path, List<MathTextPosition>? positions)
+    {
+        if (IsAtomic(structure.Slots[slot]))
         {
-            Write(text, row);
+            Slot(text, structure, slot, path, positions);
             return;
         }
 
         text.Append('(');
-        Write(text, row);
+        Slot(text, structure, slot, path, positions);
         text.Append(')');
     }
 
@@ -159,7 +193,7 @@ public static class MathLinearWriter
         }
 
         // A number is as atomic as one symbol: 12⌟5 needs no brackets around the 12.
-        return !row.IsEmpty && row.Elements.All(element => element is MathSymbol { Text.Length: 1 } symbol && (char.IsAsciiDigit(symbol.Text[0]) || symbol.Text[0] == '.'));
+        return row.Elements.All(element => element is MathSymbol { Text.Length: 1 } symbol && (char.IsAsciiDigit(symbol.Text[0]) || symbol.Text[0] == '.'));
     }
 
     private static bool IsSelfDelimiting(MathTemplateKind kind)

@@ -11,6 +11,10 @@
   -->
 
   <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\app\Barbatos.Pallas.Presentation\Barbatos.Pallas.Presentation.csproj" />
   </ItemGroup>
 

@@ -35,6 +35,17 @@ public sealed class MathDocument
     /// <summary>Gets the empty input.</summary>
     public static MathDocument Empty { get; } = new(MathRow.Empty, MathCursor.Start);
 
+    /// <summary>Creates an input that already holds a row, with the cursor after it.</summary>
+    /// <param name="row">The row.</param>
+    /// <returns>The input.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="row"/> is <see langword="null"/>.</exception>
+    /// <remarks>What is read back from the history arrives as a whole line, not as the keystrokes that made it.</remarks>
+    public static MathDocument Of(MathRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        return new MathDocument(row, new MathCursor([], row.Count));
+    }
+
     /// <summary>Gets the whole input.</summary>
     public MathRow Root { get; }
 
@@ -192,6 +203,30 @@ public sealed class MathDocument
     /// <summary>Moves the cursor to the slot below the one it is in.</summary>
     /// <returns>The document with the cursor moved.</returns>
     public MathDocument MoveDown() => MoveVertically(1);
+
+    /// <summary>Moves the cursor to a place in the written text, which is where an error says it is.</summary>
+    /// <param name="offset">How many characters of the Canonical Linear Syntax come before the place.</param>
+    /// <returns>The document with the cursor at the last place that starts no later than the offset.</returns>
+    /// <remarks>
+    /// The engine reports what it could not calculate as a span of the text it was given, and the calculator puts
+    /// the cursor there (manual p. 162). An offset inside a symbol belongs to that symbol, and one past the end is
+    /// the end.
+    /// </remarks>
+    public MathDocument MoveTo(int offset)
+    {
+        MathCursor cursor = MathCursor.Start;
+        foreach (MathTextPosition position in MathLinearWriter.Positions(this))
+        {
+            if (position.Offset > offset)
+            {
+                break;
+            }
+
+            cursor = position.Cursor;
+        }
+
+        return new MathDocument(Root, cursor);
+    }
 
     /// <summary>Moves the cursor before everything.</summary>
     /// <returns>The document with the cursor at the start of the input.</returns>

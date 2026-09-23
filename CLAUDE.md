@@ -30,7 +30,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, and the math input with its two writers |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, and properties over random sequences of keys |
 | `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, and the session in the preferences |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
@@ -44,13 +44,19 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 ## Current phase
 
 **Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
-M2 keypad and MathInput, M3 Calculate end to end, M4 the other screens, M5 persistence and shortcuts, M6 hardening
-and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to end.
+M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens, M5 persistence and shortcuts,
+M6 hardening and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
+end.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
   route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
   between runs (`PreferencesSessionStore` in the host). The host is `WpfProgram` + `AppRoutes` + `Views/`, with the
   text in `Locales/*.yaml`. Screens of applications whose own screen is still to come render `AppScreenView`.
+- The line the user types on is `MathDocument` (immutable, a cursor path through template slots), written as
+  Canonical Linear Syntax for the engine and as LaTeX for the screen, and read back by `MathDocumentReader` through
+  the engine's own parser. The keypad is the table in `Keypad`, the keyboard maps onto it (`KeyboardMap`), and
+  `InputCommandRouter` is the only place a key becomes an edit. `CalculateViewModel` calculates, shows the result
+  (FORMAT and S⇔D), walks the history, and puts the cursor where an error says it is.
 - Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal`, `AngleUnit`,
   `ErrorFunction` and `PoissonDistribution`.
 - Expressions reads Canonical Linear Syntax into an immutable syntax tree and prints it back, as linear text or LaTeX.
@@ -134,6 +140,9 @@ Things that will save time:
     `StandardVocabulary.cs` is data built once for `SyntaxVocabulary.Standard` and is excluded from mutation.
     Deleting one of its lines by hand fails 13 to 18 tests (17 Sep 2026); the vocabulary tests and the conformance
     inputs are what guard it. A lookup table is written out rather than built by a loop (`DecimalDigits.PowersOfTen`);
+  - a property test that samples thousands of cases makes Stryker's *initial* run report failures that a plain
+    `dotnet test` never shows (Presentation, 23 Sep 2026: four CsCheck properties at 2000 iterations). Keep a
+    property at a few hundred iterations, or the run never starts;
   - a mutant that cannot change a result (a guard `System.Math` already applies, a branch no input reaches) is a
     reason to simplify the code, not to write a test that pins an implementation detail. The Engine went from 75% to
     92.5% on 18 Sep 2026 that way and by edge tests, and three real bugs surfaced (docs/ARCHITECTURE.md §12).

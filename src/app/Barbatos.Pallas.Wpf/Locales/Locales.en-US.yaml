@@ -34,6 +34,21 @@ setting.digitSeparator: Group digits in threes
 setting.complexRoots: Show complex roots of a polynomial
 setting.verify: Verify an equation or an inequality
 
+# What an error of the engine is called. The key is its CalcErrorKind, which is all the core says about it.
+error.SyntaxError: Syntax ERROR
+error.MathError: Math ERROR
+error.StackError: Stack ERROR
+error.ArgumentError: Argument ERROR
+error.DimensionError: Dimension ERROR
+error.VariableError: Variable ERROR
+error.CannotSolve: Can't Solve
+error.RangeError: Range ERROR
+error.TimeOut: Time Out
+error.CircularError: Circular ERROR
+error.MemoryError: Memory ERROR
+error.NoOperator: No Operator
+error.NotDefined: Not Defined
+
 # The values of a setting: an enum value is its own key, so one template shows any of them.
 setting:
   MathIMathO: MathI/MathO
@@ -49,3 +64,4 @@ setting:
   Polar: r∠θ
   Dot: Dot
   Comma: Comma
+

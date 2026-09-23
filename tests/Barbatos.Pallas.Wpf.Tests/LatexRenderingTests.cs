@@ -5,6 +5,7 @@
 
 using System.IO;
 using System.Text.Json;
+using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
 
 namespace Barbatos.Pallas.Wpf.Tests;
@@ -82,6 +83,24 @@ public sealed class LatexRenderingTests
         result.Root.Should().NotBeNull("'{0}' should parse", input);
         string latex = LatexPrinter.Print(result.Root!);
         Formula.Fault(latex).Should().BeNull("'{0}' prints as '{1}'", input, latex);
+    }
+
+    [Theory]
+    [MemberData(nameof(ManualInputs))]
+    public void EveryResultOfTheManualIsDrawn(string input, CalculatorApp app)
+    {
+        // The Calculate screen draws the result as mathematics too, and the formatter writes that LaTeX itself.
+        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession(app == CalculatorApp.MathBox ? CalculatorApp.Calculate : app);
+        Calculation calculation = session.Calculate(input);
+        if (!calculation.Succeeded)
+        {
+            // An error is words, and the screen shows those instead of a formula.
+            calculation.Display.Latex.Should().BeEmpty();
+            return;
+        }
+
+        calculation.Display.Latex.Should().NotBeEmpty("a result the screen shows has mathematics to draw");
+        Formula.Fault(calculation.Display.Latex).Should().BeNull("'{0}' comes to '{1}'", input, calculation.Display.Latex);
     }
 
     [Theory]

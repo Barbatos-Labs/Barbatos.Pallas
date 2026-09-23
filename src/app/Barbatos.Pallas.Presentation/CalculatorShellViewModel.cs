@@ -36,6 +36,8 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         _store = store;
         _currentApp = CalculatorApps.Of(session.App);
         Settings = new SettingsViewModel(session);
+        Calculate = new CalculateViewModel(session);
+        Calculate.Input.Requested += OnRequested;
     }
 
     /// <summary>Gets the session every application of the shell works on.</summary>
@@ -44,8 +46,12 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     /// <summary>Gets the settings of the calculator, as the settings screen shows them.</summary>
     public SettingsViewModel Settings { get; }
 
-    /// <summary>Gets the line the user types on, which every application of the calculator shares.</summary>
-    public MathInputViewModel Input { get; } = new();
+    /// <summary>Gets the Calculate screen, which owns the line the user types on.</summary>
+    public CalculateViewModel Calculate { get; }
+
+    /// <summary>Raised when a key asks for a screen the shell does not own, with the route of that screen.</summary>
+    /// <remarks>The host navigates; the shell knows which application a route belongs to and nothing about windows.</remarks>
+    public event EventHandler<string>? NavigationRequested;
 
     /// <summary>Gets every application, in the order of the home screen.</summary>
     public ImmutableArray<CalculatorAppInfo> Apps { get; } = CalculatorApps.All;
@@ -109,5 +115,20 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         CurrentApp = CalculatorApps.Of(Session.App);
         Settings.Refresh();
         return true;
+    }
+
+    private void OnRequested(object? sender, KeyCommand command)
+    {
+        switch (command)
+        {
+            case KeyCommand.Home:
+                NavigationRequested?.Invoke(this, "/");
+                break;
+            case KeyCommand.Settings:
+                NavigationRequested?.Invoke(this, "/settings");
+                break;
+            default:
+                break;
+        }
     }
 }
