@@ -1,0 +1,57 @@
+<UserControl x:Class="Barbatos.Pallas.Wpf.Views.KeypadView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="True">
+    <!-- The keypad, row by row, straight from the table: a new key is a row in Keypad, not a button here. The rows
+         share the height the keypad is given, so a keypad of ten rows fits where one of eight does, with smaller
+         keys, instead of losing its last row off the bottom of the window (measured 23 Sep 2026). -->
+    <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <UniformGrid Columns="1" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <ItemsControl ItemsSource="{Binding}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource KeyButton}"
+                                    Command="{Binding DataContext.PressCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding Id}">
+                                <!-- A key shorter than its three lines draws them smaller rather than cutting off the
+                                     alpha legend under the digit; it never draws them larger than they are. -->
+                                <Viewbox StretchDirection="DownOnly">
+                                <StackPanel>
+                                    <!-- The second and third meanings, in the colours the calculator prints them in. -->
+                                    <TextBlock Text="{Binding ShiftGlyph}"
+                                               FontSize="{StaticResource LegendSize}"
+                                               LineHeight="{StaticResource LegendLine}"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               Foreground="{StaticResource ShiftInk}"
+                                               HorizontalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <!-- The face of the key takes its size and colour from the key's group. -->
+                                    <TextBlock Text="{Binding Glyph}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding AlphaGlyph}"
+                                               FontSize="{StaticResource LegendSize}"
+                                               LineHeight="{StaticResource LegendLine}"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               Foreground="{StaticResource AlphaInk}"
+                                               HorizontalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                </Viewbox>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

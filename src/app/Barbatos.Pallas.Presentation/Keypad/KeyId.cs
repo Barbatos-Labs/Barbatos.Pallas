@@ -149,4 +149,103 @@ public enum KeyId
 
     /// <summary>A sum, and a product after Shift.</summary>
     Sum,
+
+    /// <summary>Turns the result between its exact form and its decimal (S⇔D, manual p. 42).</summary>
+    SwapForm,
+
+    // Base-N (manual pp. 51-56). The hexadecimal digits are keys of their own there, because the variables A to F
+    // do not exist in Base-N (assumption U12).
+
+    /// <summary>The hexadecimal digit A.</summary>
+    HexA,
+
+    /// <summary>The hexadecimal digit B.</summary>
+    HexB,
+
+    /// <summary>The hexadecimal digit C.</summary>
+    HexC,
+
+    /// <summary>The hexadecimal digit D.</summary>
+    HexD,
+
+    /// <summary>The hexadecimal digit E.</summary>
+    HexE,
+
+    /// <summary>The hexadecimal digit F.</summary>
+    HexF,
+
+    /// <summary>The logic operator <c>and</c>, and <c>or</c> after Shift.</summary>
+    LogicAnd,
+
+    /// <summary>The logic operator <c>xor</c>, and <c>xnor</c> after Shift.</summary>
+    LogicXor,
+
+    /// <summary>The one's complement <c>Not(</c>, and the two's complement <c>Neg(</c> after Shift.</summary>
+    LogicNot,
+
+    // Matrix and Vector (manual pp. 135-139).
+
+    /// <summary>MatA, and MatAns after Shift.</summary>
+    MatrixA,
+
+    /// <summary>MatB.</summary>
+    MatrixB,
+
+    /// <summary>MatC.</summary>
+    MatrixC,
+
+    /// <summary>MatD.</summary>
+    MatrixD,
+
+    /// <summary>The determinant, and the transpose after Shift.</summary>
+    Determinant,
+
+    /// <summary>The identity matrix.</summary>
+    Identity,
+
+    /// <summary>VctA, and VctAns after Shift.</summary>
+    VectorA,
+
+    /// <summary>VctB.</summary>
+    VectorB,
+
+    /// <summary>VctC.</summary>
+    VectorC,
+
+    /// <summary>VctD.</summary>
+    VectorD,
+
+    /// <summary>The dot product.</summary>
+    DotProduct,
+
+    /// <summary>The angle between two vectors, and the unit vector after Shift.</summary>
+    VectorAngle,
+
+    // Complex (manual pp. 129-134).
+
+    /// <summary>The imaginary unit.</summary>
+    Imaginary,
+
+    /// <summary>The polar mark ∠, with the real and imaginary parts on its other meanings.</summary>
+    Polar,
+
+    /// <summary>The conjugate, and the argument after Shift.</summary>
+    Conjugate,
+
+    // Statistics (manual pp. 90-95). The rest of the statistic variables are reached through the CATALOG.
+
+    /// <summary>The number of data, with the sums of x and y on its other meanings.</summary>
+    DataCount,
+
+    /// <summary>The mean of x, with σx and sx on its other meanings.</summary>
+    MeanX,
+
+    /// <summary>The mean of y, with σy and sy on its other meanings.</summary>
+    MeanY,
+
+    /// <summary>The estimate x̂, with ŷ and ▶t on its other meanings.</summary>
+    EstimateX,
+
+    /// <summary>The normal probability P(, with Q( and R( on its other meanings.</summary>
+    Probability,
 }

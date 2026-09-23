@@ -15,6 +15,7 @@ namespace Barbatos.Pallas.Presentation;
 /// <param name="ShiftGlyph">What is written above the key for the shift mode, or <see langword="null"/>.</param>
 /// <param name="Alpha">What it does in the alpha mode, or <see langword="null"/>.</param>
 /// <param name="AlphaGlyph">What is written above the key for the alpha mode, or <see langword="null"/>.</param>
+/// <param name="Group">What kind of key it is, which is how the screen colours it.</param>
 /// <remarks>
 /// A glyph is the mathematics itself (7, ×, sin, √), which is the same in every language and is therefore not
 /// localized; a key whose face is a word carries its own label in the host instead.
@@ -26,7 +27,8 @@ public sealed record KeyDefinition(
     KeyAction? Shift = null,
     string? ShiftGlyph = null,
     KeyAction? Alpha = null,
-    string? AlphaGlyph = null)
+    string? AlphaGlyph = null,
+    KeyGroup Group = KeyGroup.Function)
 {
     /// <summary>Returns what the key does in a mode.</summary>
     /// <param name="mode">The mode.</param>

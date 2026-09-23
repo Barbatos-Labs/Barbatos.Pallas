@@ -4,6 +4,7 @@
 // All Rights Reserved.
 
 using System.Collections.Immutable;
+using Barbatos.Pallas.Expressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -32,11 +33,21 @@ public sealed partial class MathInputViewModel : ObservableObject
     [ObservableProperty]
     private KeyMode _mode = KeyMode.Primary;
 
+    /// <summary>Gets or sets which application the line belongs to, which decides the keys it has.</summary>
+    /// <remarks>
+    /// The keypad of Base-N has no functions and only Matrix has MatA: a key the application cannot read is not
+    /// on its keypad, and the keyboard cannot reach it either.
+    /// </remarks>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Rows))]
+    private CalculatorApp _app = CalculatorApp.Calculate;
+
     /// <summary>Raised for a key the input cannot carry out itself, such as Execute or the home screen.</summary>
     public event EventHandler<KeyCommand>? Requested;
 
-    /// <summary>Gets the keys row by row, as the screen draws them.</summary>
-    public ImmutableArray<ImmutableArray<KeyDefinition>> Rows { get; } = [.. Keypad.Rows.Select(row => row.Select(Keypad.Of).ToImmutableArray())];
+    /// <summary>Gets the keys of the application row by row, as the screen draws them.</summary>
+    public ImmutableArray<ImmutableArray<KeyDefinition>> Rows =>
+        [.. Keypad.RowsFor(App).Select(row => row.Select(id => Keypad.Of(id, App)).ToImmutableArray())];
 
     /// <summary>Gets the input as Canonical Linear Syntax, which is what the engine reads.</summary>
     public string Linear => MathLinearWriter.Write(Document);
@@ -54,16 +65,16 @@ public sealed partial class MathInputViewModel : ObservableObject
     public bool CanRedo => _redone.Count > 0;
 
     /// <summary>Presses a key.</summary>
-    /// <param name="id">The key; one the keypad has not is ignored.</param>
+    /// <param name="id">The key; one the application's keypad has not is ignored.</param>
     [RelayCommand]
     public void Press(KeyId id)
     {
-        if (Keypad.Find(id) is not { } key)
+        if (!Keypad.Has(App, id))
         {
             return;
         }
 
-        KeyAction? action = key.In(Mode);
+        KeyAction? action = Keypad.Of(id, App).In(Mode);
 
         // A mode lasts for one key: Shift and then a key is that key's second meaning, and nothing after it.
         Mode = KeyMode.Primary;

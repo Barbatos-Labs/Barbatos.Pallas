@@ -4,56 +4,81 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="0" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Text="{i18n:StringLocalizer Text='app.table'}" />
+            <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.table'}" />
         </DockPanel>
 
-        <TextBlock DockPanel.Dock="Bottom" Foreground="#C00" Margin="0,6,0,0" Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
-
-        <DockPanel>
-            <StackPanel DockPanel.Dock="Top">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <ComboBox MinWidth="150" Margin="0,0,8,0" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-                    <Button Padding="10,4" Margin="8,0,0,0" Command="{Binding GenerateCommand}" Content="{i18n:StringLocalizer Text='table.generate'}" />
-                    <Button Padding="10,4" Margin="8,0,0,0" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock VerticalAlignment="Center" Margin="0,0,4,0" Text="f(x)" />
-                    <TextBox Width="140" Padding="4,3" Margin="0,0,12,0" FontFamily="Consolas" Text="{Binding FunctionF, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBlock VerticalAlignment="Center" Margin="0,0,4,0" Text="g(x)" />
-                    <TextBox Width="140" Padding="4,3" FontFamily="Consolas" Text="{Binding FunctionG, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <TextBlock Margin="0,0,0,4" Foreground="Gray" Text="{i18n:StringLocalizer Text='table.range'}" />
-                <views:ValueGridView DataContext="{Binding Range}" />
+        <StackPanel Grid.Row="1">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <ComboBox Style="{StaticResource Choice}"
+                          MinWidth="150"
+                          ItemsSource="{Binding Types}"
+                          SelectedItem="{Binding Type}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Style="{StaticResource PrimaryButton}" Margin="10,2,8,2" Command="{Binding GenerateCommand}" Content="{i18n:StringLocalizer Text='table.generate'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,2" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
             </StackPanel>
 
-            <ItemsControl ItemsSource="{Binding Rows}" Margin="0,12,0,0">
+            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="f(x)" />
+                        <TextBox Style="{StaticResource CellBox}" Width="140" Margin="0,0,12,0" TextAlignment="Left" Text="{Binding FunctionF, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="g(x)" />
+                        <TextBox Style="{StaticResource CellBox}" Width="140" TextAlignment="Left" Text="{Binding FunctionG, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource SectionLabel}" Text="{i18n:StringLocalizer Text='table.range'}" />
+                    <views:ValueGridView DataContext="{Binding Range}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Background="{StaticResource Bezel}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Rows}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel Margin="0,2">
-                            <TextBlock DockPanel.Dock="Left" MinWidth="80" FontFamily="Consolas" Foreground="Gray" Text="{Binding X.Display.Text}" />
-                            <TextBlock DockPanel.Dock="Left" MinWidth="110" FontFamily="Consolas" Text="{Binding F.Display.Text}" />
-                            <TextBlock FontFamily="Consolas" Text="{Binding G.Display.Text}" />
+                        <DockPanel Margin="0,3">
+                            <TextBlock DockPanel.Dock="Left"
+                                       MinWidth="80"
+                                       FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource InkMuted}"
+                                       Text="{Binding X.Display.Text}" />
+                            <TextBlock DockPanel.Dock="Left"
+                                       MinWidth="110"
+                                       FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource Ink}"
+                                       Text="{Binding F.Display.Text}" />
+                            <TextBlock FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource Ink}"
+                                       Text="{Binding G.Display.Text}" />
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </DockPanel>
-    </DockPanel>
+        </ScrollViewer>
+        </Border>
+
+        <TextBlock Grid.Row="3"
+                   Margin="0,8,0,0"
+                   Foreground="{StaticResource Danger}"
+                   Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+    </Grid>
 </UserControl>

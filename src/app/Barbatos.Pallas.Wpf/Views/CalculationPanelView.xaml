@@ -23,34 +23,72 @@
         </Style>
     </UserControl.Resources>
 
-    <DockPanel>
-        <!-- What the calculation came to, or what went wrong with it. -->
-        <Border DockPanel.Dock="Bottom"
-                BorderBrush="#888"
-                BorderThickness="1"
-                Padding="8"
-                Margin="0,8,0,0"
-                MinHeight="52">
+    <!--
+        The display takes the height it needs and the keypad the rest, which its rows share: the screen decides how
+        much this panel gets, and the keys grow or shrink with it. A DockPanel gave the keypad its height first and
+        squeezed everything else out of the window, and an Auto keypad of ten rows lost its last row off the bottom
+        (both measured 23 Sep 2026).
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- One display, as the calculator has one: what is being typed, and under it what it came to. -->
+        <Border Grid.Row="0" Style="{StaticResource LcdPanel}" MinHeight="124" Margin="0,0,0,10">
             <Grid>
-                <DockPanel Style="{StaticResource WhenResult}" LastChildFill="False">
-                    <TextBlock DockPanel.Dock="Right"
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="40" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" MinHeight="34" />
+                </Grid.RowDefinitions>
+
+                <wpfmath:FormulaControl Grid.Row="0"
+                                        Formula="{Binding Input.Latex}"
+                                        Scale="22"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center" />
+
+                <!-- What the engine will read, under what the screen shows: the two are the same tree. -->
+                <TextBlock Grid.Row="1"
+                           Text="{Binding Input.Linear}"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="10"
+                           Foreground="{StaticResource LcdInkMuted}"
+                           TextWrapping="Wrap" />
+
+                <Border Grid.Row="2"
+                        Height="1"
+                        Margin="0,6,0,4"
+                        Background="{StaticResource LcdEdge}"
+                        Opacity="0.5" />
+
+                <Grid Grid.Row="3">
+                    <DockPanel Style="{StaticResource WhenResult}" LastChildFill="False">
+                        <wpfmath:FormulaControl DockPanel.Dock="Right"
+                                                Formula="{Binding Display.Latex}"
+                                                Scale="26"
+                                                VerticalAlignment="Center" />
+                        <TextBlock DockPanel.Dock="Left"
+                                   Text="{Binding Display.Text}"
+                                   FontFamily="{StaticResource MonoFont}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource LcdInkMuted}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource WhenError}"
+                               HorizontalAlignment="Right"
                                VerticalAlignment="Center"
-                               FontFamily="Consolas"
-                               FontSize="16"
-                               Text="{Binding Display.Text}" />
-                    <wpfmath:FormulaControl DockPanel.Dock="Left"
-                                            Formula="{Binding Display.Latex}"
-                                            Scale="20"
-                                            VerticalAlignment="Center" />
-                </DockPanel>
-                <TextBlock Style="{StaticResource WhenError}"
-                           VerticalAlignment="Center"
-                           FontSize="15"
-                           Foreground="#C00"
-                           Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource LcdError}"
+                               Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+                </Grid>
             </Grid>
         </Border>
 
-        <views:MathInputView DataContext="{Binding Input}" />
-    </DockPanel>
+        <views:KeypadView Grid.Row="1" DataContext="{Binding Input}" />
+    </Grid>
 </UserControl>

@@ -115,6 +115,13 @@ public sealed class MathWriterTests
     [InlineData("7", "7")]
     [InlineData("+", "+")]
     [InlineData("$A$1", @"\text{\$}A\text{\$}1")]
+    [InlineData("σx", @"\sigma x", "WpfMath has no σ as a character, only as a command")]
+    [InlineData("Σy", @"\Sigma y")]
+    [InlineData("▶t", @"\blacktriangleright t")]
+    [InlineData("σ²x", @"\sigma ^{2}x", "a statistic name with a square in it, as the CATALOG will type")]
+    [InlineData("x̂₁", @"\hat{x}_{1}")]
+    [InlineData("and", @"\;\mathrm{and}\;", "a logic operator is a word between two numbers, spaced as the history spaces it")]
+    [InlineData("xnor", @"\;\mathrm{xnor}\;")]
     public void ASymbolIsDrawnAsTheCalculatorWritesIt(string symbol, string latex, string? because = null)
     {
         MathLatexWriter.Write(MathDocument.Empty.Insert(symbol), caret: false).Should().Be(latex, because ?? string.Empty);

@@ -83,4 +83,7 @@ public enum KeyCommand
 
     /// <summary>Go to the settings screen.</summary>
     Settings,
+
+    /// <summary>Turn the result between its exact form and its decimal (S⇔D, manual p. 42).</summary>
+    SwapForm,
 }

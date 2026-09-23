@@ -16,40 +16,41 @@
                 <TextBlock Text="{Binding Digits}" />
             </StackPanel>
         </DataTemplate>
-        <Style TargetType="TextBlock" x:Key="Label">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0,0,12,0" />
-        </Style>
-        <Style TargetType="ComboBox">
+        <Style TargetType="TextBlock" x:Key="Label" BasedOn="{StaticResource FieldLabel}" />
+        <Style TargetType="ComboBox" BasedOn="{StaticResource Choice}">
             <Setter Property="Margin" Value="0,4" />
             <Setter Property="MinWidth" Value="180" />
         </Style>
-        <Style TargetType="CheckBox">
+        <Style TargetType="CheckBox" BasedOn="{StaticResource Flag}">
             <Setter Property="Margin" Value="0,6" />
         </Style>
     </UserControl.Resources>
 
-    <DockPanel Margin="16">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <Button DockPanel.Dock="Left"
-                    Padding="12,6"
-                    Margin="0,0,12,0"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="22"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
+            <TextBlock Style="{StaticResource ScreenTitle}"
+                       FontSize="22"
                        Text="{i18n:StringLocalizer Text='settings.title'}" />
         </DockPanel>
 
-        <Button DockPanel.Dock="Bottom"
+        <Button Grid.Row="2"
+                Style="{StaticResource ActionButton}"
                 HorizontalAlignment="Left"
-                Padding="12,6"
                 Margin="0,12,0,0"
                 Command="{Binding ResetCommand}"
                 Content="{i18n:StringLocalizer Text='settings.reset'}" />
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -119,5 +120,5 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
-    </DockPanel>
+    </Grid>
 </UserControl>

@@ -38,7 +38,7 @@ public sealed partial class CalculateViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
-        Input = new MathInputViewModel();
+        Input = new MathInputViewModel { App = session.App };
         Input.Requested += OnRequested;
     }
 
@@ -49,8 +49,12 @@ public sealed partial class CalculateViewModel : ObservableObject
     /// <remarks>Calculate and Complex are the same screen, and the title is how the user tells them apart.</remarks>
     public string TitleKey => CalculatorApps.Of(_session.App).NameKey;
 
-    /// <summary>Tells the screen that the application changed, and with it its title.</summary>
-    public void Refresh() => OnPropertyChanged(nameof(TitleKey));
+    /// <summary>Tells the screen that the application changed, and with it its title and its keys.</summary>
+    public void Refresh()
+    {
+        Input.App = _session.App;
+        OnPropertyChanged(nameof(TitleKey));
+    }
 
     /// <summary>Gets the last calculation, or <see langword="null"/> before the first one.</summary>
     [ObservableProperty]
@@ -218,6 +222,9 @@ public sealed partial class CalculateViewModel : ObservableObject
                 break;
             case KeyCommand.MoveDown:
                 RecallNext();
+                break;
+            case KeyCommand.SwapForm:
+                ToggleDecimal();
                 break;
             default:
                 break;

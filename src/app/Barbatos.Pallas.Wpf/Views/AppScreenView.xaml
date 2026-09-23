@@ -3,24 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml">
-    <DockPanel Margin="16">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <Button DockPanel.Dock="Left"
-                    Padding="12,6"
-                    Margin="0,0,12,0"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="22"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
+            <TextBlock Style="{StaticResource ScreenTitle}"
                        Text="{i18n:StringLocalizer BindText={Binding CurrentApp.NameKey}}" />
         </DockPanel>
 
-        <TextBlock VerticalAlignment="Center"
+        <TextBlock Grid.Row="1"
+                   VerticalAlignment="Center"
                    HorizontalAlignment="Center"
-                   Foreground="Gray"
+                   Foreground="{StaticResource InkFaint}"
                    TextWrapping="Wrap"
                    TextAlignment="Center"
                    Text="{i18n:StringLocalizer Text='app.screenLater'}" />
-    </DockPanel>
+    </Grid>
 </UserControl>

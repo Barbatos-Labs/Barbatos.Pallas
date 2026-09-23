@@ -4,56 +4,62 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <!-- The data is the point of this screen, so it gets more of the window than the calculator does elsewhere. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" MinHeight="0" />
+            <RowDefinition Height="5*" MaxHeight="{StaticResource PanelMaxHeight}" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Text="{i18n:StringLocalizer Text='app.statistics'}" />
+            <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.statistics'}" />
         </DockPanel>
 
-        <views:CalculationPanelView DockPanel.Dock="Bottom" DataContext="{Binding Calculate}" />
-
-        <DockPanel>
-            <StackPanel DockPanel.Dock="Top">
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <CheckBox VerticalAlignment="Center" Margin="0,0,12,0" IsChecked="{Binding IsTwoVariable}" Content="{i18n:StringLocalizer Text='statistics.twoVariable'}" />
-                    <CheckBox VerticalAlignment="Center" Margin="0,0,12,0" IsChecked="{Binding HasFrequencies}" Content="{i18n:StringLocalizer Text='statistics.frequencies'}" />
-                    <ComboBox MinWidth="150" Margin="0,0,8,0" ItemsSource="{Binding Regressions}" SelectedItem="{Binding Regression}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <Button Padding="10,4" Margin="0,0,8,0" Command="{Binding ApplyCommand}" Content="{i18n:StringLocalizer Text='statistics.apply'}" />
-                    <Button Padding="10,4" Margin="0,0,8,0" Command="{Binding AddRowCommand}" Content="{i18n:StringLocalizer Text='statistics.addRow'}" />
-                    <Button Padding="10,4" Margin="0,0,8,0" Command="{Binding RemoveRowCommand}" Content="{i18n:StringLocalizer Text='statistics.removeRow'}" />
-                    <Button Padding="10,4" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
-                </StackPanel>
-                <views:ValueGridView DataContext="{Binding Data}" />
+        <StackPanel Grid.Row="1">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <CheckBox Style="{StaticResource Flag}" IsChecked="{Binding IsTwoVariable}" Content="{i18n:StringLocalizer Text='statistics.twoVariable'}" />
+                <CheckBox Style="{StaticResource Flag}" IsChecked="{Binding HasFrequencies}" Content="{i18n:StringLocalizer Text='statistics.frequencies'}" />
+                <ComboBox Style="{StaticResource Choice}"
+                          MinWidth="150"
+                          ItemsSource="{Binding Regressions}"
+                          SelectedItem="{Binding Regression}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Command="{Binding ApplyCommand}" Content="{i18n:StringLocalizer Text='statistics.apply'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,0,8,0" Command="{Binding AddRowCommand}" Content="{i18n:StringLocalizer Text='statistics.addRow'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,0,8,0" Command="{Binding RemoveRowCommand}" Content="{i18n:StringLocalizer Text='statistics.removeRow'}" />
+                <Button Style="{StaticResource ActionButton}" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+            </StackPanel>
+        </StackPanel>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
-                <ItemsControl ItemsSource="{Binding Summary}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <DockPanel Margin="0,2">
-                            <TextBlock DockPanel.Dock="Left" MinWidth="64" FontFamily="Consolas" Foreground="Gray" Text="{Binding Name}" />
-                            <TextBlock FontFamily="Consolas" Text="{Binding Text}" TextWrapping="Wrap" />
-                        </DockPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <!-- The data and what was made of it share the row that gives way. -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" MaxHeight="150" />
+                <RowDefinition Height="*" MinHeight="0" />
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Style="{StaticResource PanelBorder}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <views:ValueGridView DataContext="{Binding Data}" />
+                </ScrollViewer>
+            </Border>
+            <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Summary}" ItemTemplate="{StaticResource NamedValueRow}" />
             </ScrollViewer>
-        </DockPanel>
-    </DockPanel>
+        </Grid>
+
+        <views:CalculationPanelView Grid.Row="3" DataContext="{Binding Calculate}" />
+    </Grid>
 </UserControl>

@@ -11,17 +11,15 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <TextBox Margin="2"
-                         Padding="4,3"
-                         MinWidth="56"
-                         FontFamily="Consolas"
+                <TextBox MinWidth="56"
+                         TextAlignment="Right"
                          Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}">
                     <TextBox.Style>
-                        <Style TargetType="TextBox">
+                        <Style TargetType="TextBox" BasedOn="{StaticResource CellBox}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasError}" Value="True">
-                                    <Setter Property="BorderBrush" Value="#C00" />
-                                    <Setter Property="Foreground" Value="#C00" />
+                                    <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
+                                    <Setter Property="Foreground" Value="{StaticResource Danger}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>

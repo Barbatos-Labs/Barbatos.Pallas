@@ -10,16 +10,16 @@ using Barbatos.Pallas.Presentation;
 namespace Barbatos.Pallas.Wpf.Views;
 
 /// <summary>
-/// The line the user types on, and the keypad under it.
+/// The keys of the calculator.
 /// </summary>
 /// <remarks>
 /// The keyboard is routed through the same table as the keypad (<see cref="KeyboardMap"/>), so what a key does on
 /// the screen and what it does on the keyboard cannot differ. A key the calculator has no use for is left to WPF.
 /// </remarks>
-public partial class MathInputView : UserControl
+public partial class KeypadView : UserControl
 {
     /// <summary>Creates the view.</summary>
-    public MathInputView()
+    public KeypadView()
     {
         InitializeComponent();
         Loaded += (_, _) => Focus();

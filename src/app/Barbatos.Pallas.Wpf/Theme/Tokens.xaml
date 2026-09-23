@@ -1,0 +1,78 @@
+<!--
+    The colours, roundings and type sizes of the calculator, in one place.
+
+    The body is dark and the display is pale, as the reference calculator's own is: it also means the mathematics
+    WpfMath draws - which is black ink it does not let us recolour per formula - lands on the one light surface in
+    the window, where it belongs.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- The body of the calculator. -->
+    <SolidColorBrush x:Key="Body" Color="#11141A" />
+    <SolidColorBrush x:Key="Bezel" Color="#1A1F27" />
+    <SolidColorBrush x:Key="Surface" Color="#222932" />
+    <SolidColorBrush x:Key="SurfaceRaised" Color="#2A323D" />
+    <SolidColorBrush x:Key="Edge" Color="#39424F" />
+    <SolidColorBrush x:Key="EdgeSoft" Color="#2C343F" />
+
+    <!-- What is written on the body. -->
+    <SolidColorBrush x:Key="Ink" Color="#E8EDF4" />
+    <SolidColorBrush x:Key="InkMuted" Color="#95A1B2" />
+    <SolidColorBrush x:Key="InkFaint" Color="#66717F" />
+
+    <!-- The display. -->
+    <SolidColorBrush x:Key="Lcd" Color="#C7D4C1" />
+    <SolidColorBrush x:Key="LcdEdge" Color="#7E9076" />
+    <SolidColorBrush x:Key="LcdInk" Color="#111A10" />
+    <SolidColorBrush x:Key="LcdInkMuted" Color="#4A5946" />
+    <SolidColorBrush x:Key="LcdError" Color="#8C231C" />
+
+    <!-- The second and third meaning of a key, in the two colours the calculator prints them in (p. 18). -->
+    <SolidColorBrush x:Key="ShiftInk" Color="#F2A93B" />
+    <SolidColorBrush x:Key="AlphaInk" Color="#6FA8FF" />
+
+    <SolidColorBrush x:Key="Accent" Color="#12A08D" />
+    <SolidColorBrush x:Key="AccentPressed" Color="#0E8577" />
+    <SolidColorBrush x:Key="Danger" Color="#E4756B" />
+
+    <!-- The keys, by what kind of key they are (KeyGroup). -->
+    <SolidColorBrush x:Key="KeyFunctionFace" Color="#2A323D" />
+    <SolidColorBrush x:Key="KeyFunctionInk" Color="#DCE3EC" />
+    <SolidColorBrush x:Key="KeyDigitFace" Color="#3C4653" />
+    <SolidColorBrush x:Key="KeyDigitInk" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="KeyOperatorFace" Color="#31414F" />
+    <SolidColorBrush x:Key="KeyOperatorInk" Color="#9AD1FF" />
+    <SolidColorBrush x:Key="KeyControlFace" Color="#242B35" />
+    <SolidColorBrush x:Key="KeyControlInk" Color="#C6CFDB" />
+    <SolidColorBrush x:Key="KeyClearFace" Color="#3A2A2C" />
+    <SolidColorBrush x:Key="KeyClearInk" Color="#F3B6B0" />
+    <SolidColorBrush x:Key="KeyModifierFace" Color="#232A34" />
+    <SolidColorBrush x:Key="KeyExecuteFace" Color="#12A08D" />
+    <SolidColorBrush x:Key="KeyExecuteInk" Color="#062B27" />
+
+    <!-- The lip under a key, which is what makes it look pressable. -->
+    <SolidColorBrush x:Key="KeyLip" Color="#0C0F14" />
+    <SolidColorBrush x:Key="KeyHover" Color="#3E4857" />
+
+    <CornerRadius x:Key="KeyCorner">7</CornerRadius>
+    <CornerRadius x:Key="PanelCorner">10</CornerRadius>
+    <CornerRadius x:Key="SmallCorner">5</CornerRadius>
+
+    <Thickness x:Key="KeyLipThickness">1,1,1,3</Thickness>
+    <Thickness x:Key="KeyLipPressed">1,3,1,1</Thickness>
+
+    <sys:Double x:Key="TitleSize">19</sys:Double>
+    <sys:Double x:Key="BodySize">13</sys:Double>
+    <sys:Double x:Key="KeySize">15</sys:Double>
+    <sys:Double x:Key="LegendSize">9</sys:Double>
+    <sys:Double x:Key="LegendLine">11</sys:Double>
+    <sys:Double x:Key="KeyHeight">30</sys:Double>
+
+    <!-- The most the display and the keypad take together: past it, a tall window gives the room to the history or
+         the grid above them rather than making every key taller. -->
+    <sys:Double x:Key="PanelMaxHeight">760</sys:Double>
+
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+</ResourceDictionary>

@@ -12,19 +12,29 @@ namespace Barbatos.Pallas.Presentation.Tests;
 /// <summary>
 /// What holds for any sequence of keys, not only the ones a test thought of.
 /// </summary>
+/// <remarks>
+/// A sequence is typed in one application, on that application's keypad: the keys of Matrix pressed on the Calculate
+/// line would be ignored, which would make the sample weaker without saying so.
+/// </remarks>
 public sealed class MathInputPropertyTests
 {
-    private static readonly ImmutableArray<KeyId> Keys = [.. Keypad.Keys.Select(key => key.Id)];
+    private static readonly ImmutableArray<CalculatorApp> Apps = [.. Enum.GetValues<CalculatorApp>().Where(app => app != CalculatorApp.MathBox)];
 
-    private static readonly Gen<KeyId[]> Sequences = Gen.Int[0, Keys.Length - 1].Array[1, 40].Select(indexes => indexes.Select(index => Keys[index]).ToArray());
+    private static readonly Gen<(CalculatorApp App, KeyId[] Keys)> Sequences =
+        Gen.Int[0, Apps.Length - 1].SelectMany(appIndex =>
+        {
+            CalculatorApp app = Apps[appIndex];
+            ImmutableArray<KeyId> keys = [.. Keypad.RowsFor(app).SelectMany(row => row)];
+            return Gen.Int[0, keys.Length - 1].Array[1, 40].Select(indexes => (app, indexes.Select(index => keys[index]).ToArray()));
+        });
 
     [Fact]
     public void AnySequenceOfKeysLeavesALineThatCanBeWrittenAndDrawn()
     {
         Sequences.Sample(
-            keys =>
+            sample =>
             {
-                MathInputViewModel input = Typed(keys);
+                MathInputViewModel input = Typed(sample);
 
                 // Neither writer may throw, whatever state the line is in: the screen is drawn on every keystroke.
                 return input.Linear is not null && input.Latex.Length > 0;
@@ -36,14 +46,14 @@ public sealed class MathInputPropertyTests
     public void WhatIsWrittenIsReadBackAsTheSameCalculation()
     {
         Sequences.Sample(
-            keys =>
+            sample =>
             {
-                string linear = Typed(keys).Linear;
-                string again = MathLinearWriter.Write(MathDocumentReader.Read(linear));
+                string linear = Typed(sample).Linear;
+                string again = MathLinearWriter.Write(MathDocumentReader.Read(linear, sample.App));
 
                 // Reading closes a bracket the user left open, which the calculator does as well (manual p. 28), so
                 // the text may change; what it says may not.
-                return Same(linear, again);
+                return Same(linear, again, sample.App);
             },
             iter: 500);
     }
@@ -52,10 +62,10 @@ public sealed class MathInputPropertyTests
     public void ReadingBackASecondTimeChangesNothing()
     {
         Sequences.Sample(
-            keys =>
+            sample =>
             {
-                string once = MathLinearWriter.Write(MathDocumentReader.Read(Typed(keys).Linear));
-                string twice = MathLinearWriter.Write(MathDocumentReader.Read(once));
+                string once = MathLinearWriter.Write(MathDocumentReader.Read(Typed(sample).Linear, sample.App));
+                string twice = MathLinearWriter.Write(MathDocumentReader.Read(once, sample.App));
 
                 return twice == once;
             },
@@ -66,9 +76,9 @@ public sealed class MathInputPropertyTests
     public void TheCursorCanBePutAtAnyPlaceInTheText()
     {
         Sequences.Sample(
-            keys =>
+            sample =>
             {
-                MathDocument document = Typed(keys).Document;
+                MathDocument document = Typed(sample).Document;
                 string linear = MathLinearWriter.Write(document);
 
                 for (int offset = 0; offset <= linear.Length + 1; offset++)
@@ -89,9 +99,9 @@ public sealed class MathInputPropertyTests
     public void EveryKeyCanBeUndoneOneAtATime()
     {
         Sequences.Sample(
-            keys =>
+            sample =>
             {
-                MathInputViewModel input = Typed(keys);
+                MathInputViewModel input = Typed(sample);
                 while (input.CanUndo)
                 {
                     input.Undo();
@@ -102,10 +112,11 @@ public sealed class MathInputPropertyTests
             iter: 500);
     }
 
-    private static bool Same(string left, string right)
+    private static bool Same(string left, string right, CalculatorApp app)
     {
-        ParseResult first = ExpressionParser.Parse(left, SyntaxContext.Calculate);
-        ParseResult second = ExpressionParser.Parse(right, SyntaxContext.Calculate);
+        SyntaxContext context = new(app, AllowRelations: true);
+        ParseResult first = ExpressionParser.Parse(left, context);
+        ParseResult second = ExpressionParser.Parse(right, context);
         if (first.Root is null || second.Root is null)
         {
             return first.Root is null && second.Root is null;
@@ -114,10 +125,10 @@ public sealed class MathInputPropertyTests
         return SyntaxEquivalence.AreEquivalent(first.Root, second.Root);
     }
 
-    private static MathInputViewModel Typed(KeyId[] keys)
+    private static MathInputViewModel Typed((CalculatorApp App, KeyId[] Keys) sample)
     {
-        MathInputViewModel input = new();
-        foreach (KeyId key in keys)
+        MathInputViewModel input = new() { App = sample.App };
+        foreach (KeyId key in sample.Keys)
         {
             input.Press(key);
         }

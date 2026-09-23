@@ -4,44 +4,43 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <!-- The history and the calculator share what the header leaves, the calculator most of it and never more
+             than its keys want; on a tall window the rest goes to the history. -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" MinHeight="0" />
+            <RowDefinition Height="6*" MaxHeight="{StaticResource PanelMaxHeight}" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
+            <TextBlock Style="{StaticResource ScreenTitle}"
                        Text="{i18n:StringLocalizer BindText={Binding TitleKey}}" />
         </DockPanel>
 
-        <views:CalculationPanelView DockPanel.Dock="Bottom" />
-
-        <!-- Everything calculated before, newest first; clicking one puts it back on the line. -->
-        <ListBox ItemsSource="{Binding History}"
-                 BorderThickness="0"
-                 Focusable="False"
-                 HorizontalContentAlignment="Stretch"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <!-- Everything calculated before, newest first; clicking one puts it back on the line. It is this row that
+             gives way when the window is short, never the display or the keys. -->
+        <ListBox Grid.Row="1"
+                 Style="{StaticResource HistoryList}"
+                 Margin="0,0,0,8"
+                 ItemsSource="{Binding History}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Button HorizontalContentAlignment="Stretch"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Focusable="False"
-                            Padding="2"
+                    <Button Style="{StaticResource HistoryItem}"
                             Command="{Binding DataContext.RecallCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                             CommandParameter="{Binding}">
                         <DockPanel>
                             <TextBlock DockPanel.Dock="Right"
-                                       FontFamily="Consolas"
-                                       Foreground="#333"
+                                       Margin="8,0,0,0"
+                                       FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource Ink}"
                                        Text="{Binding Display.Text}" />
-                            <TextBlock FontFamily="Consolas"
-                                       Foreground="Gray"
+                            <TextBlock FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource InkMuted}"
                                        TextTrimming="CharacterEllipsis"
                                        Text="{Binding Input}" />
                         </DockPanel>
@@ -49,5 +48,7 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-    </DockPanel>
+
+        <views:CalculationPanelView Grid.Row="2" />
+    </Grid>
 </UserControl>

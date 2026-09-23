@@ -3,53 +3,62 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml">
-    <DockPanel Margin="16">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
             <Button DockPanel.Dock="Right"
-                    Padding="12,6"
+                    Style="{StaticResource ActionButton}"
                     aqr:RouterLink.To="/settings"
                     Content="{i18n:StringLocalizer Text='home.settings'}" />
-            <TextBlock FontSize="22"
+            <TextBlock FontSize="23"
                        FontWeight="SemiBold"
                        VerticalAlignment="Center"
+                       Foreground="{StaticResource Ink}"
                        Text="{i18n:StringLocalizer Text='home.title'}" />
         </DockPanel>
 
         <!-- The applications of the calculator, in the order of its own home screen. -->
-        <ItemsControl ItemsSource="{Binding Apps}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Columns="2" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Margin="4"
-                            Padding="12,10"
-                            HorizontalContentAlignment="Left"
-                            IsEnabled="{Binding IsAvailable}"
-                            aqr:RouterLink.To="{Binding Route}">
-                        <StackPanel>
-                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding NameKey}}" />
-                            <!-- An application without an engine is shown and disabled, never hidden. -->
-                            <TextBlock Foreground="Gray"
-                                       FontSize="11"
-                                       Text="{i18n:StringLocalizer Text='home.later'}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsAvailable}" Value="False">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </DockPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Apps}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource AppTile}"
+                                IsEnabled="{Binding IsAvailable}"
+                                aqr:RouterLink.To="{Binding Route}">
+                            <StackPanel>
+                                <TextBlock FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Text="{i18n:StringLocalizer BindText={Binding NameKey}}" />
+                                <!-- An application without an engine is shown and disabled, never hidden. -->
+                                <TextBlock Foreground="{StaticResource InkFaint}"
+                                           FontSize="11"
+                                           Margin="0,2,0,0"
+                                           Text="{i18n:StringLocalizer Text='home.later'}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

@@ -14,12 +14,25 @@ namespace Barbatos.Pallas.Presentation.Tests;
 public sealed class KeypadTests
 {
     [Fact]
-    public void EveryKeyOfTheKeypadIsOnTheScreenExactlyOnce()
+    public void EveryKeyIsOnTheScreenOfSomeApplicationAndOnceAtMost()
     {
-        ImmutableArray<KeyId> placed = [.. Keypad.Rows.SelectMany(row => row)];
+        HashSet<KeyId> placed = [];
+        foreach (CalculatorApp app in Enum.GetValues<CalculatorApp>())
+        {
+            ImmutableArray<KeyId> keys = [.. Keypad.RowsFor(app).SelectMany(row => row)];
 
-        placed.Should().OnlyHaveUniqueItems();
-        placed.Should().BeEquivalentTo(Keypad.Keys.Select(key => key.Id), "the table is the keypad");
+            keys.Should().OnlyHaveUniqueItems("a key is drawn once on the keypad of {0}", app);
+            placed.UnionWith(keys);
+        }
+
+        placed.Should().BeEquivalentTo(Keypad.Keys.Select(key => key.Id), "the table is the keypads");
+    }
+
+    [Fact]
+    public void CalculateHasTheKeypadThatIsNotAnyApplicationsOwn()
+    {
+        Keypad.RowsFor(CalculatorApp.Calculate).Should().Equal(Keypad.Rows);
+        Keypad.RowsFor(CalculatorApp.Equation).Should().Equal(Keypad.Rows, "an application with no names of its own has the keys of Calculate");
     }
 
     [Fact]
@@ -49,16 +62,19 @@ public sealed class KeypadTests
     }
 
     [Fact]
-    public void EverySymbolAKeyTypesIsSyntaxTheParserKnows()
+    public void EverySymbolAKeyTypesIsSyntaxTheParserKnowsInTheApplicationThatHasTheKey()
     {
-        foreach (string text in Symbols())
+        foreach (CalculatorApp app in Enum.GetValues<CalculatorApp>())
         {
-            // Around each symbol goes the least that makes it a calculation, so that what is tested is the symbol.
-            string input = Around(text);
-            ParseResult result = ExpressionParser.Parse(input, SyntaxContext.Calculate);
+            foreach (string text in Symbols(app))
+            {
+                // Around each symbol goes the least that makes it a calculation, so that what is tested is the symbol.
+                string input = Around(text);
+                ParseResult result = ExpressionParser.Parse(input, new SyntaxContext(app, AllowRelations: true));
 
-            result.Root.Should().NotBeNull("'{0}' should be syntax, as '{1}'", text, input);
-            MathLinearWriter.Write(MathDocument.Empty.Insert(text)).Should().Be(text, "what a key types is what it types");
+                result.Root.Should().NotBeNull("'{0}' should be syntax in {1}, as '{2}'", text, app, input);
+                MathLinearWriter.Write(MathDocument.Empty.Insert(text)).Should().Be(text, "what a key types is what it types");
+            }
         }
     }
 
@@ -127,9 +143,11 @@ public sealed class KeypadTests
         }
     }
 
-    private static IEnumerable<KeyAction> Actions()
+    private static IEnumerable<KeyAction> Actions() => Actions(Keypad.Keys);
+
+    private static IEnumerable<KeyAction> Actions(IEnumerable<KeyDefinition> keys)
     {
-        foreach (KeyDefinition key in Keypad.Keys)
+        foreach (KeyDefinition key in keys)
         {
             foreach (KeyAction? action in new[] { key.Primary, key.Shift, key.Alpha })
             {
@@ -153,7 +171,11 @@ public sealed class KeypadTests
         }
     }
 
-    private static IEnumerable<string> Symbols() => Actions().OfType<InsertSymbol>().Select(symbol => symbol.Text).Distinct(StringComparer.Ordinal);
+    private static IEnumerable<string> Symbols(CalculatorApp app) =>
+        Actions(Keypad.RowsFor(app).SelectMany(row => row).Select(id => Keypad.Of(id, app)))
+            .OfType<InsertSymbol>()
+            .Select(symbol => symbol.Text)
+            .Distinct(StringComparer.Ordinal);
 
     private static string Around(string text)
     {
@@ -163,7 +185,8 @@ public sealed class KeypadTests
             "," => "log(2,8)",
             "." => ".5",
             "+" or "−" or "×" or "÷" or "P" or "C" => "10" + text + "4",
-            "²" or "³" or "⁻¹" or "!" or "%" or "°" => "2" + text,
+            "and" or "or" or "xor" or "xnor" or "•" or "∠" => "1" + text + "1",
+            "²" or "³" or "⁻¹" or "!" or "%" or "°" or "x̂" or "ŷ" or "▶t" => "2" + text,
             _ when text.EndsWith('(') => text + "1)",
             _ => text,
         };

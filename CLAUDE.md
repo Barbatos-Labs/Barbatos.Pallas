@@ -30,8 +30,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, and properties over random sequences of keys |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, and the session in the preferences |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), and properties over random sequences of keys in a random application |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath, every screen is built with the theme loaded (`ScreenResourceTests`), and the session in the preferences |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -44,7 +44,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 ## Current phase
 
 **Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
-M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M5 persistence and shortcuts,
+M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M4.5 the calculator's face (a layout
+and look ✅, b a keypad per application ✅, c CATALOG), M5 persistence and shortcuts,
 M6 hardening and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
 end.
 
@@ -55,10 +56,14 @@ end.
   `VectorViewModel`, `StatisticsViewModel`, `DistributionViewModel`, `EquationViewModel`, `InequalityViewModel`,
   `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`), built the first time it is opened
   and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was typed through the
-  session. Screens of applications whose own screen is still to come render `AppScreenView`.
+  session. Screens of applications whose own screen is still to come render `AppScreenView`. The look is
+  `Theme/Tokens.xaml` (colours, roundings, sizes) and `Theme/Controls.xaml` (every style); `KeypadView` draws the
+  key table and `CalculationPanelView` the one display, input above and answer below.
 - The line the user types on is `MathDocument` (immutable, a cursor path through template slots), written as
   Canonical Linear Syntax for the engine and as LaTeX for the screen, and read back by `MathDocumentReader` through
-  the engine's own parser. The keypad is the table in `Keypad`, the keyboard maps onto it (`KeyboardMap`), and
+  the engine's own parser. The keypad is the table in `Keypad`, and each application draws its own rows of it
+  (`Keypad.RowsFor`): the keys of what it reads and no others - Base-N has no functions, only Matrix has MatA. The
+  keyboard maps onto the same table (`KeyboardMap`) through the same filter (`Keypad.Has`), and
   `InputCommandRouter` is the only place a key becomes an edit. `CalculateViewModel` calculates, shows the result
   (FORMAT and S⇔D), walks the history, and puts the cursor where an error says it is.
 - Numerics holds only what .NET lacks: `Trigonometry`, `IntegerFunctions`, `Fractions`, `Sexagesimal`, `AngleUnit`,
@@ -241,6 +246,24 @@ Things that will save time:
   against a known constant (docs/CONFORMANCE.md §5), never from `System.Math` or the code under test.
 - **An assumption is a `note`,** listed under U1-U26 in docs/CONFORMANCE.md. A deliberate difference from the
   calculator is a D-entry there, never a silent engine change.
+
+### The window
+
+- **A screen is a `Grid` with explicit rows, never a `DockPanel`.** A `DockPanel` gives a docked child the height it
+  asks for and squeezes the rest out: at the default window size that cost the Base-N screen its number-base row and
+  cut a fraction on the line in half (23 Sep 2026). Auto for the header, the controls and the calculation panel; `*`
+  for the content, which is what scrolls.
+- **The calculator shares the screen by weight and its keys share the keypad's height.** An Auto keypad cannot give
+  way: ten rows under the Matrix grid lost the row with = off the window. The keypad rows are a `UniformGrid`, the
+  panel row is `5*` or `6*` under `PanelMaxHeight`, and a key's content only ever shrinks (`Viewbox` DownOnly).
+- **A key an application cannot read is not on its keypad.** Adding a key means adding it to the rows of the
+  applications that read it; `ApplicationKeypadTests` types it there and fails if that application has no token for
+  it. A key whose meaning changes in an application (the brackets and × ÷ in Base-N) is an entry in
+  `Keypad.Of(id, app)`, not a second key.
+- **No view sets a colour, a corner or a font size of its own.** They are in `Theme/Tokens.xaml`, and every style is
+  in `Theme/Controls.xaml`. What a key looks like follows its `KeyGroup`, which is part of the keypad table.
+- **A new style or token is used through `StaticResource` and covered by `ScreenResourceTests`,** which builds every
+  screen with the theme: a key no dictionary has compiles and throws only when that screen is opened.
 
 ### Build and style
 

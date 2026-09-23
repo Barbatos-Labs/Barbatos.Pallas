@@ -3,8 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
         Title="Barbatos Pallas"
-        Width="480" Height="760"
-        MinWidth="360" MinHeight="520"
+        Width="470" Height="880"
+        MinWidth="410" MinHeight="700"
+        Background="{StaticResource Body}"
+        TextElement.Foreground="{StaticResource Ink}"
+        TextElement.FontSize="{StaticResource BodySize}"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen">
     <aqr:RouterView />
 </Window>

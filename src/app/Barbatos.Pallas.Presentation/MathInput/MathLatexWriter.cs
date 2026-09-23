@@ -72,7 +72,31 @@ public static class MathLatexWriter
         ["ȳ"] = @"\bar{y}",
         ["x̂"] = @"\hat{x}",
         ["ŷ"] = @"\hat{y}",
+        ["x̂₁"] = @"\hat{x}_{1}",
+        ["x̂₂"] = @"\hat{x}_{2}",
+
+        // The logic operators of Base-N are words between two numbers, spaced as LatexPrinter spaces them: without
+        // it F and A is drawn as one word, FandA.
+        ["and"] = @"\;\mathrm{and}\;",
+        ["or"] = @"\;\mathrm{or}\;",
+        ["xor"] = @"\;\mathrm{xor}\;",
+        ["xnor"] = @"\;\mathrm{xnor}\;",
     }.ToFrozenDictionary(StringComparer.Ordinal);
+
+    // A character of a name that WpfMath has no glyph for as a character, written as the command it has instead -
+    // the same ones LatexPrinter writes, so a name on the line and the same name in the history look alike. Found
+    // by drawing the statistic keys of Statistics: σx, Σx and ▶t were all "Unknown character" (23 Sep 2026).
+    private static readonly FrozenDictionary<char, string> Characters = new Dictionary<char, string>
+    {
+        ['σ'] = @"\sigma ",
+        ['Σ'] = @"\Sigma ",
+        ['▶'] = @"\blacktriangleright ",
+        ['²'] = "^{2}",
+        ['³'] = "^{3}",
+        ['⁴'] = "^{4}",
+        ['₁'] = "_{1}",
+        ['₂'] = "_{2}",
+    }.ToFrozenDictionary();
 
     /// <summary>Writes a document, with the cursor where it stands.</summary>
     /// <param name="document">The document.</param>
@@ -275,7 +299,7 @@ public static class MathLatexWriter
                 continue;
             }
 
-            latex.Append(character);
+            latex.Append(Characters.GetValueOrDefault(character) ?? character.ToString());
         }
     }
 }

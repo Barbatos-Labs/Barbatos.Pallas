@@ -4,25 +4,25 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" MinHeight="0" />
+            <RowDefinition Height="6*" MaxHeight="{StaticResource PanelMaxHeight}" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Text="{i18n:StringLocalizer Text='app.base-n'}" />
+            <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.base-n'}" />
         </DockPanel>
 
-        <views:CalculationPanelView DockPanel.Dock="Bottom" DataContext="{Binding Calculate}" />
-
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-            <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="{i18n:StringLocalizer Text='basen.mode'}" />
-            <ComboBox MinWidth="110" Margin="0,0,8,0" ItemsSource="{Binding Bases}" SelectedItem="{Binding Mode}">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer Text='basen.mode'}" />
+            <ComboBox Style="{StaticResource Choice}" ItemsSource="{Binding Bases}" SelectedItem="{Binding Mode}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
@@ -30,5 +30,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
-    </DockPanel>
+
+        <views:CalculationPanelView Grid.Row="3" DataContext="{Binding Calculate}" />
+    </Grid>
 </UserControl>

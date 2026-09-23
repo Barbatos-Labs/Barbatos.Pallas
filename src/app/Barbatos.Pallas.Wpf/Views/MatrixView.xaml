@@ -4,36 +4,48 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" MinHeight="0" />
+            <RowDefinition Height="5*" MaxHeight="{StaticResource PanelMaxHeight}" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Text="{i18n:StringLocalizer Text='app.matrix'}" />
+            <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.matrix'}" />
         </DockPanel>
 
-        <views:CalculationPanelView DockPanel.Dock="Bottom" DataContext="{Binding Calculate}" />
-
-        <StackPanel VerticalAlignment="Top">
+        <StackPanel Grid.Row="1">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                <ComboBox MinWidth="110" Margin="0,0,8,0" ItemsSource="{Binding Names}" SelectedItem="{Binding Name}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-                <Button Padding="10,4" Margin="0,0,8,0" Command="{Binding StoreCommand}" Content="{i18n:StringLocalizer Text='matrix.store'}" />
-                <Button Padding="10,4" Margin="0,0,8,0" Command="{Binding DeleteCommand}" Content="{i18n:StringLocalizer Text='matrix.delete'}" />
-                <Button Padding="10,4" Command="{Binding UseAnswerCommand}" Content="{i18n:StringLocalizer Text='matrix.answer'}" />
+                <ComboBox Style="{StaticResource Choice}"
+                          MinWidth="110"
+                          Margin="0,0,8,0"
+                          ItemsSource="{Binding Names}"
+                          SelectedItem="{Binding Name}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Style="{StaticResource ActionButton}" Margin="0,0,8,0" Command="{Binding StoreCommand}" Content="{i18n:StringLocalizer Text='matrix.store'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,0,8,0" Command="{Binding DeleteCommand}" Content="{i18n:StringLocalizer Text='matrix.delete'}" />
+                <Button Style="{StaticResource ActionButton}" Command="{Binding UseAnswerCommand}" Content="{i18n:StringLocalizer Text='matrix.answer'}" />
             </StackPanel>
-            <views:ValueGridView DataContext="{Binding Grid}" />
         </StackPanel>
-    </DockPanel>
+
+        <!-- The entries share their row with nothing, and scroll when a 4×4 matrix is taller than it. -->
+        <ScrollViewer Grid.Row="2" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource PanelBorder}" VerticalAlignment="Top">
+                <views:ValueGridView DataContext="{Binding Grid}" />
+            </Border>
+        </ScrollViewer>
+
+        <views:CalculationPanelView Grid.Row="3" DataContext="{Binding Calculate}" />
+    </Grid>
 </UserControl>

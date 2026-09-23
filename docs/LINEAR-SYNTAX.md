@@ -126,6 +126,7 @@ On the calculator these are different keys; in text they share spellings. Decide
 | 3 | `°`: angle unit or degrees-minutes-seconds? | `°` followed by a number and `′` or `″` is sexagesimal (`2°20′30″`, `2°30″`); `°` alone is the degree unit (`sin(30°)`). In Radian mode the two differ: `30°` is 30 degrees, `30°0′0″` is the number 30. The printer writes all three parts. |
 | 4 | Scientific constants | Prefixed with `@` (§2). |
 | 5 | Verify chains | §3. |
+| 6 | `A`-`F` in Base-N: variable, digit, or combination? | In Base-N a run of `0`-`9` and `A`-`F` is a number (§4), so `A`-`F` are always digits there and `C` is never the combination operator. The Base-N keypad therefore has keys of its own for the six digits and no nPr or nCr: a key that typed `C` under an nCr legend would be read as the digit twelve, which no parser can tell from a digit typed on purpose. Decided 23 Sep 2026. |
 
 ## 6. Errors
 

@@ -4,36 +4,53 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
-    <DockPanel Margin="12">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="0" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <Button DockPanel.Dock="Left"
-                    Padding="10,4"
-                    Margin="0,0,12,0"
-                    Focusable="False"
+                    Style="{StaticResource BackButton}"
                     aqr:RouterLink.To="/"
                     Content="{i18n:StringLocalizer Text='settings.back'}" />
-            <TextBlock FontSize="18"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Text="{i18n:StringLocalizer Text='app.ratio'}" />
+            <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.ratio'}" />
         </DockPanel>
 
-        <TextBlock DockPanel.Dock="Bottom" Foreground="#C00" Margin="0,6,0,0" Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
-
-        <StackPanel VerticalAlignment="Top">
+        <StackPanel Grid.Row="1">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                <ComboBox MinWidth="180" Margin="0,0,8,0" ItemsSource="{Binding Forms}" SelectedItem="{Binding Form}">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-                <Button Padding="10,4" Margin="8,0,0,0" Command="{Binding SolveCommand}" Content="{i18n:StringLocalizer Text='equation.solve'}" />
-                <Button Padding="10,4" Margin="8,0,0,0" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+                <ComboBox Style="{StaticResource Choice}"
+                          MinWidth="180"
+                          ItemsSource="{Binding Forms}"
+                          SelectedItem="{Binding Form}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Style="{StaticResource PrimaryButton}" Margin="10,2,8,2" Command="{Binding SolveCommand}" Content="{i18n:StringLocalizer Text='equation.solve'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,2" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
             </StackPanel>
-            <views:ValueGridView DataContext="{Binding Grid}" />
-            <TextBlock Margin="0,12,0,0" FontFamily="Consolas" FontSize="16" Text="{Binding Solution.Display.Text}" />
+            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
+                <views:ValueGridView DataContext="{Binding Grid}" />
+            </Border>
         </StackPanel>
-    </DockPanel>
+
+        <StackPanel Grid.Row="2">
+            <TextBlock Style="{StaticResource SectionLabel}" Text="X" />
+            <TextBlock FontFamily="{StaticResource MonoFont}"
+                       FontSize="17"
+                       Foreground="{StaticResource Ink}"
+                       Text="{Binding Solution.Display.Text}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="3"
+                   Margin="0,8,0,0"
+                   Foreground="{StaticResource Danger}"
+                   Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+    </Grid>
 </UserControl>
