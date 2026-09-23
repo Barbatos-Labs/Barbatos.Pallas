@@ -10,9 +10,11 @@
   -->
 
   <PropertyGroup>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <VersionSuffix>preview.1</VersionSuffix>
-    <!-- Assembly and file versions take numeric parts only; the prerelease label lives in the package. -->
+    <!-- The packages' version (maintainer, 24 Sep 2026: the first release is 1.0.0). From here on semantic versioning
+         holds: an incompatible change to the public API waits for 2.0.0. The application has a version of its own,
+         in the Wpf csproj and packaging/Barbatos.Pallas.json. -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <!-- Assembly and file versions take numeric parts only; a prerelease label, when there is one, lives in the package. -->
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(VersionPrefix)</FileVersion>
   </PropertyGroup>

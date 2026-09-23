@@ -2,7 +2,8 @@
 
 The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition, degrees-minutes-seconds, the error function erf, erfc and its inverse, and the Poisson probability.
 
-> **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+> **Status: 1.0.** The API below is tested on .NET 8, 9 and 10, and it follows semantic versioning: an incompatible
+> change waits for 2.0.
 >
 > **Not a package of its own.** It ships inside [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
 > which carries its assembly: reference that package to use it.

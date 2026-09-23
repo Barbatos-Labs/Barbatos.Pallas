@@ -14,9 +14,9 @@
     "AppGuid": "{5E50D3E6-0148-428F-88C9-F824709C75C4}",
     // The .csproj's <Product>. It is also {Slug} in the installer's file name.
     "AppName": "Barbatos Pallas",
-    // The application's own version, numeric: the engine refuses a prerelease label here (BPE1011), so the app is
-    // 0.1.0 while the packages are 0.1.0-preview.1. barbatos-pack passes it to the build; the .csproj's <Version>
-    // says the same for a build outside it, and Wpf.Tests fails when the two differ.
+    // The application's own version, numeric (the engine refuses a prerelease label here, BPE1011): the app is 0.1.0
+    // while the packages are 1.0.0 (Directory.Build.props). barbatos-pack passes it to the build; the .csproj's
+    // <Version> says the same for a build outside it, and Wpf.Tests fails when the two differ.
     "Version": "0.1.0",
     "Copyright": "(c) 2026 Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors. All rights reserved."
   },

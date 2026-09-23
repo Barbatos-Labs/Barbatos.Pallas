@@ -2,7 +2,8 @@
 
 Reference data for Barbatos.Pallas: CODATA physical constants, NIST SP 811 unit conversions with exact factors, and CIAAW standard atomic weights.
 
-> **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+> **Status: 1.0.** The API below is tested on .NET 8, 9 and 10, and it follows semantic versioning: an incompatible
+> change waits for 2.0.
 >
 > **Not a package of its own.** It ships inside
 > [Barbatos.Pallas.DependencyInjection](https://www.nuget.org/packages/Barbatos.Pallas.DependencyInjection), which

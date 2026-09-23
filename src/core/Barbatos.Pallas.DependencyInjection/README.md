@@ -2,12 +2,13 @@
 
 Microsoft.Extensions.DependencyInjection integration for Barbatos.Pallas: AddPallas(), validated options, and registration of function, constant and unit modules.
 
-> **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+> **Status: 1.0.** The API below is tested on .NET 8, 9 and 10, and it follows semantic versioning: an incompatible
+> change waits for 2.0.
 
 ## Installing
 
 ```bash
-dotnet add package Barbatos.Pallas.DependencyInjection --prerelease
+dotnet add package Barbatos.Pallas.DependencyInjection
 ```
 
 It depends on [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),

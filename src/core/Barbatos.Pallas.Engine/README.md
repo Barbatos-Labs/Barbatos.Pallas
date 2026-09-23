@@ -2,12 +2,13 @@
 
 The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify, Base-N, matrices, vectors, statistics, distributions, equations, inequalities and ratios.
 
-> **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+> **Status: 1.0.** The API below is tested on .NET 8, 9 and 10, and it follows semantic versioning: an incompatible
+> change waits for 2.0.
 
 ## Installing
 
 ```bash
-dotnet add package Barbatos.Pallas.Engine --prerelease
+dotnet add package Barbatos.Pallas.Engine
 ```
 
 The package has no dependencies. It carries the libraries the engine is built on, each an assembly and a namespace of

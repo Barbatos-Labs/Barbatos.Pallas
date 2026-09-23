@@ -3,7 +3,8 @@
 Exact linear algebra of `decimal` matrices for Barbatos.Pallas: determinants, inverses and solutions of linear systems,
 by fraction-free elimination on `BigInteger`.
 
-> **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+> **Status: 1.0.** The API below is tested on .NET 8, 9 and 10, and it follows semantic versioning: an incompatible
+> change waits for 2.0.
 >
 > **Not a package of its own.** It ships inside [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
 > which carries its assembly: reference that package to use it.

@@ -30,11 +30,11 @@ session.Calculate("14÷0×2").Error;                  // MathError at the divisi
 Two packages are published, for .NET 8, 9 and 10 on any platform:
 
 ```bash
-dotnet add package Barbatos.Pallas.Engine --prerelease
+dotnet add package Barbatos.Pallas.Engine
 ```
 
 ```bash
-dotnet add package Barbatos.Pallas.DependencyInjection --prerelease
+dotnet add package Barbatos.Pallas.DependencyInjection
 ```
 
 | Package | What it is | Carries |
