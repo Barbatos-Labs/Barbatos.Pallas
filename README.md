@@ -12,9 +12,9 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
 
 > **Status: Phase 5 - the desktop app - in progress.** The engine is complete for every application but Math Box -
 > Calculate, Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and
-> Table - and every one of their conformance cases passes. The WPF app has its shell: the home screen, the settings
-> and a session that survives a restart; the screens follow milestone by milestone. See the
-> [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> Table - and every one of their conformance cases passes. The Windows app runs all of them, with the calculator's
+> keypad per application, its menus, and the session, history, window and language kept between runs; what remains
+> is hardening and the installer. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ```csharp
 CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
@@ -27,18 +27,34 @@ session.Calculate("14÷0×2").Error;                  // MathError at the divisi
 
 ## Packages
 
-| Package | Purpose | Phase |
+Two packages are published, for .NET 8, 9 and 10 on any platform:
+
+```bash
+dotnet add package Barbatos.Pallas.Engine --prerelease
+```
+
+```bash
+dotnet add package Barbatos.Pallas.DependencyInjection --prerelease
+```
+
+| Package | What it is | Carries |
 |---|---|---|
-| `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds, erf and erfc, the Poisson probability | 1 |
-| `Barbatos.Pallas.Expressions` | Lexer, Pratt parser with the reference calculator's priority, syntax tree, error spans, linear and LaTeX printers | 2 |
-| `Barbatos.Pallas.Engine` | Evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex, and the Matrix, Vector, Statistics, Distribution, Equation, Inequality and Ratio applications | 3 |
-| `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | 3 |
-| `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection | 3 |
-| `Barbatos.Pallas.LinearAlgebra` | Exact determinants, inverses and linear systems of decimal matrices | 4 |
-| `Barbatos.Pallas.Statistics` | Exact sums, variances and least-squares fits of decimal data; quartile ranks | 4 |
-| `Barbatos.Pallas.Solvers` | Exact integer polynomials and the roots of a polynomial: the sign at a rational point, Sturm's count of the real roots, division by a rational root, Aberth's iteration | 4 |
-| `Barbatos.Pallas.Spreadsheet` | The sheet: constants and formulas, relative and absolute references, ranges, fills, circular-reference detection; and number tables of f(x) and g(x) | 4 |
-| `Barbatos.Pallas.Graphing` | Platform-neutral function graphing | 6 |
+| `Barbatos.Pallas.Engine` | The calculation engine: evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex, and the Matrix, Vector, Statistics, Distribution, Equation, Inequality and Ratio applications. No dependencies | Expressions, Numerics, LinearAlgebra, Statistics, Solvers |
+| `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection, on Engine | Data, Spreadsheet |
+
+The engine is built from smaller libraries, each an assembly and a namespace of its own. They are too small to be worth
+a package, so each travels inside the package that references it, and its public types are there to use:
+
+| Library | Purpose | Ships in |
+|---|---|---|
+| `Barbatos.Pallas.Numerics` | The calculator math .NET lacks: trigonometry in angle units, factorial, nPr, nCr, LCM, prime factors, fraction recognition, degrees-minutes-seconds, erf and erfc, the Poisson probability | Engine |
+| `Barbatos.Pallas.Expressions` | Lexer, Pratt parser with the reference calculator's priority, syntax tree, error spans, linear and LaTeX printers | Engine |
+| `Barbatos.Pallas.LinearAlgebra` | Exact determinants, inverses and linear systems of decimal matrices | Engine |
+| `Barbatos.Pallas.Statistics` | Exact sums, variances and least-squares fits of decimal data; quartile ranks | Engine |
+| `Barbatos.Pallas.Solvers` | Exact integer polynomials and the roots of a polynomial: the sign at a rational point, Sturm's count of the real roots, division by a rational root, Aberth's iteration | Engine |
+| `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | DependencyInjection |
+| `Barbatos.Pallas.Spreadsheet` | The sheet: constants and formulas, relative and absolute references, ranges, fills, circular-reference detection; and number tables of f(x) and g(x) | DependencyInjection |
+| `Barbatos.Pallas.Graphing` | Platform-neutral function graphing | Nothing yet: no code until Phase 6 |
 
 ## Documentation
 

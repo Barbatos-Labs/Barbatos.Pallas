@@ -3,6 +3,10 @@
 Reference data for Barbatos.Pallas: CODATA physical constants, NIST SP 811 unit conversions with exact factors, and CIAAW standard atomic weights.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+>
+> **Not a package of its own.** It ships inside
+> [Barbatos.Pallas.DependencyInjection](https://www.nuget.org/packages/Barbatos.Pallas.DependencyInjection), which
+> carries its assembly: reference that package to use it.
 
 ## Adding the data to an engine
 
@@ -36,7 +40,7 @@ session.Calculate("5cm▶in").Result;           // exactly 5 ÷ 2.54
 
 A value is a `ScaledDecimal`: a `decimal` mantissa and a power of ten. The Planck constant is
 `new(6.62607015m, -34)`, which keeps every published digit where `decimal` alone would be 0 and `double` is not
-allowed in a data package
+allowed in the data library
 ([docs/PRECISION.md](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/docs/PRECISION.md) §7). The engine
 turns it into a value with the precision rule.
 

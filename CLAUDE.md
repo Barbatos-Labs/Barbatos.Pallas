@@ -1,6 +1,6 @@
 # Barbatos.Pallas - working agreement
 
-A precise scientific calculation engine for .NET built on `decimal`, `double` and `BigInteger`, published as NuGet
+A precise scientific calculation engine for .NET built on `decimal`, `double` and `BigInteger`, published as two NuGet
 packages, plus the desktop (WPF) calculator built on it. Its functional reference is a scientific
 calculator, called *the reference calculator* everywhere, and its manual: *what* the calculator does, never *how*
 Pallas implements it.
@@ -17,9 +17,9 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 
 | Path | What |
 |---|---|
-| `src/core/*` | The ten NuGet packages: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF` |
+| `src/core/*` | The ten engine libraries: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF`. Two are packages - Engine (carrying Expressions, Numerics, LinearAlgebra, Statistics, Solvers) and DependencyInjection (carrying Data, Spreadsheet); Graphing has no code until Phase 6 |
 | `src/app/*` | Presentation (MVVM with no UI framework, so it is unit-tested), the WPF host (Barbatos.Wpf.Core, Aquarius, AquariusRouter, Barbatos.i18n.Wpf, WpfMath) |
-| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`) and the floating-point IL/metadata scanner |
+| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
@@ -31,7 +31,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
 | `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded (`ScreenResourceTests`), and the session, the window's place and the language in the preferences |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -40,13 +40,17 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
 | `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
+| `build/Test-Packages.ps1` | Installs the two packed packages into programs outside the repository and calculates with them on net8.0, net9.0 and net10.0 |
+| `build/New-AppIcon.ps1` | Draws the app icon (`Assets/Pallas.ico`) from the mark in `build/nuget.svg` |
+| `packaging/` | The installer: the barbatos-pack profile, the AppGuid ledger, the Vietnamese wizard text; `certificates/` is gitignored (packaging/README.md) |
 
 ## Current phase
 
 **Phase 5 - the WPF app - in progress** (roadmap in docs/ARCHITECTURE.md §11). Milestones: M1 the shell ✅,
 M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens ✅, M4.5 the calculator's face (a layout
 and look ✅, b a keypad per application ✅, c CATALOG, FORMAT, RCL and STO ✅), M5 persistence and shortcuts ✅,
-M6 hardening and the installer. Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
+M6 hardening and the installer (in progress: the installer is built, signed and verified; the installed app is still to
+be walked). Phase 4 is complete: every application but Math Box, which is Phase 6, works end to
 end.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
@@ -56,7 +60,9 @@ end.
   `AppRoutes` + `Views/`, with the text in `Locales/*.yaml`; it also keeps the window's place (`WindowPlacement`) and
   the language (`AppLanguage`, over `CalculatorShellViewModel.Language`) in the preferences, and binds the window's
   shortcuts through Barbatos.Wpf.Core's input system (`Shortcuts`, reaching a screen's line through
-  `CalculatorShellViewModel.LineOf`). Every application has its own view model over that session (`MatrixViewModel`,
+  `CalculatorShellViewModel.LineOf`). `CrashGuard` reports what nothing caught (`CrashReports`), saves the session and
+  says so, and saves it too whenever the window loses the focus. The keypad has the input method off, or Windows'
+  Vietnamese one swallows the digit row. Every application has its own view model over that session (`MatrixViewModel`,
   `VectorViewModel`, `StatisticsViewModel`, `DistributionViewModel`, `EquationViewModel`, `InequalityViewModel`,
   `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`), built the first time it is opened
   and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was typed through the
@@ -128,8 +134,21 @@ Things that will save time:
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
   (a net8.0-only compile error). A full run is 12 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
   = 37 assemblies.
-- **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the ten core packages.
-  Packing one project does not pack its project references.
+- **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the two published packages,
+  Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection; the other seven libraries with code travel inside
+  them (docs/ARCHITECTURE.md §10). Then `./build/Test-Packages.ps1 -PackageDirectory artifacts/packages` installs them
+  into programs outside the repository and calculates on net8.0, net9.0 and net10.0, which is the only check of what a
+  user gets: a package that leaves out an assembly packs, builds and tests cleanly. Pack into an empty folder - the
+  script refuses any package but the two.
+- **CI is Windows only** (maintainer, 23 Sep 2026: the app ships on Windows alone). The packages must stay
+  platform-neutral all the same: no Windows TFM in `src/core`, CA1416 is an error, and Architecture.Tests bans the
+  UI and GDI assemblies. Nothing measures a `double` result on another OS (docs/PRECISION.md I5).
+- **The installer** is `barbatos-pack release --profile packaging/Barbatos.Pallas.json --strict`, run from a checkout of
+  Barbatos.PackagingEngine beside this one (packaging/README.md). It needs Inno Setup 6, the Windows SDK's signtool and
+  the signing leaf in `packaging/certificates/`, which is gitignored and must stay so. The app's version is numeric
+  (the engine refuses a prerelease label for an app), so a release changes `<Version>` in the Wpf csproj and
+  `Identity.Version` in the profile together; `PackagingProfileTests` fails otherwise. Close the running app first:
+  the publish writes over files it holds.
 - **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
 
   ```bash
@@ -244,6 +263,12 @@ Things that will save time:
 - **`ArchitectureMap` is the dependency graph.** A new `ProjectReference` means updating the map *and* the diagram
   in docs/ARCHITECTURE.md §2, or the tests fail.
 - **Core `.csproj` files never set `TargetFramework(s)`;** `src/core/Directory.Build.props` owns it (tested).
+- **Two packages: Engine and DependencyInjection** (maintainer, 23 Sep 2026). Every other library ships inside the
+  one published package that references it, and has no `PackageId` or `PackageTags`. Making a third package, or
+  moving a library from one package to the other, is the maintainer's decision; `PackagingRulesTests` fails until
+  `ArchitectureMap.PublishedPackages` says so. A PackageReference in Engine would be dropped from its package without
+  a word (it suppresses its dependencies), which is why that test also fails on one. Graphing gets a package when
+  Phase 6 gives it code.
 - **No reflection-based discovery, no `InternalsVisibleTo`.** iOS needs full AOT, and test needs are met through
   public API.
 - **The core is language-neutral:** errors are `CalcErrorKind` + span, and text is localized in the app.

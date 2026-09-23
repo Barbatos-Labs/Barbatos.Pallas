@@ -3,10 +3,13 @@
 Lexer, Pratt parser and abstract syntax tree for calculator expressions, following the operator precedence of a reference scientific calculator, with implicit multiplication, precise error spans, and linear and LaTeX printers.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+>
+> **Not a package of its own.** It ships inside [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
+> which carries its assembly: reference that package to use it.
 
 Expressions are written in Canonical Linear Syntax, the calculator's LineI notation as plain Unicode text
 ([docs/LINEAR-SYNTAX.md](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/docs/LINEAR-SYNTAX.md)). The
-package reads and writes expressions; it does not evaluate them, and it keeps numbers as the text that was typed.
+library reads and writes expressions; it does not evaluate them, and it keeps numbers as the text that was typed.
 
 ## Parse
 
@@ -79,7 +82,7 @@ ExpressionParser.Parse("2beam(3,4)", SyntaxContext.Calculate, vocabulary);
 - Lexing allocates nothing.
 - Every printed tree parses back to an equivalent tree, checked with generated trees in seven application contexts.
 - Arbitrary text never makes the parser throw or hang; nesting deeper than 128 levels is reported as a Stack ERROR.
-- The package has no dependencies and uses no binary floating point.
+- The library has no dependencies and uses no binary floating point.
 
 Part of [Barbatos.Pallas](https://github.com/Barbatos-Labs/Barbatos.Pallas), a precise scientific calculation
 engine for .NET 8, 9 and 10 built on decimal, double and BigInteger.

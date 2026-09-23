@@ -36,9 +36,16 @@ public static class WpfProgram
     /// <returns>The configured host.</returns>
     public static WpfApp CreateWpfApp()
     {
+        // First, so that a fault while the host is being built is reported like any other.
+        CrashGuard.WatchOtherThreads();
+
         WpfAppBuilder builder = WpfApp.CreateBuilder();
 
         builder.ConfigureSingleInstance();
+
+        // An exception nothing else caught is reported and the session saved; the session is also saved whenever the
+        // window loses the focus, so a crash takes little with it.
+        CrashGuard.Configure(builder);
 
         // The window's own shortcuts - undo, copy, paste, the CATALOG, the settings - through the host's input
         // system; the keys of the calculator are the keypad table.

@@ -48,7 +48,7 @@ a custom number tower; the maintainer chose the built-in types instead (§12 of 
 | I2 | A decimal literal is parsed into `decimal`, never through `double`: `0.1` is exactly one tenth. | `Binder.TryParseNumber`, `ValueTests` |
 | I3 | Rounding happens only at an explicit boundary (§5), never to an intermediate result. | Code review, tests |
 | I4 | No silent loss: a value `decimal` would hold with fewer than 15 significant digits is kept as `double` (§3). | `Value.FromApproximation`, `ValueMath`, `ValueTests` |
-| I5 | `decimal` and `BigInteger` results are identical on every runtime, OS and architecture. `double` results agree to the tested accuracy (§6), not necessarily bit for bit. | CI on Windows x64, Linux x64 and Linux ARM64 |
+| I5 | `decimal` and `BigInteger` results are identical on every runtime, OS and architecture. `double` results agree to the tested accuracy (§6) on Windows x64, where they are measured; elsewhere they come from that platform's C runtime and are not measured. | `decimal` and `BigInteger` are managed code, the same on every platform; `double` by CI on Windows x64 (§6) |
 | I6 | `float`, `Half` and `MathF` appear nowhere in `src/core`; `double` and `System.Numerics.Complex` only in allow-listed assemblies (§7). | Two locks, §7 |
 | I7 | A numerical method (integration, root finding) reports an error estimate or a named failure, never a bare number it cannot stand behind. | `Calculation.Integrals`, Time Out; `AccuracyTests` |
 
@@ -207,7 +207,11 @@ removed on 17 Sep 2026 (decision log).
 - combined with the 15-digit conversion (§4), a transcendental result carries about 14-15 correct significant digits.
 
 **Cross-platform.** Different C runtimes may return results that differ in the last ulp. The accuracy tests run on
-Windows x64, Linux x64 and Linux ARM64 in CI (I5).
+Windows x64 in CI (I5). The workflow also had Linux x64 and Linux ARM64 jobs, which never ran - the repository has
+no remote yet - and the maintainer dropped them on 23 Sep 2026, because the application ships on Windows alone.
+The packages still build for any platform - net8.0,
+net9.0 and net10.0, with CA1416 an error on a Windows-only call - but a `double` result on another OS is the C
+runtime's there, and nobody measures it.
 
 ## 7. Where double may appear
 

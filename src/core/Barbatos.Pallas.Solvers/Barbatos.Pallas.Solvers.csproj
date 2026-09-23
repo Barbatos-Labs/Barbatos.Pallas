@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Solvers</PackageId>
     <RootNamespace>Barbatos.Pallas.Solvers</RootNamespace>
-    <PackageTags>polynomial;roots;aberth;sturm;rational</PackageTags>
     <Description>Polynomial algebra for Barbatos.Pallas: exact integer polynomials with the sign at a rational point, the number of real roots by Sturm, division by a rational root, and every complex root by the method of Aberth.</Description>
   </PropertyGroup>
 

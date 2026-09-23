@@ -1,8 +1,22 @@
 # Barbatos.Pallas.Engine
 
-The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify, Base-N, matrices, vectors, statistics and distributions.
+The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify, Base-N, matrices, vectors, statistics, distributions, equations, inequalities and ratios.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+
+## Installing
+
+```bash
+dotnet add package Barbatos.Pallas.Engine --prerelease
+```
+
+The package has no dependencies. It carries the libraries the engine is built on, each an assembly and a namespace of
+its own, whose public types can be used directly: `Barbatos.Pallas.Expressions` (the lexer, the parser and the linear
+and LaTeX printers), `Barbatos.Pallas.Numerics`, `Barbatos.Pallas.LinearAlgebra`, `Barbatos.Pallas.Statistics` and
+`Barbatos.Pallas.Solvers`. The reference data - CODATA constants, NIST unit conversions, CIAAW atomic weights - and the
+spreadsheet come with
+[Barbatos.Pallas.DependencyInjection](https://www.nuget.org/packages/Barbatos.Pallas.DependencyInjection), which
+depends on this package.
 
 ## One calculation
 

@@ -2,12 +2,17 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
   <!--
-    src/core: the engine packages that ship to nuget.org. Platform-neutral on purpose - the same
-    assemblies serve the WPF app and anything else that calculates: a Web API, a service, a test harness.
+    src/core: the engine libraries. Platform-neutral on purpose - the same assemblies serve the WPF app and
+    anything else that calculates: a Web API, a service, a test harness.
+
+    Two of them ship to nuget.org, Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection, and say so in
+    their own csproj (IsPackable). The others are too small to be worth a package of their own (maintainer,
+    23 Sep 2026) and travel inside the package that references them: Directory.Build.targets puts their
+    assemblies into it. Architecture.Tests holds which projects are published.
   -->
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-    <IsPackable>true</IsPackable>
+    <!-- Every library writes its XML documentation, a bundled one included: it is what IntelliSense reads. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- iOS requires full AOT, so the engine takes no reflection-based shortcuts anywhere. -->
     <IsAotCompatible>true</IsAotCompatible>
@@ -15,6 +20,14 @@
     <!-- Projects that legitimately need floating point for rendering (Graphing) set this to false in their
          csproj and document why. Everything else is banned from touching it. -->
     <PallasBanFloatingPoint Condition="'$(PallasBanFloatingPoint)' == ''">true</PallasBanFloatingPoint>
+  </PropertyGroup>
+
+  <!-- Strong naming only when a release build has written the key (from the STRONG_NAME_KEY secret), and then for
+       every library here, not only the two published ones: a signed assembly cannot reference an unsigned one
+       (CS8002), and a published assembly references the ones it carries. -->
+  <PropertyGroup Condition="Exists('$(RepositoryDirectory)src\barbatos.snk')">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(RepositoryDirectory)src\barbatos.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <!-- Items are evaluated after all properties, so a csproj override of PallasBanFloatingPoint is seen here. -->

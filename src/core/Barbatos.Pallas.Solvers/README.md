@@ -4,6 +4,9 @@ Polynomial algebra for Barbatos.Pallas: exact integer polynomials, with the sign
 roots by Sturm, division by a rational root, and every complex root by the method of Aberth.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+>
+> **Not a package of its own.** It ships inside [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
+> which carries its assembly: reference that package to use it.
 
 ## Exact where it can be, iterated where it cannot
 
@@ -42,5 +45,5 @@ Newton solver and the intervals of an inequality — are in Barbatos.Pallas.Engi
 `SolveSimultaneous`, `SolveEquation`, `SolveInequality`).
 
 Part of [Barbatos.Pallas](https://github.com/Barbatos-Labs/Barbatos.Pallas), a precise scientific calculation
-engine for .NET 8, 9 and 10 built on decimal, double and BigInteger. The precision guarantees every package upholds are
+engine for .NET 8, 9 and 10 built on decimal, double and BigInteger. The precision guarantees every library upholds are
 described in [docs/PRECISION.md](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/docs/PRECISION.md).

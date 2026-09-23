@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Graphing</PackageId>
     <RootNamespace>Barbatos.Pallas.Graphing</RootNamespace>
-    <PackageTags>graph;plot;sampling;asymptote;roots</PackageTags>
     <Description>Platform-neutral function graphing for Barbatos.Pallas: adaptive sampling, asymptote detection, and roots, extrema and intersections.</Description>
   </PropertyGroup>
 

@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.LinearAlgebra</PackageId>
     <RootNamespace>Barbatos.Pallas.LinearAlgebra</RootNamespace>
-    <PackageTags>matrix;vector;linear-algebra;determinant;decimal</PackageTags>
     <Description>Exact linear algebra of decimal matrices for Barbatos.Pallas: determinants, inverses and linear systems by fraction-free elimination on BigInteger.</Description>
   </PropertyGroup>
 

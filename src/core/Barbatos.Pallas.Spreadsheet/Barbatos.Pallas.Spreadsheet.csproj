@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Spreadsheet</PackageId>
     <RootNamespace>Barbatos.Pallas.Spreadsheet</RootNamespace>
-    <PackageTags>spreadsheet;table;cells;formula;recalculation</PackageTags>
     <Description>Spreadsheet and function-table engines for Barbatos.Pallas: cell values, relative and absolute references, dependency-ordered recalculation and circular reference detection.</Description>
   </PropertyGroup>
 

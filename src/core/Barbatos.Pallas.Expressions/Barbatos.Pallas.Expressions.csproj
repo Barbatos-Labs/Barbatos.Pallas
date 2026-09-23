@@ -1,11 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Expressions</PackageId>
     <RootNamespace>Barbatos.Pallas.Expressions</RootNamespace>
-    <PackageTags>parser;lexer;ast;expression;pratt;latex</PackageTags>
     <Description>Lexer, Pratt parser and abstract syntax tree for calculator expressions, following the operator precedence of a reference scientific calculator, with implicit multiplication, precise error spans, and linear and LaTeX printers.</Description>
   </PropertyGroup>
-
 
 </Project>

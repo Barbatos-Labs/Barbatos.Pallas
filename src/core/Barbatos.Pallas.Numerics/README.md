@@ -3,10 +3,13 @@
 The calculator math .NET does not already provide: trigonometry in degrees, radians and gradians built on System.Double and System.Math, exact integer functions on BigInteger (factorial, permutations, combinations, LCM, prime factors), fraction recognition, degrees-minutes-seconds, the error function erf, erfc and its inverse, and the Poisson probability.
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
+>
+> **Not a package of its own.** It ships inside [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
+> which carries its assembly: reference that package to use it.
 
 ## Use .NET first
 
-This package deliberately contains nothing .NET already has. Use these directly:
+This library deliberately contains nothing .NET already has. Use these directly:
 
 | Need | .NET |
 |---|---|
@@ -19,7 +22,7 @@ This package deliberately contains nothing .NET already has. Use these directly:
 | Decimal arithmetic and rounding | `decimal` operators, `Math.Round(decimal, int, MidpointRounding)` |
 | 10 significant digits for display | `value.ToString("G10", CultureInfo.InvariantCulture)` |
 
-## What this package adds
+## What this library adds
 
 ```csharp
 using System.Numerics;

@@ -25,12 +25,28 @@ internal static class ArchitectureMap
         ["Barbatos.Pallas.Spreadsheet"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.Data"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.Graphing"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Solvers"],
-        ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Solvers", "Barbatos.Pallas.Spreadsheet", "Barbatos.Pallas.Data", "Barbatos.Pallas.Graphing"],
+        ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Data", "Barbatos.Pallas.Spreadsheet"],
         ["Barbatos.Pallas.Presentation"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Spreadsheet"],
         ["Barbatos.Pallas.Wpf"] = ["Barbatos.Pallas.Presentation", "Barbatos.Pallas.DependencyInjection"],
     };
 
-    /// <summary>Projects under src/core: shipped to NuGet and platform-neutral; binary floating point only where allow-listed.</summary>
+    /// <summary>
+    /// The projects published to nuget.org (maintainer, 23 Sep 2026: only what is large and widely useful is worth a
+    /// package). Every other library travels inside the one published package that references it.
+    /// </summary>
+    public static readonly string[] PublishedPackages =
+    [
+        "Barbatos.Pallas.Engine",
+        "Barbatos.Pallas.DependencyInjection",
+    ];
+
+    /// <summary>Libraries no package carries, with the reason; one that gains code has to be given a package.</summary>
+    public static readonly IReadOnlyDictionary<string, string> NotShipped = new Dictionary<string, string>
+    {
+        ["Barbatos.Pallas.Graphing"] = "it has no code until Phase 6",
+    };
+
+    /// <summary>Projects under src/core: platform-neutral; binary floating point only where allow-listed.</summary>
     public static readonly string[] CoreProjects =
     [
         "Barbatos.Pallas.Numerics",

@@ -15,7 +15,8 @@ namespace Barbatos.Pallas.Numerics.Tests;
 /// </summary>
 /// <remarks>
 /// Pallas does not wrap System.Math; the engine calls it directly. These tests still belong here, because Pallas's
-/// accuracy claim rests on them, and CI runs them on Windows (UCRT) and Linux (glibc) on x64 and ARM64.
+/// accuracy claim rests on them. CI runs them on Windows x64 (UCRT) only: the application ships on Windows alone, and
+/// the Linux jobs were dropped with it (docs/PRECISION.md I5).
 /// </remarks>
 public sealed class MathAccuracyTests
 {

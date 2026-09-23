@@ -1,10 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.DependencyInjection</PackageId>
     <RootNamespace>Barbatos.Pallas.DependencyInjection</RootNamespace>
-    <PackageTags>dependencyinjection;di;microsoft-extensions</PackageTags>
-    <Description>Microsoft.Extensions.DependencyInjection integration for Barbatos.Pallas: AddPallas(), validated options, and registration of function, constant and unit modules.</Description>
+    <Description>Barbatos.Pallas for Microsoft.Extensions.DependencyInjection: AddPallas(), validated options, and registration of function, constant and unit modules. Carries the reference data (CODATA 2022 constants, NIST SP 811 unit conversions, CIAAW atomic weights) and the spreadsheet and number table.</Description>
+  </PropertyGroup>
+
+  <!--
+    Published, on top of the Engine package. Data and Spreadsheet are not published on their own, so they are
+    referenced with PrivateAssets="all" - no package dependency on them - and the package carries their
+    assemblies (Directory.Build.targets). Engine stays an ordinary reference: it is a package, and a dependency.
+  -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Barbatos.Pallas.DependencyInjection</PackageId>
+    <PackageTags>dependencyinjection;di;microsoft-extensions;constants;codata;units;nist;spreadsheet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Solvers\Barbatos.Pallas.Solvers.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
+    <ProjectReference Include="..\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

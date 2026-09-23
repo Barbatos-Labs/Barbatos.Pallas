@@ -1,0 +1,118 @@
+// Barbatos.Pallas - packaging profile for Barbatos.PackagingEngine (barbatos-pack).
+//
+// The one copy of the calculator's identity: the engine stamps it into the build, into the Inno Setup script and
+// its AppId, and checks the .csproj against it. JSONC - the engine skips comments and allows trailing commas, so
+// these comments are documentation that travels with the values. See packaging/README.md.
+{
+  "ProfileVersion": 1,
+
+  "Identity": {
+    // Immutable after the first release (CLAUDE.md, Identity). It names %LocalAppData%\Barbatos Labs\{AppGuid}\,
+    // where the stored session, the history, the window's place and the language live, and it is the installer's
+    // AppId. packaging/identity.lock.json records it, so a change fails validation instead of stranding every
+    // user's data.
+    "AppGuid": "{5E50D3E6-0148-428F-88C9-F824709C75C4}",
+    // The .csproj's <Product>. It is also {Slug} in the installer's file name.
+    "AppName": "Barbatos Pallas",
+    // The application's own version, numeric: the engine refuses a prerelease label here (BPE1011), so the app is
+    // 0.1.0 while the packages are 0.1.0-preview.1. barbatos-pack passes it to the build; the .csproj's <Version>
+    // says the same for a build outside it, and Wpf.Tests fails when the two differ.
+    "Version": "0.1.0",
+    "Copyright": "(c) 2026 Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors. All rights reserved."
+  },
+
+  "Publisher": {
+    // The other half of the storage path: never changes after the first release either.
+    "Name": "Barbatos Labs",
+    "Website": "https://github.com/Barbatos-Labs/Barbatos.Pallas",
+    "SupportUrl": "https://github.com/Barbatos-Labs/Barbatos.Pallas/issues"
+  },
+
+  "Build": {
+    "Project": "src/app/Barbatos.Pallas.Wpf/Barbatos.Pallas.Wpf.csproj",
+    "Configuration": "Release",
+    "RuntimeIdentifier": "win-x64",
+    // A calculator is installed by people who have no .NET runtime and should not need one.
+    "SelfContained": true,
+    // Under artifacts/, which is gitignored.
+    "OutputDirectory": "artifacts/installer/{Version}",
+    // The full moniker: the bare -windows form has no WinRT projections and restore fails with NU1201.
+    "ExpectedTargetFramework": "net10.0-windows10.0.17763.0"
+  },
+
+  "Signing": {
+    "Enabled": true,
+    "Mode": "SelfSigned",
+
+    "SelfSigned": {
+      // The leaf of the Barbatos Labs chain, the one every Barbatos app is signed with - one root for the
+      // organisation, not one per repository. packaging/certificates/ is gitignored and never committed.
+      "PfxPath": "packaging/certificates/barbatos-codesign.pfx",
+      // Never a password - only where it is: this variable in CI, else the .password.txt beside the .pfx.
+      "PasswordEnvironmentVariable": "BARBATOS_CERT_PASSWORD"
+    },
+
+    "FileDigest": "SHA256",
+    "TimestampDigest": "SHA256",
+
+    // Tried in order. An untimestamped signature dies the day the certificate expires, installed copies included.
+    "TimestampServers": [
+      "http://timestamp.digicert.com",
+      "http://timestamp.sectigo.com",
+      "http://timestamp.globalsign.com/tsa/r6advanced1"
+    ],
+
+    // First-party binaries. The .exe pattern is what makes the apphost - the file users launch and UAC names the
+    // publisher from - signed at all.
+    "Include": [ "**/Barbatos.*.dll", "**/Barbatos.*.exe" ],
+    "Exclude": [ "**/runtimes/**", "**/*.resources.dll" ],
+
+    "VerifyAfterSigning": true,
+    "WarnWhenCertificateExpiresWithinDays": 45
+  },
+
+  "Targets": {
+    "InnoSetup": {
+      "Enabled": true,
+      // Program Files, for every user of the machine. AppId comes from Identity.AppGuid - never set it here.
+      "PrivilegesRequired": "admin",
+      "SignedUninstaller": true,
+      // barbatos-pallas-v0.1.0-setup.exe.
+      "OutputBaseName": "{Slug}-v{Version}-setup",
+      "AllowUserToChooseInstallLocation": true,
+      "AllowUserToChooseStartMenuFolder": true,
+      // The application's two languages. Inno does not bundle Vietnamese: packaging/languages/Vietnamese.isl.
+      "Languages": [ "english", "vietnamese" ]
+    },
+
+    "Msix": {
+      // Off: a self-signed MSIX needs an elevated trust step on every machine, and moving a shipped app from an
+      // installer to MSIX loses its users' data.
+      "Enabled": false
+    }
+  },
+
+  "Release": {
+    "Feed": {
+      // There is no share or server yet. The pipeline does not write to the feed - it only checks that one is named -
+      // so this names the folder a release is copied to by hand until the repository has a remote.
+      "Root": "artifacts/releases/{ProfileId}",
+      "Channels": [ "stable" ],
+      "DefaultChannel": "stable",
+      "KeepPreviousVersions": 5
+    },
+
+    "Manifest": {
+      "FileName": "releases.json",
+      "EmitChecksums": true,
+      "ChecksumAlgorithm": "SHA256"
+    },
+
+    // The calculator does not look for updates yet, so nothing claims it does.
+    "UpdatePolicy": {
+      "CheckOnStartup": false,
+      "AutoDownload": false,
+      "AutoApply": false
+    }
+  }
+}

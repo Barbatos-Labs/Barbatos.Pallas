@@ -379,6 +379,10 @@ skills/.evals/results/
 # in the repository. Without this line a routine "git add -A" would commit the private key to a public repository.
 *.snk
 
+# The code-signing chain the installer is signed with: the leaf's .pfx and the password beside it (Barbatos.PackagingEngine
+# reads packaging/certificates/). Private keys and a password in plain text - never in the repository.
+packaging/certificates/
+
 # The reference calculator's user's guide is its manufacturer's copyrighted work. It is the functional reference
 # this project is built against, kept locally for reading - not redistributed. Remove this line only with permission.
 docs/*.pdf

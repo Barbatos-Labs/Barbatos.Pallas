@@ -26,7 +26,7 @@ Barbatos.Pallas/
 ├─ build/        package icon, BannedSymbols.FloatingPoint.txt
 ├─ docs/         this document, PRECISION, CALCULATOR-CATALOG, CONFORMANCE, LINEAR-SYNTAX
 ├─ src/
-│  ├─ core/      net8.0;net9.0;net10.0 · published to nuget.org · no float/Half/MathF
+│  ├─ core/      net8.0;net9.0;net10.0 · Engine and DependencyInjection on nuget.org · no float/Half/MathF
 │  │  ├─ Barbatos.Pallas.Numerics            ├─ Barbatos.Pallas.Solvers
 │  │  ├─ Barbatos.Pallas.LinearAlgebra       ├─ Barbatos.Pallas.Spreadsheet
 │  │  ├─ Barbatos.Pallas.Statistics          ├─ Barbatos.Pallas.Data
@@ -49,19 +49,20 @@ Barbatos.Pallas/
           │             └──────────────────────────────────► DependencyInjection: AddPallas()
           ▼
    Barbatos.Pallas.Presentation (CommunityToolkit.Mvvm) ──────► Engine · Spreadsheet
- src/core ────────────────────────────────────────────────────────────────────────
-                    Barbatos.Pallas.DependencyInjection  (references all below)
-                                                 ▼
-                   Spreadsheet        Graphing (→ Solvers)        Data
-                       └─────────────────────┬─────────────────────┘
-                                             ▼
-                                          Engine ────────────────────────────────┐
+ src/core ───────────────────────────────────────────────── [ ] a package on nuget.org
+    [Barbatos.Pallas.DependencyInjection] ─────────────────────────┐
+     │                 │                                           │
+     │                 ▼                                           ▼
+     │             Spreadsheet        Graphing (→ Solvers)        Data
+     │                 └─────────────────────┬─────────────────────┘
+     │                                       ▼
+     └────────────────────────────────► [Engine] ────────────────────────────────┐
             ┌──────────────────┬─────────────┼─────────────┐                     │
             ▼                  ▼             ▼             ▼                     │
-       Expressions       LinearAlgebra   Statistics     Solvers                   │
-    (no dependencies)          └──────────────┴─────────┐ (no dependencies)       │
-                                                        ▼                         │
-                                                    Numerics ◄────────────────────┘
+       Expressions       LinearAlgebra   Statistics     Solvers                  │
+    (no dependencies)          └──────────────┴─────────┐ (no dependencies)      │
+                                                        ▼                        │
+                                                    Numerics ◄───────────────────┘
                                                 (no dependencies)
 ```
 
@@ -70,7 +71,10 @@ Barbatos.Pallas/
 - a `.csproj` references anything other than what the map declares;
 - the map contains a cycle;
 - a compiled assembly references a Pallas assembly outside its transitive dependencies, or a UI/GDI framework
-  assembly.
+  assembly;
+- a project other than the two in brackets is a package, or a library ships in no package or in two
+  (`PackagingRulesTests`: Engine carries the five libraries below it, DependencyInjection carries Spreadsheet and
+  Data and depends on Engine).
 
 Change the map and this diagram together.
 
@@ -335,7 +339,18 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
     `CalculatorShellViewModel.Language` holds the choice (Windows' own, English or Tiếng Việt), `AppLanguage` keeps
     it in the preferences and switches the localizer as it changes, and Reset leaves it alone. Each language is named
     in itself on the settings screen, so it can be found by someone who cannot read the other.
-  - Installer through Barbatos.PackagingEngine.
+  - **The installer** comes from Barbatos.PackagingEngine (`barbatos-pack`) and `packaging/Barbatos.Pallas.json`:
+    a self-contained win-x64 build, the Barbatos binaries signed and timestamped with the Barbatos Labs chain, an
+    Inno Setup installer in English and Vietnamese under the immutable AppId, itself signed. The app's version is
+    numeric and its own (0.1.0), the csproj names the uninstall key Inno registers (`{AppId}_is1`), and
+    `PackagingProfileTests` keeps the csproj and the profile in step. The icon is the Pallas mark without its word,
+    drawn at every size by `build/New-AppIcon.ps1`.
+  - **What nothing caught** (`CrashGuard`, `CrashReports`): an exception on the window's thread is written to a
+    report under the app's data folder, the session is saved, the user is told in their language where the report
+    is, and the calculator carries on - until the same run faults a third time. One on another thread is only
+    reported: saving from there could write a torn session over a good one. The session is saved whenever the
+    window loses the focus and when Windows ends the session, so a crash takes what was typed since the user last
+    looked away, not the whole run.
 
 ## 9. Performance
 
@@ -381,10 +396,22 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
   - MIT file header (IDE0073 is an error).
   - XML docs on every public member.
 - **Packages.**
-  - `Barbatos.Pallas.*`, version `0.1.0-preview.1`, MIT license expression, per-package README, icon.
+  - Two: `Barbatos.Pallas.Engine` and `Barbatos.Pallas.DependencyInjection`, version `0.1.0-preview.1`, MIT license
+    expression, per-package README, icon. Each csproj says it is one (`IsPackable`, `PackageId`); no other project
+    has package metadata, and `PackagingRulesTests` keeps it so.
+  - The other libraries travel inside the package that references them (root `Directory.Build.targets`: their
+    assemblies and XML documentation into `lib/`, their symbols into the `.snupkg`). Engine carries all five of its
+    references and has no dependencies at all (`SuppressDependenciesWhenPacking`); DependencyInjection carries Data
+    and Spreadsheet, referenced with `PrivateAssets="all"`, and depends on Engine and two Microsoft.Extensions
+    packages.
+  - `build/Test-Packages.ps1` installs what came out of the pack into two programs outside the repository and
+    calculates with them on every runtime; CI runs it after the pack.
   - snupkg symbols.
   - SourceLink in CI/release builds only.
-  - Strong naming when the release workflow writes `src/barbatos.snk` from the `STRONG_NAME_KEY` secret.
+  - Strong naming of every core library when the release workflow writes `src/barbatos.snk` from the
+    `STRONG_NAME_KEY` secret - all of them, because a signed assembly cannot reference an unsigned one.
+- **CI.** One job, on `windows-latest`: build, the 37 test assemblies, the mutation gates, the pack and the package
+  test. The application ships on Windows alone, so there is no Linux job (PRECISION.md I5).
 - **Tests.**
   - xunit.v3 on Microsoft.Testing.Platform (`global.json`); AwesomeAssertions.
   - Run on net8.0, net9.0 and net10.0.
@@ -398,7 +425,7 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | **2 Expressions** ✅ | Lexer, Pratt parser, syntax tree, diagnostics with spans, vocabulary, linear and LaTeX printers; Canonical Linear Syntax final (docs/LINEAR-SYNTAX.md) | Every conformance input parses in its application; print-and-reparse property in 7 application contexts; fuzzing never throws or hangs; lexing allocates nothing; every branch covered but one documented; mutation score ≥ 90% |
 | **3 Engine** ✅ | Binder, plugins, RPN evaluator, exact display forms, formatter, memory and sessions, calculus, Verify, Base-N, Complex, the CODATA/NIST/CIAAW data sets and `AddPallas()` | The 111 Calculate, Complex and Base-N conformance cases pass; evaluation of any generated tree ends in a value or a named error within its budget; integrals agree with 50-digit references; mutation score ≥ 90% |
 | **4 Domain apps** ✅ (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4 Equation, Inequality and Ratio, M5 Spreadsheet and Table, M6 hardening) | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Met: every conformance case of those applications passes (only the four Math Box cases are skipped, for Phase 6); the normal distribution, the Poisson probability and the polynomial roots agree with 50-digit PeterO.Numbers references; every package with code is above the 90% mutation gate |
-| 5 WPF (in progress: **M1 shell ✅**, **M2 keypad and math input ✅**, **M3 Calculate ✅**, **M4 the other screens ✅**, M4.5 the calculator's face - **a layout and look ✅**, **b a keypad per application ✅**, **c CATALOG, FORMAT, RCL and STO ✅** -, **M5 persistence and shortcuts ✅**, M6 hardening and installer) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
+| 5 WPF (in progress: **M1 shell ✅**, **M2 keypad and math input ✅**, **M3 Calculate ✅**, **M4 the other screens ✅**, M4.5 the calculator's face - **a layout and look ✅**, **b a keypad per application ✅**, **c CATALOG, FORMAT, RCL and STO ✅** -, **M5 persistence and shortcuts ✅**, M6 hardening and installer - the installer built, signed and verified, the installed app still to be walked) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
 | 6 Graph and Math Box | Graphing; Dice, Coin, Number Line, Circle | Math Box conformance cases pass |
 | 7 Hardening | Benchmarks and gates, API docs, public API tracking, publish pipeline, installer | 0.x preview on nuget.org |
 
@@ -487,3 +514,7 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | 23 Sep 2026 | **The window's place and the language are the host's, not the session's.** Where the window was, whether it was maximized and which language the application speaks are about this computer, not the calculator, so they are preferences of the host (`WindowPlacement`, `AppLanguage`) beside the session and not fields of it; Reset leaves them alone. A place is used only while the whole height of the title bar and 120 pixels of its width are on the virtual screen - a monitor that has been unplugged would otherwise open the calculator where nobody can reach it. The language is Windows' own, English or Tiếng Việt, applied at once through Barbatos.i18n's culture switch; "Windows' own" is the culture the application started in, read before a stored choice is applied. Measured: moved to 150,60 at 520×900, closed and reopened there; maximized, reopened maximized, and restored to 150,60; Tiếng Việt chosen, every label changed at once, and it was still Tiếng Việt after a restart. |
 | 23 Sep 2026 | **The keypad turns the input method off.** Walking M5 on the maintainer's machine, digits typed on the keyboard never reached the line while + did: Windows' Vietnamese input method takes keys of the digit row, and WPF reports such a key as `Key.ImeProcessed`, which `KeyboardMap` has no entry for. This had been so since M2 wherever that input method is on. The keypad is not a text field, so `InputMethod.IsInputMethodEnabled` is off on it, and a key an input method still processes is read as `ImeProcessedKey`; text boxes keep the input method, where Vietnamese is typed. |
 | 23 Sep 2026 | **M5 measured.** 37 assemblies, 9890 tests, none failing (the 12 skipped are Math Box's four cases on three runtimes); mutation score of Presentation 92.5%. Walked in the application: the history, the window's place and the language came back after a restart, and every shortcut did what its entry above says. |
+| 23 Sep 2026 | **Phase 5 M6: the application ships on Windows alone, so CI runs on Windows alone** (maintainer). The workflow's Linux x64 and ARM64 job is gone; it never ran, because the repository has no remote yet. The packages stay platform-neutral - net8.0, net9.0 and net10.0, CA1416 an error on a Windows-only call (checked on a probe that called `Console.Beep`), no UI or GDI assembly (Architecture.Tests) - but they are run on Windows only. PRECISION.md I5 says what that leaves: `decimal` and `BigInteger` are managed code and the same everywhere; a `double` result on another OS comes from its C runtime and is not measured. |
+| 23 Sep 2026 | **Two packages, not ten** (maintainer: only what is large and widely useful is worth publishing). Measured: Engine is 83 files and 10,100 lines; DependencyInjection is small but is the entry point; Solvers, Statistics, LinearAlgebra and Data are 330 to 440 lines each, Numerics 770, Spreadsheet 750, Expressions 3,200 and useless without an evaluator, Graphing empty. Published: **Barbatos.Pallas.Engine**, which carries Expressions, Numerics, LinearAlgebra, Statistics and Solvers and has no dependencies, and **Barbatos.Pallas.DependencyInjection**, which depends on Engine and carries Data and Spreadsheet. NuGet makes every project reference a package dependency, published or not (NuGet/Home#3891), so a carried library has to be kept out of the dependencies and put into `lib/` by hand. `PrivateAssets="all"` does the first for DependencyInjection; on Engine it also hid the carried assemblies from every project of the repository that reaches them through Engine (Presentation lost `SyntaxVocabulary`), so Engine suppresses its dependencies instead, which is right only while it has none - `PackagingRulesTests` fails the day it gains one. The carried libraries keep their assemblies, namespaces and READMEs, and their public types are still there for a user. DependencyInjection stopped referencing Solvers and Graphing, which it never used: Solvers comes with Engine, and Graphing has no code until Phase 6. Strong naming moved from the published projects to every core library, or a signed Engine could not reference an unsigned Numerics. `build/Test-Packages.ps1` installs both packages into programs outside the repository and calculates on net8.0, net9.0 and net10.0; packed once without the bundling, it failed as it should - the Engine program did not compile without `Barbatos.Pallas.Expressions`. |
+| 23 Sep 2026 | **The installer, through Barbatos.PackagingEngine.** `packaging/Barbatos.Pallas.json` is the one profile; `barbatos-pack release` validates it, publishes the app self-contained for win-x64 (a calculator is installed by people with no .NET runtime), signs the 18 Barbatos binaries with a timestamp, verifies them and compiles a signed Inno Setup installer in English and Vietnamese, installed machine-wide under `{5E50D3E6-0148-428F-88C9-F824709C75C4}`, which the ledger `packaging/identity.lock.json` now pins. Signed with the Barbatos Labs chain every Barbatos app uses and this machine already trusts, copied from Barbatos.RMCP's `packaging/certificates` - the leaf and its password only, never the CA's key, and the folder gitignored before anything went into it. The engine refuses a prerelease version for an application (BPE1011), so the app is 0.1.0 of its own while the packages stay 0.1.0-preview.1; the csproj says the same number, and `PackagingProfileTests` fails when it, the AppId, the uninstall key `{AppId}_is1` or the product drift from the profile - checks `barbatos-pack validate` also makes, but CI cannot install that tool. The release feed is a folder until there is a share: the pipeline only checks one is named. The app had no icon, so the window, the taskbar and the shortcuts showed .NET's; it is the Pallas mark without its word, drawn at nine sizes from `build/nuget.svg`. Measured: the installer and the binaries report 0.1.0 and a valid, timestamped Barbatos Labs signature; the generated script has the AppId, both languages and the Program Files path. Not yet measured: the installation itself, which asks for elevation and is the maintainer's to run. |
+| 24 Sep 2026 | **An exception nothing caught no longer takes the session with it.** WPF's default ends the process on the spot, and the session was written only on a normal exit. `CrashGuard` writes a report (`CrashReports`: the version, the system and the exception with its stack, the newest 20 kept, nothing sent anywhere), saves the session, tells the user in their language where the report is and carries on; a third fault in one run ends it. A fault on another thread only writes a report, because saving from there could put a torn session over a good one. The session is now also saved whenever the window loses the focus and when Windows ends the session. Measured: 7×6 = 42 typed, the window minimized, the process killed without an exit, and 42 was in the history of the next start. The message's `{0}` survives Barbatos.i18n's YAML reader in both languages, through the localizer the app builds (`CrashReportsTests`); the dialog itself has not been seen, since nothing in the app can be made to throw on purpose. |

@@ -23,6 +23,9 @@ settings.back: Quay lại
 settings.reset: Đặt lại như ban đầu
 settings.language: Ngôn ngữ
 
+crash.title: Barbatos Pallas
+crash.message: Máy tính vừa gặp lỗi. Phiên làm việc đã được lưu, có thể dùng tiếp như bình thường. Báo cáo lỗi được ghi tại {0}
+
 setting.inputOutput: Nhập và xuất
 setting.angleUnit: Đơn vị góc
 setting.numberFormat: Dạng số

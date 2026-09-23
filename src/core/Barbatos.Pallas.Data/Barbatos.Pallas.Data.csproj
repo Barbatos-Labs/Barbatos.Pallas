@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Data</PackageId>
     <RootNamespace>Barbatos.Pallas.Data</RootNamespace>
-    <PackageTags>constants;codata;units;nist;periodic-table;iupac</PackageTags>
     <Description>Reference data for Barbatos.Pallas: CODATA physical constants, NIST SP 811 unit conversions with exact factors, and IUPAC standard atomic weights.</Description>
   </PropertyGroup>
 

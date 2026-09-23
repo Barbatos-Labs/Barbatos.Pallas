@@ -10,6 +10,9 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Barbatos.Pallas.Wpf</RootNamespace>
     <AssemblyName>Barbatos.Pallas</AssemblyName>
+    <!-- The Pallas mark without its word, drawn by build/New-AppIcon.ps1 from build/nuget.svg. It is what the window,
+         the taskbar, the shortcuts and Add or Remove Programs show; without it they all showed .NET's default. -->
+    <ApplicationIcon>Assets\Pallas.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,11 +21,23 @@
          first release, or every user's settings and history are stranded. -->
     <Product>Barbatos Pallas</Product>
     <Company>Barbatos Labs</Company>
+    <!-- The application's version, which is the installer's: numeric, because Barbatos.PackagingEngine refuses a
+         prerelease label for an app (BPE1011), while the packages carry the repository's 0.1.0-preview.1.
+         packaging/Barbatos.Pallas.json names the same number and barbatos-pack passes it to the build; this line is
+         what makes a build outside it agree. AssemblyVersion and FileVersion follow Version. -->
+    <Version>0.1.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Immutable after the first release. Barbatos.PackagingEngine's identity ledger will pin it. -->
+    <!-- Immutable after the first release; packaging/Barbatos.Pallas.json holds the same value, and
+         packaging/identity.lock.json pins it. -->
     <AssemblyMetadata Include="Barbatos.Wpf.ApplicationModel.AppInfo.AppId" Value="{5E50D3E6-0148-428F-88C9-F824709C75C4}" />
+    <!-- The key the installer registers under. Inno Setup always appends _is1 and Barbatos.Wpf.Core reads the name as
+         written, so without the suffix AppInfo.InstallDate and InstallLocation are null on every installed machine.
+         It stays out of AppId, which is also the name of the user-data folder. -->
+    <AssemblyMetadata Include="Barbatos.Wpf.ApplicationModel.AppInfo.UninstallRegistryKey" Value="{5E50D3E6-0148-428F-88C9-F824709C75C4}_is1" />
     <AssemblyMetadata Include="Barbatos.Wpf.ApplicationModel.PublisherInfo.Website" Value="https://github.com/Barbatos-Labs/Barbatos.Pallas" />
   </ItemGroup>
 

@@ -10,7 +10,7 @@
     <PackageTags Condition="'$(PackageTags)' == ''">$(CommonTags)</PackageTags>
   </PropertyGroup>
 
-  <!-- Everything below applies only to projects that ship to NuGet (src/core). -->
+  <!-- Everything below applies only to the projects that ship to NuGet: Engine and DependencyInjection. -->
   <PropertyGroup Condition="'$(IsPackable)' == 'true'">
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeSymbols>true</IncludeSymbols>
@@ -26,17 +26,42 @@
     <None Include="$(MSBuildProjectDirectory)\README.md" Pack="true" PackagePath="\README.md" />
   </ItemGroup>
 
+  <!--
+    A published package carries the assemblies of the unpublished projects it references, so that what it shows
+    its users is there: Engine every project it references (it suppresses every dependency), DependencyInjection
+    the ones it references with PrivateAssets="all". Their XML documentation goes into lib/ beside them, for
+    IntelliSense, and their symbols into the .snupkg. NuGet has no switch for this (NuGet/Home#3891), so these are
+    its two documented extension points.
+  -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);PallasPackBundledAssemblies</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificDebugSymbolsInPackage>$(TargetsForTfmSpecificDebugSymbolsInPackage);PallasPackBundledSymbols</TargetsForTfmSpecificDebugSymbolsInPackage>
+  </PropertyGroup>
+
+  <Target Name="PallasResolveBundledAssemblies" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <_PallasBundled Include="@(ReferenceCopyLocalPaths)"
+                      Condition="'%(ReferenceCopyLocalPaths.ReferenceSourceTarget)' == 'ProjectReference' AND ('$(SuppressDependenciesWhenPacking)' == 'true' OR '%(ReferenceCopyLocalPaths.PrivateAssets)' == 'All')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PallasPackBundledAssemblies" DependsOnTargets="PallasResolveBundledAssemblies">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(_PallasBundled)" Condition="'%(Extension)' == '.dll' OR '%(Extension)' == '.xml'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PallasPackBundledSymbols" DependsOnTargets="PallasResolveBundledAssemblies">
+    <ItemGroup>
+      <TfmSpecificDebugSymbolsFile Include="@(_PallasBundled)" Condition="'%(Extension)' == '.pdb'" TargetPath="%(Filename)%(Extension)" TargetFramework="$(TargetFramework)" />
+    </ItemGroup>
+  </Target>
+
   <!-- SourceLink only where it can work: CI and release builds (-p:SourceLinkEnabled=true). A local clone
        without a remote or a commit would otherwise print three warnings per project per framework. -->
   <ItemGroup Condition="'$(IsPackable)' == 'true' AND ('$(SourceLinkEnabled)' == 'true' OR '$(ContinuousIntegrationBuild)' == 'true')">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
   </ItemGroup>
-
-  <!-- Strong naming only when the release workflow has written the key (from the STRONG_NAME_KEY secret). -->
-  <PropertyGroup Condition="'$(IsPackable)' == 'true' AND Exists('$(RepositoryDirectory)src\barbatos.snk')">
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(RepositoryDirectory)src\barbatos.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
 
   <Target Name="AddCommitHashToAssemblyAttributes" BeforeTargets="GetAssemblyAttributes">
     <ItemGroup>

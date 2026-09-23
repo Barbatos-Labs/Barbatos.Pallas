@@ -18,7 +18,8 @@ permissions:
 jobs:
   windows:
     name: Build, test and pack (Windows, x64)
-    # The WPF application only builds on Windows; everything else is covered on Linux and ARM64 below.
+    # The only job: the application ships on Windows alone (maintainer, 23 Sep 2026). The packages stay platform-neutral -
+    # net8.0, net9.0 and net10.0 with no Windows API (CA1416 and Architecture.Tests) - but are only run here.
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,8 +105,16 @@ jobs:
           path: StrykerOutput/*/reports/*
           if-no-files-found: ignore
 
-      - name: Pack core packages
+      # Packing is by solution: IsPackable decides what comes out, and only Engine and DependencyInjection set it.
+      - name: Pack the published packages
         run: dotnet pack Barbatos.Pallas.slnx --configuration Release --no-build --output artifacts/packages
+
+      # A package can pack cleanly and still be unusable - an assembly it should carry left out, a type that does not
+      # load. Two programs outside the repository install the packages from artifacts/packages and calculate with them
+      # on net8.0, net9.0 and net10.0; the script also fails if any other package came out of the pack.
+      - name: Test the packages as a user installs them
+        shell: pwsh
+        run: ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages
 
       - name: Upload test results
         if: always()
@@ -120,64 +129,3 @@ jobs:
           name: nuget-packages
           path: artifacts/packages/*
           if-no-files-found: error
-
-  portable:
-    name: Test (${{ matrix.os }})
-    # Invariant I5 (docs/PRECISION.md): results must agree on every OS and architecture. System.Math calls the platform C
-    # runtime (UCRT on Windows, glibc on Linux), so the Numerics accuracy tests matter most here. Every test project
-    # except the WPF host runs.
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET SDKs
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-            9.0.x
-            10.0.x
-
-      - name: Architecture tests
-        run: dotnet test --project tests/Barbatos.Pallas.Architecture.Tests --configuration Release
-
-      - name: Conformance tests
-        run: dotnet test --project tests/Barbatos.Pallas.Conformance.Tests --configuration Release
-
-      - name: Numerics tests
-        run: dotnet test --project tests/Barbatos.Pallas.Numerics.Tests --configuration Release
-
-      - name: Expressions tests
-        run: dotnet test --project tests/Barbatos.Pallas.Expressions.Tests --configuration Release
-
-      - name: Engine tests
-        run: dotnet test --project tests/Barbatos.Pallas.Engine.Tests --configuration Release
-
-      - name: LinearAlgebra tests
-        run: dotnet test --project tests/Barbatos.Pallas.LinearAlgebra.Tests --configuration Release
-
-      - name: Statistics tests
-        run: dotnet test --project tests/Barbatos.Pallas.Statistics.Tests --configuration Release
-
-      - name: Solvers tests
-        run: dotnet test --project tests/Barbatos.Pallas.Solvers.Tests --configuration Release
-
-      - name: Spreadsheet tests
-        run: dotnet test --project tests/Barbatos.Pallas.Spreadsheet.Tests --configuration Release
-
-      - name: Data tests
-        run: dotnet test --project tests/Barbatos.Pallas.Data.Tests --configuration Release
-
-      - name: Dependency injection tests
-        run: dotnet test --project tests/Barbatos.Pallas.DependencyInjection.Tests --configuration Release
-
-      - name: Presentation tests
-        run: dotnet test --project tests/Barbatos.Pallas.Presentation.Tests --configuration Release
-
-      # Draws every formula the printers emit with WpfMath, the renderer of the app: Windows only, one framework.
-      - name: Wpf tests
-        run: dotnet test --project tests/Barbatos.Pallas.Wpf.Tests --configuration Release

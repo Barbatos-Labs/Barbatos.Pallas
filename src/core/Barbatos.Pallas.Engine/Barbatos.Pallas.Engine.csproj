@@ -1,10 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Barbatos.Pallas.Engine</PackageId>
     <RootNamespace>Barbatos.Pallas.Engine</RootNamespace>
-    <PackageTags>evaluator;engine;calculator;formatting;calculus;plugin</PackageTags>
-    <Description>The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify, Base-N, matrices, vectors, statistics and distributions.</Description>
+    <Description>The Barbatos.Pallas calculation engine: binding, a function and constant plugin registry, compiled evaluation, calculator memory and sessions, result formatting, calculus, Verify, Base-N, matrices, vectors, statistics, distributions, equations, inequalities and ratios. Carries the parser and printers (Barbatos.Pallas.Expressions) and the mathematics it is built on (Numerics, LinearAlgebra, Statistics, Solvers).</Description>
+  </PropertyGroup>
+
+  <!--
+    Published. Everything it references is a project of this repository that is not published on its own, so the
+    package carries their assemblies (Directory.Build.targets) and has no dependencies at all: the engine needs
+    nothing outside .NET. SuppressDependenciesWhenPacking drops every dependency from the package, which is right
+    only while that stays true - Architecture.Tests fails if a PackageReference or a published project appears here.
+    PrivateAssets would drop them one by one instead, but it also hides these assemblies from every project in the
+    repository that reaches them through Engine (measured 23 Sep 2026: Presentation lost SyntaxVocabulary).
+  -->
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Barbatos.Pallas.Engine</PackageId>
+    <PackageTags>evaluator;engine;calculator;parser;latex;formatting;calculus;matrix;statistics;polynomial;plugin</PackageTags>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- NU5128: lib/ has net8.0, net9.0 and net10.0 and the nuspec no dependency group for them. That is what a package
+         with no dependencies looks like once they are suppressed; NuGet resolves lib/<framework> without a group. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

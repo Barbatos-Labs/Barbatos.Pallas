@@ -4,6 +4,19 @@ Microsoft.Extensions.DependencyInjection integration for Barbatos.Pallas: AddPal
 
 > **Status: preview.** The API below is tested on .NET 8, 9 and 10 but may still change before the first release.
 
+## Installing
+
+```bash
+dotnet add package Barbatos.Pallas.DependencyInjection --prerelease
+```
+
+It depends on [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
+`Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Options`, and it carries two
+libraries of its own, each an assembly and a namespace whose public types can be used directly:
+`Barbatos.Pallas.Data` (the reference data below) and `Barbatos.Pallas.Spreadsheet` (the Spreadsheet and Table
+applications). A program without a container can take this package for the data alone and add it to
+`PallasEngineBuilder` itself.
+
 ## One call
 
 ```csharp
