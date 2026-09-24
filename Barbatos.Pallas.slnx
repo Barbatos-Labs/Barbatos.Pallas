@@ -54,4 +54,8 @@
     <Project Path="tests/Barbatos.Pallas.Presentation.Tests/Barbatos.Pallas.Presentation.Tests.csproj" />
     <Project Path="tests/Barbatos.Pallas.Wpf.Tests/Barbatos.Pallas.Wpf.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <File Path="benchmarks/Directory.Build.props" />
+    <Project Path="benchmarks/Barbatos.Pallas.Benchmarks/Barbatos.Pallas.Benchmarks.csproj" />
+  </Folder>
 </Solution>

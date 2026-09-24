@@ -49,10 +49,16 @@ jobs:
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
-          $expected = 37   # 12 test projects x 3 target frameworks, plus Wpf.Tests on Windows only
+          $expected = 40   # 13 test projects x 3 target frameworks, plus Wpf.Tests on Windows only
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
+
+      # Roadmap gate: the performance targets of docs/ARCHITECTURE.md §9. Every benchmark runs a fixed number of
+      # iterations on the Release build above and fails the step when its 99th percentile is beyond its target by more
+      # than the margin a shared runner needs (Gate.Margin); the table goes to the run's summary.
+      - name: Benchmarks against their targets
+        run: dotnet run --project benchmarks/Barbatos.Pallas.Benchmarks --configuration Release --no-build -- --gate
 
       # Roadmap gate: a mutation score of at least 90% per package. Each stryker-config.json sets break = 90, so a lower
       # score fails the step. Stryker builds its own Debug output and does not touch the Release build packed below.
@@ -109,9 +115,12 @@ jobs:
           path: StrykerOutput/*/reports/*
           if-no-files-found: ignore
 
-      # Packing is by solution: IsPackable decides what comes out, and only Engine and DependencyInjection set it.
+      # Packing is by solution: IsPackable decides what comes out, and only Engine and DependencyInjection set it. It is
+      # not --no-build: a package finds the libraries it carries by resolving its references, which builds them - up to
+      # date after the Release build above, so nothing compiles again - and a --no-build pack fails them with NETSDK1085.
+      # Telling it not to build them loses their XML documentation and symbols from the packages (measured 25 Sep 2026).
       - name: Pack the published packages
-        run: dotnet pack Barbatos.Pallas.slnx --configuration Release --no-build --output artifacts/packages
+        run: dotnet pack Barbatos.Pallas.slnx --configuration Release --output artifacts/packages
 
       # A package can pack cleanly and still be unusable - an assembly it should carry left out, a type that does not
       # load. Two programs outside the repository install the packages from artifacts/packages and calculate with them

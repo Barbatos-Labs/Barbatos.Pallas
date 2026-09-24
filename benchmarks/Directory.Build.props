@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    Benchmarks measure the engine as the application runs it, on the application's runtime. They are programs, not
+    tests: `dotnet run -c Release` runs them, and the gate option makes the run fail when a benchmark misses its target
+    (docs/ARCHITECTURE.md §9). BenchmarkDotNet needs an optimized build, so they are always run in Release.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

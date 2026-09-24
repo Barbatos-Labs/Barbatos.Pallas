@@ -33,6 +33,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
 | `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, the graph of the Table screen fitted to its rows, zoomed and read at the pointer, worked out off the thread with a superseded result never shown (`TableGraphViewModelTests`, under `OneThread`), every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
 | `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool and the graph of a table laid out and drawn (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
+| `benchmarks/Barbatos.Pallas.Benchmarks` | BenchmarkDotNet, net10.0, in process: keypad expressions, the Table application at its largest, a graph of 2,000 columns and its named points, and every other application at its slowest, each with its target (`[Target]`); `--gate` fails one whose p99 is beyond its target × `Gate.Margin` |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -55,8 +56,8 @@ be walked). Phase 4 is complete.
 
 **Phase 7 - Hardening and 1.0.0 - in progress** (plan approved 24 Sep 2026): M1 the public API frozen and tracked ✅
 (`PublicAPI.*.txt` per core library), M2 `API-REFERENCE.md` per package, hand-written and checked complete by a
-test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate, M4 calculations off the
-window's thread, M5 the release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with
+test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate ✅ (every benchmark six
+times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread, M5 the release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with
 Barbatos.i18n and Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the
 maintainer.
 
@@ -165,7 +166,21 @@ Things that will save time:
   them (docs/ARCHITECTURE.md §10). Then `./build/Test-Packages.ps1 -PackageDirectory artifacts/packages` installs them
   into programs outside the repository and calculates on net8.0, net9.0 and net10.0, which is the only check of what a
   user gets: a package that leaves out an assembly packs, builds and tests cleanly. Pack into an empty folder - the
-  script refuses any package but the two.
+  script refuses any package but the two. Never pack with `--no-build`: a package finds what it carries by resolving
+  its references, which builds them, so `--no-build` fails with NETSDK1085, and switching that build off drops the
+  carried libraries' XML documentation and symbols (25 Sep 2026).
+- **Benchmarks** run in Release, in process (a project BenchmarkDotNet generated inside the repository would be built
+  with its analyzers). The gate, as CI runs it after the tests:
+
+  ```bash
+  dotnet run --project benchmarks/Barbatos.Pallas.Benchmarks -c Release -- --gate
+  ```
+
+  Arguments after `--gate` select benchmarks as BenchmarkDotNet's do (`--filter *Graph*`); without `--gate` they
+  run BenchmarkDotNet's own way, for a closer look. A benchmark checks in its setup that its input calculates, so a
+  benchmark never measures an error. A new benchmark needs a `[Target]`, or the gate fails it; a target is the
+  application's (docs/ARCHITECTURE.md §9), never the last measurement, and parallelism or SIMD is added only where a
+  measurement misses one (maintainer, 24 Sep 2026).
 - **CI is Windows only** (maintainer, 23 Sep 2026: the app ships on Windows alone). The packages must stay
   platform-neutral all the same: no Windows TFM in `src/core`, CA1416 is an error, and Architecture.Tests bans the
   UI and GDI assemblies. Nothing measures a `double` result on another OS (docs/PRECISION.md I5).

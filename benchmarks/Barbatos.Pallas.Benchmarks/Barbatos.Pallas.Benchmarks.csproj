@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The performance targets of docs/ARCHITECTURE.md §9, measured with BenchmarkDotNet: a keypad expression, a table,
+    a graph, and the other applications at their largest. Each benchmark carries its target ([Target]); the gate run
+    fails one that misses it by more than the margin a shared machine needs.
+  -->
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The engine and what the DependencyInjection package carries: the data, the sheet and the graphs. Referenced one
+         by one, because DependencyInjection keeps them to itself (PrivateAssets="all"). -->
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Data\Barbatos.Pallas.Data.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
+  </ItemGroup>
+
+</Project>

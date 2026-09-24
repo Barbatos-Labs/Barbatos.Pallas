@@ -23,6 +23,7 @@ Precision rules live in [PRECISION.md](PRECISION.md); the functional reference i
 ```
 Barbatos.Pallas/
 ├─ Barbatos.Pallas.slnx · Directory.Build.props/.targets · Directory.Packages.props · global.json
+├─ benchmarks/   Barbatos.Pallas.Benchmarks: net10.0 · BenchmarkDotNet · the targets of §9 and their gate
 ├─ build/        package icon, BannedSymbols.FloatingPoint.txt
 ├─ docs/         this document, PRECISION, CALCULATOR-CATALOG, CONFORMANCE, LINEAR-SYNTAX
 ├─ src/
@@ -389,18 +390,50 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
    runtime-optimized arithmetic. `BigInteger` appears only in integer functions such as `69!`.
 3. **Compile once, evaluate many.** RPN bytecode for Table, Graph, Σ/Π, integration nodes, Solver iterations and
    Spreadsheet.
-4. **Task-level parallelism.** Table rows, graph samples, spreadsheet dependency levels, large matrix products and
-   large data sets. Values are immutable, so no locks; results merge in a fixed order, preserving determinism.
-5. **SIMD where the values are `double`.** `Vector<double>` can sample graphs in batches (Graphing). `decimal` has no
-   SIMD support, so `decimal` arithmetic stays scalar.
+4. **Task-level parallelism, where a measurement asks for it - and none has.** Table rows, graph samples,
+   spreadsheet dependency levels, large matrix products and large data sets could be split across cores: values are
+   immutable, so no locks would be needed, and results would merge in a fixed order, preserving determinism. It is
+   added only where a benchmark misses its target (Phase 7 plan, decision 3), and on 24 Sep 2026 every benchmark is
+   within its target on one thread by a factor of six or more (item 7). What a slow input costs the window - a table
+   of thirteen integrals took 1.9 s - is answered by moving the work off the window's thread (Phase 7 M4), not by
+   splitting it.
+5. **SIMD, likewise not needed.** `Vector<double>` could sample graphs in batches, but a column of a graph is the
+   engine's calculation at that x - `Value` operations under the precision rule - not a `double` formula a vector
+   register could run, and 2,000 columns take under 3 ms. `decimal` has no SIMD support, so `decimal` arithmetic
+   stays scalar.
 6. **Constants come from .NET.** `double.Pi`, `double.E` and `double.Tau` are compile-time constants; nothing is
    computed or cached at run time.
-7. **Measured, not assumed.** BenchmarkDotNet with committed baselines and a CI regression gate (Phase 7). Initial
-   targets, to be adjusted against measurements:
-   - typical keypad expression: p99 below 1 ms;
-   - 45-row, two-function table: below 20 ms;
-   - 2,000 graph samples: below 16 ms per frame. Measured on 24 Sep 2026 (one thread, Release, 2,000 columns with
-     their refinement): 2.3 to 10.9 ms, the normal density at 10.3 ms once its √(2π) is calculated once.
+7. **Measured, not assumed.** `benchmarks/Barbatos.Pallas.Benchmarks` measures each target with BenchmarkDotNet,
+   in process, and CI runs it as a gate (Phase 7 M3): a benchmark fails when the 99th percentile of its iterations
+   is beyond its target by more than half again (`Gate.Margin`). There is no committed baseline, because a hosted
+   runner's timings move from one run to the next (Phase 7 plan, decision 2); a target is what the application needs,
+   not the last measurement. The targets:
+   - a keypad expression, read, calculated, displayed and stored in Ans and the history: 1 ms;
+   - a table at its largest - 45 rows of f(x), or 30 of f(x) and g(x) (pp. 108-113): 20 ms;
+   - 2,000 graph samples: 16 ms, a frame at 60 Hz;
+   - anything else one action of the window asks for, which §9 had named no target for - the roots and extrema of a
+     graph, and each other application at its largest or its slowest form: a frame, 16 ms.
+
+   Measured on 25 Sep 2026: Release, net10.0, one thread, an Intel Core i5-14400F, p99 of 20 iterations after 3
+   of warm-up.
+
+   | Benchmark | p99 | Target |
+   |---|---:|---:|
+   | Keypad: twelve expressions, from `(1+2)×3÷4−5²` to `Σ(x,1,100)` and `∫(x²,0,1)` | 2.1-8.5 µs | 1 ms |
+   | Table: 30 rows of f(x) and g(x); 45 rows of f(x) | 0.45 ms; 0.60 ms | 20 ms |
+   | Graph, 2,000 columns: x²−3x+1, tan(x), the normal density, sin(x)÷x | 1.2-2.6 ms | 16 ms |
+   | Their roots and extrema, 400 intervals of the view | 0.52-2.1 ms | 16 ms |
+   | The inverse of a 4×4 matrix of decimals; four simultaneous equations | 21 µs; 7.6 µs | 16 ms |
+   | A quartic with four rational roots; one with complex roots only | 1.5 ms; 0.39 ms | 16 ms |
+   | ∫(√(x)×e^(-x),0,10), whose integrand has an infinite slope at 0 | 0.49 ms | 16 ms |
+   | The quadratic regression of 80 pairs, fitted again | 20 µs | 16 ms |
+   | Binomial CD of 100 trials; Normal CD | 8.9 µs; 1.2 µs | 16 ms |
+   | A sheet of 61 cells calculated again | 62 µs | 16 ms |
+   | Three dice thrown 250 times, with their sums' Relative Freq | 11 µs | 16 ms |
+
+   The graph figures Phase 6 M3 wrote here - 2.3 to 10.9 ms, "Release" - were timed in a Debug build of a test with a
+   `Stopwatch`, first calls included; the relative gain of calculating √(2π) once still holds, their absolute values
+   do not.
 
 ## 10. Build and packaging conventions
 
@@ -437,8 +470,8 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
   - SourceLink in CI/release builds only.
   - Strong naming of every core library when the release workflow writes `src/barbatos.snk` from the
     `STRONG_NAME_KEY` secret - all of them, because a signed assembly cannot reference an unsigned one.
-- **CI.** One job, on `windows-latest`: build, the 37 test assemblies, the mutation gates, the pack and the package
-  test. The application ships on Windows alone, so there is no Linux job (PRECISION.md I5).
+- **CI.** One job, on `windows-latest`: build, the 40 test assemblies, the benchmark gate, the mutation gates, the
+  pack and the package test. The application ships on Windows alone, so there is no Linux job (PRECISION.md I5).
 - **Tests.**
   - xunit.v3 on Microsoft.Testing.Platform (`global.json`); AwesomeAssertions.
   - Run on net8.0, net9.0 and net10.0.
@@ -454,7 +487,7 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | **4 Domain apps** ✅ (M1 Matrix and Vector, M2 Statistics, M3 Distribution, M4 Equation, Inequality and Ratio, M5 Spreadsheet and Table, M6 hardening) | Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet, Table | Met: every conformance case of those applications passes (only the four Math Box cases are skipped, for Phase 6); the normal distribution, the Poisson probability and the polynomial roots agree with 50-digit PeterO.Numbers references; every package with code is above the 90% mutation gate |
 | 5 WPF (in progress: **M1 shell ✅**, **M2 keypad and math input ✅**, **M3 Calculate ✅**, **M4 the other screens ✅**, M4.5 the calculator's face - **a layout and look ✅**, **b a keypad per application ✅**, **c CATALOG, FORMAT, RCL and STO ✅** -, **M5 persistence and shortcuts ✅**, M6 hardening and installer - the installer built, signed and verified, the installed app still to be walked) | Presentation, keypad, MathInput, rendering, thirteen applications, settings, i18n, history | Every manual workflow runs in the app |
 | **6 Graph and Math Box** ✅ (M1 Math Box in Engine, M2 its screens, M3 Graphing, M4 the graph in Table, M5 hardening) | Graphing; Dice, Coin, Number Line, Circle; the graph of a table | Met: every conformance case passes, none skipped; every curve drawn is inside its viewport and at the engine's values, and every root and intersection named is a change of sign, over generated curves and viewports; every package with code is above the 90% mutation gate |
-| 7 Hardening (in progress: **M1 the public API frozen ✅**, **M2 the API reference ✅**, M3 benchmarks and their gate, M4 calculations off the window's thread, M5 the release pipeline, M6 the release candidate and 1.0.0) | Public API tracking, API docs, benchmarks and gates, a responsive window, publish pipeline | 1.0.0 of both packages on nuget.org, installing and calculating on net8.0, net9.0 and net10.0; the public API tracked and its reference complete by test; the benchmarks within their targets in CI |
+| 7 Hardening (in progress: **M1 the public API frozen ✅**, **M2 the API reference ✅**, **M3 benchmarks and their gate ✅**, M4 calculations off the window's thread, M5 the release pipeline, M6 the release candidate and 1.0.0) | Public API tracking, API docs, benchmarks and gates, a responsive window, publish pipeline | 1.0.0 of both packages on nuget.org, installing and calculating on net8.0, net9.0 and net10.0; the public API tracked and its reference complete by test; the benchmarks within their targets in CI |
 
 ## 12. Decision log
 
@@ -555,3 +588,4 @@ services.AddPallas(options =>                               // Barbatos.Pallas.D
 | 24 Sep 2026 | **Phase 7 plan approved**, with six decisions by the maintainer. (1) Each package has an `API-REFERENCE.md`, written by hand in the manner of Barbatos.i18n and Barbatos.Wpf - namespaces, then types, then members with their signatures - covering the libraries it carries, and a test fails when an entry of `PublicAPI.Shipped.txt` is missing from it. (2) BenchmarkDotNet measures the targets of §9, and CI fails a benchmark beyond its target with a margin rather than against a committed baseline: a shared runner's timings move between runs. (3) Parallelism and SIMD (§9) are added only where a measurement misses a target. (4) The packages are strong-named with `barbatos.snk`, the key Barbatos.i18n and Barbatos.Wpf are signed with, from the `STRONG_NAME_KEY` secret. (5) The app's installer is 1.0.0 with the packages. (6) Calculations leave the window's thread in this phase, not only the graph's: a table of thirteen integrals held it for 1.9 s. Milestones: M1 the public surface reviewed, frozen and tracked by `Microsoft.CodeAnalysis.PublicApiAnalyzers`; M2 the API reference; M3 benchmarks and their gate; M4 calculations off the window's thread; M5 the release pipeline, on a GitHub Release, with NuGet trusted publishing; M6 the release candidate, walked installed, and 1.0.0 published by the maintainer. Each is reported. |
 | 24 Sep 2026 | **Phase 7 M1: the public API tracked.** `Microsoft.CodeAnalysis.PublicApiAnalyzers` 5.6.0, the version of the BannedApiAnalyzers already in use, runs on every core library from `src/core/Directory.Build.props`, and the analyzer's own code fix wrote the API files (`dotnet format analyzers --diagnostics RS0016`): 1,177 entries - Engine 701, Expressions 252, Graphing 80, Spreadsheet 51, Numerics 30, Statistics 21, DependencyInjection 20, Solvers 10, LinearAlgebra 6, Data 6. They stay in `PublicAPI.Unshipped.txt` until the 1.0.0 release moves them to `PublicAPI.Shipped.txt`. The review before the freeze found nothing to make internal: the carried libraries are public because Engine and DependencyInjection call them from other assemblies with no `InternalsVisibleTo`; `EvalResult.FromValue` beside `Success` is the named alternative CA2225 requires of its implicit conversion; and the entries marked `~` are the compiler's own `Equals` and `ToString` of record structs. RS0026 is off: it forbids two public overloads that each end in an optional parameter, which `Calculate(input, cancellationToken = default)` beside `Calculate(input, values, cancellationToken = default)` is, as the BCL's own overloads are. An undeclared public member was measured to fail the build (RS0016), and `PublicApiTrackingTests` fails a core library the analyzer does not run on. 40 test assemblies, 11,087 tests, none failing. |
 | 24 Sep 2026 | **Phase 7 M2: the API reference.** Each package has an `API-REFERENCE.md` beside its csproj, in the manner of Barbatos.i18n and Barbatos.Wpf - its namespaces, then their types, then each member with its signature and what it does: Barbatos.Pallas.Engine's describes 117 types in six namespaces, Barbatos.Pallas.DependencyInjection's 21 in four, and both leave out what the compiler gives every record and the parameterless constructors. The first draft was written from the built assemblies and their XML documentation by a scratch tool that is not part of the repository, so every description is the summary the code already carries; the introductions of the packages and namespaces were written for it, and from now on it is kept by hand. `ApiReferenceTests` reads what each library of a package declares in its `PublicAPI.*.txt` and fails a type with no section, a property, field or enum value not named in its type's section, a method, constructor, indexer or operator whose parameters are not named there overload by overload, and a section for a type that is not public. Measured: taking `PreAns` out of the reference, renaming a parameter of `SetVariable` in it and adding a section for a type that does not exist each fail it. The root README's status (still Phase 5), its package table (DependencyInjection without Graphing) and its Graphing row ("no code until Phase 6") are brought up to date, and both package READMEs link their reference. 40 test assemblies, 11,108 tests, none failing. |
+| 25 Sep 2026 | **Phase 7 M3: benchmarks and their gate.** `benchmarks/Barbatos.Pallas.Benchmarks` (BenchmarkDotNet 0.15.8, net10.0, in the solution) measures 32 benchmarks: twelve keypad expressions calculated as = does, the Table application at its largest, four curves drawn across 2,000 columns and their named points, and every other application at its largest or its slowest - a 4×4 inverse, four simultaneous equations, two quartics, an integral, the quadratic regression of 80 pairs, Binomial and Normal CD, a sheet of 61 cells, 250 throws of three dice. Each carries its target (`[Target]`); `--gate` runs 20 iterations after 3 of warm-up and fails a benchmark whose p99 is beyond its target × 1.5, one without a target, and one that did not run, and CI runs it after the tests, with its table in the run's summary. The benchmarks run in process, because a project BenchmarkDotNet generated inside the repository would be built with its analyzers. §9 named targets for three things; everything else one action of the window asks for has a frame's, 16 ms. Measured (§9.7): the nearest to its target is the normal density's graph, 2.6 ms of 16; a keypad expression takes 2 to 9 µs of its 1 ms. So nothing is parallel or vectorized (decision 3), and §9.4 and §9.5 say why. Four things the first runs found: a benchmark's setup now checks that what it measures calculates, after all ten application benchmarks failed on formulas entered with their `=`; with Auto Calc off a formula entered is the placeholder SyntaxError until the sheet is calculated (pinned by `AutoCalculateOffLeavesTheFormulasUntilTheSheetIsCalculated`), so the benchmark's sheet is entered with Auto Calc on and calculated again by `Recalculate`; a session keeps its statistics fit until the data change, so "c" measured 2.6 µs of looking up until the benchmark gave the data again (20 µs with the fit); and the Phase 6 M3 graph figures, recorded as Release, were a Debug build's with its first calls (§9.7). A target missed on purpose (5 × 10⁻⁴ ms for Normal CD) failed the run with exit code 1. Checking that the benchmark project leaves the pack alone found the pack step of CI broken since it was written: `--no-build` fails every carried library with NETSDK1085, because a package finds them by resolving its references, which builds them; with no remote, CI had never run. CI packs with a build now, which compiles nothing after the Release build (measured on the assemblies' times); telling the references not to build instead was tried and left the carried libraries' XML documentation and symbols out of both packages. 40 test assemblies, 11,108 tests, none failing; `dotnet test` leaves the benchmark project out, as it is not a test project. |
