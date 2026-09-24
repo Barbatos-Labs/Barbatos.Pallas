@@ -72,6 +72,9 @@ distribution.upper: Upper
 distribution.area: Area
 table.generate: Generate
 table.range: Start, end and step
+table.graph: Graph
+table.fit: Fit the table
+table.noGraph: Generate a table to draw its graph.
 sheet.commit: Enter
 sheet.clearCell: Clear cell
 sheet.clearAll: Clear sheet
@@ -229,3 +232,10 @@ language:
   system: The language of Windows
   en-US: English
   vi-VN: Tiếng Việt
+
+# What the graph of a table names: a GraphFeatureKind is its own key.
+graph:
+  Root: Root
+  Minimum: Minimum
+  Maximum: Maximum
+  Intersection: Intersection

@@ -603,6 +603,19 @@
         <Setter Property="MinHeight" Value="96" />
     </Style>
 
+    <!-- The graph of a table: f(x) in the display's ink, g(x) in its second colour, what it names in the third. -->
+    <Style x:Key="TableGraph" TargetType="views:GraphDrawing">
+        <Setter Property="Ink" Value="{StaticResource LcdInk}" />
+        <Setter Property="Second" Value="{StaticResource LcdAlpha}" />
+        <Setter Property="Faint" Value="{StaticResource LcdInkMuted}" />
+        <Setter Property="Mark" Value="{StaticResource LcdShift}" />
+        <Setter Property="Paper" Value="{StaticResource Lcd}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="{StaticResource DrawingLabelSize}" />
+        <Setter Property="MinHeight" Value="120" />
+        <Setter Property="Cursor" Value="Cross" />
+    </Style>
+
     <Style x:Key="CircleFace" TargetType="views:CircleDrawing">
         <Setter Property="Ink" Value="{StaticResource LcdInk}" />
         <Setter Property="Faint" Value="{StaticResource LcdInkMuted}" />

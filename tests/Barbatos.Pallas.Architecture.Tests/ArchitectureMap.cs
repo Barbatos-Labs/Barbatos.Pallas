@@ -26,7 +26,7 @@ internal static class ArchitectureMap
         ["Barbatos.Pallas.Data"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.Graphing"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Data", "Barbatos.Pallas.Spreadsheet", "Barbatos.Pallas.Graphing"],
-        ["Barbatos.Pallas.Presentation"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Spreadsheet"],
+        ["Barbatos.Pallas.Presentation"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Spreadsheet", "Barbatos.Pallas.Graphing"],
         ["Barbatos.Pallas.Wpf"] = ["Barbatos.Pallas.Presentation", "Barbatos.Pallas.DependencyInjection"],
     };
 

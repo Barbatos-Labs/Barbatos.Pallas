@@ -111,6 +111,41 @@ public sealed class ScreenResourceTests
     }
 
     [Fact]
+    public void TheGraphOfATableIsDrawnWithTheTheme()
+    {
+        // The graph is sampled at the size its drawing is laid out at, which only the view can say: laid out here, the
+        // drawing has told the view model how large it is, and the curves, the rows, the named points and a reading
+        // are all drawn.
+        OnUiThread(() =>
+        {
+            CalculatorShellViewModel shell = Shell();
+            shell.Open(CalculatorApps.Of(CalculatorApp.Table));
+            TableView view = new(shell);
+            TableViewModel table = shell.Table;
+            table.IsGraphShown = true;
+            Draw(view).Should().BeGreaterThan(0, "the display says there is nothing to draw yet");
+
+            table.FunctionF = "1÷x";
+            table.FunctionG = "x²−2";
+            table.Range[0, 0].Text = "-2";
+            table.Range[0, 1].Text = "2";
+            table.Generate();
+            Draw(view).Should().BeGreaterThan(0);
+
+            table.Graph.Curves.Should().HaveCount(2, "the drawing said how large it is");
+            table.Graph.Curves[0].Trace.Breaks.Should().NotBeEmpty("1÷x has an asymptote at 0");
+            table.Graph.Features.Should().NotBeEmpty();
+
+            table.Graph.Read(0.3);
+            table.Graph.Reading.Should().NotBeNull();
+            Draw(view).Should().BeGreaterThan(0, "a reading is drawn over the graph");
+
+            table.Graph.ZoomIn();
+            Draw(view).Should().BeGreaterThan(0);
+        });
+    }
+
+    [Fact]
     public void TheKeypadTakesKeysAndNotText()
     {
         // Windows' Vietnamese input method takes keys of the digit row, and WPF then reports them as ImeProcessed:

@@ -70,6 +70,9 @@ distribution.upper: Cận trên
 distribution.area: Diện tích
 table.generate: Tạo bảng
 table.range: Đầu, cuối và bước
+table.graph: Đồ thị
+table.fit: Vừa với bảng
+table.noGraph: Tạo bảng để vẽ đồ thị của nó.
 sheet.commit: Nhập
 sheet.clearCell: Xoá ô
 sheet.clearAll: Xoá bảng
@@ -227,3 +230,10 @@ language:
   system: Ngôn ngữ của Windows
   en-US: English
   vi-VN: Tiếng Việt
+
+# What the graph of a table names: a GraphFeatureKind is its own key.
+graph:
+  Root: Nghiệm
+  Minimum: Cực tiểu
+  Maximum: Cực đại
+  Intersection: Giao điểm

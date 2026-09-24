@@ -319,6 +319,15 @@ is the same operation on the same values, so the same value and exact form, and 
 expression's result, display and error with the line's for such inputs. Ran#, RanInt#(, plugin functions and a call
 that fails are left to be calculated each time.
 
+**The graph of a table** (Phase 6 M4). A point read off the graph at the pointer is calculated at an x the pointer
+chooses, and that x is an input, as a number typed is, not a rounding of a result: the double under the pointer,
+converted to its 15 digits and rounded half away from zero to the decimal places a pixel tells apart
+(`Math.Round(decimal, int, MidpointRounding.AwayFromZero)`), so 1.23 rather than 1.23456789012345. At most fourteen
+places, so the x is 0 or at least 10⁻¹⁴, where the precision rule holds a value as `decimal`; for a finer pixel, or
+an x from 10¹⁵ on, which has no decimals left to round, it is the engine's own value of the double
+(`CompiledExpression.ValueOf`). The values read are the engine's calculations at that x, displayed as the line
+displays them, and nothing in the table is rounded by being drawn.
+
 **Equation, Inequality and Ratio** (Phase 4).
 - A system of linear equations is exact: each row is scaled into integers, which leaves the solution where it is, and
   eliminated without fractions, so a solution such as 1/2 is a fraction and not 0.4999999999999999999999999999. A

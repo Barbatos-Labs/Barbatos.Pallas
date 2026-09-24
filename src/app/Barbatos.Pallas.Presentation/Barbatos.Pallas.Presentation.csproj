@@ -18,6 +18,8 @@
     <ProjectReference Include="..\..\core\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
     <!-- The Spreadsheet and Table screens: the sheet and the number table are those applications themselves. -->
     <ProjectReference Include="..\..\core\Barbatos.Pallas.Spreadsheet\Barbatos.Pallas.Spreadsheet.csproj" />
+    <!-- The graph of the Table screen: its curves sampled, and its roots, extrema and intersections named. -->
+    <ProjectReference Include="..\..\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
   </ItemGroup>
 
 </Project>

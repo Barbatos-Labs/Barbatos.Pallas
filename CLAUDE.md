@@ -31,8 +31,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Graphing.Tests` | Curves whose shape is known: pieces clipped to the viewport, chords within half a pixel, asymptotes, jumps and domain edges; roots, extrema and intersections against their closed forms and the engine's values there |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool laid out and drawn (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, the graph of the Table screen fitted to its rows, zoomed and read at the pointer (`TableGraphViewModelTests`), every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool and the graph of a table laid out and drawn (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -55,8 +55,9 @@ be walked). Phase 4 is complete.
 
 **Phase 6 - Graph and Math Box - in progress** (plan approved 24 Sep 2026). Milestones: M1 Math Box in Engine ✅,
 M2 its screens ✅, M3 Graphing ✅ (a library carried by the DependencyInjection package, with an `AllowList` entry for
-screen coordinates, on a compiled-expression API in Engine), M4 the graph as a view of the Table application, M5
-hardening. Since M1 every application has its engine and every conformance case runs, none skipped.
+screen coordinates, on a compiled-expression API in Engine), M4 the graph as a view of the Table application ✅
+(Presentation references Graphing), M5 hardening. Since M1 every application has its engine and every conformance
+case runs, none skipped.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
   route table read; `SettingsViewModel` is Calc Settings; `SessionSnapshotJson` and `ISessionStore` keep the session
@@ -73,7 +74,10 @@ hardening. Since M1 every application has its engine and every conformance case 
   time it is opened and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was
   typed through the session. Math Box is a menu of four screens (`SimulationViewModel` for dice and coins,
   `NumberLineViewModel`, `CircleViewModel`), drawn by `NumberLineDrawing` and `CircleDrawing`, which place lines and
-  calculate nothing the screen shows. The look is
+  calculate nothing the screen shows. The Table screen shows its rows or its graph (`TableGraphViewModel`: the
+  session's f(x) and g(x) compiled once, sampled by Graphing at the pixels of `GraphDrawing`, the view fitted to the
+  rows of the table and zoomed from there, roots, extrema and intersections named, and the value at the pointer
+  calculated at the x it shows). The look is
   `Theme/Tokens.xaml` (colours, roundings, sizes) and `Theme/Controls.xaml` (every style); `KeypadView` draws the
   key table and `CalculationPanelView` the one display, input above and answer below.
 - The line the user types on is `MathDocument` (immutable, a cursor path through template slots), written as

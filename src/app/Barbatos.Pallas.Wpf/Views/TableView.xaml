@@ -4,6 +4,41 @@
              xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
              xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
              xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
+    <UserControl.Resources>
+        <!-- The rows and the graph are two views of one table; the flag says which is shown. -->
+        <Style x:Key="WhenRows" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsGraphShown}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenGraph" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsGraphShown}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Within the graph: until a table is generated there is nothing to draw, and the display says so. -->
+        <Style x:Key="WhenNoGraph" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasGraph}" Value="False">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenReading" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Reading}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -33,7 +68,8 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <Button Style="{StaticResource PrimaryButton}" Margin="10,2,8,2" Command="{Binding GenerateCommand}" Content="{i18n:StringLocalizer Text='table.generate'}" />
-                <Button Style="{StaticResource ActionButton}" Margin="0,2" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+                <Button Style="{StaticResource ActionButton}" Margin="0,2,12,2" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+                <CheckBox Style="{StaticResource Flag}" IsChecked="{Binding IsGraphShown}" Content="{i18n:StringLocalizer Text='table.graph'}" />
             </StackPanel>
 
             <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,10">
@@ -51,29 +87,124 @@
         </StackPanel>
 
         <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Background="{StaticResource Bezel}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Rows}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <DockPanel Margin="0,3">
-                            <TextBlock DockPanel.Dock="Left"
-                                       MinWidth="80"
-                                       FontFamily="{StaticResource MonoFont}"
-                                       Foreground="{StaticResource InkMuted}"
-                                       Text="{Binding X.Display.Text}" />
-                            <TextBlock DockPanel.Dock="Left"
-                                       MinWidth="110"
-                                       FontFamily="{StaticResource MonoFont}"
-                                       Foreground="{StaticResource Ink}"
-                                       Text="{Binding F.Display.Text}" />
-                            <TextBlock FontFamily="{StaticResource MonoFont}"
-                                       Foreground="{StaticResource Ink}"
-                                       Text="{Binding G.Display.Text}" />
-                        </DockPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+            <Grid>
+                <ScrollViewer Style="{StaticResource WhenRows}" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,3">
+                                    <TextBlock DockPanel.Dock="Left"
+                                               MinWidth="80"
+                                               FontFamily="{StaticResource MonoFont}"
+                                               Foreground="{StaticResource InkMuted}"
+                                               Text="{Binding X.Display.Text}" />
+                                    <TextBlock DockPanel.Dock="Left"
+                                               MinWidth="110"
+                                               FontFamily="{StaticResource MonoFont}"
+                                               Foreground="{StaticResource Ink}"
+                                               Text="{Binding F.Display.Text}" />
+                                    <TextBlock FontFamily="{StaticResource MonoFont}"
+                                               Foreground="{StaticResource Ink}"
+                                               Text="{Binding G.Display.Text}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- The graph: the drawing and what it reads on the display, what it names below it. -->
+                <Grid Style="{StaticResource WhenGraph}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="3*" MinHeight="0" />
+                        <RowDefinition Height="*" MinHeight="0" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8" DataContext="{Binding Graph}">
+                        <Button Style="{StaticResource ActionButton}" Margin="0,0,6,0" Command="{Binding ZoomOutCommand}" Content="−" />
+                        <Button Style="{StaticResource ActionButton}" Margin="0,0,6,0" Command="{Binding ZoomInCommand}" Content="+" />
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding FitCommand}" Content="{i18n:StringLocalizer Text='table.fit'}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource LcdPanel}" DataContext="{Binding Graph}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" MinHeight="0" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <views:GraphDrawing x:Name="Drawing"
+                                                Grid.Row="0"
+                                                Style="{StaticResource TableGraph}"
+                                                Viewport="{Binding Viewport}"
+                                                Curves="{Binding Curves}"
+                                                Points="{Binding Points}"
+                                                Features="{Binding Features}"
+                                                XTicks="{Binding XTicks}"
+                                                YTicks="{Binding YTicks}"
+                                                Reading="{Binding Reading}" />
+                            <Border Grid.Row="0" Style="{StaticResource WhenNoGraph}" IsHitTestVisible="False">
+                                <TextBlock Style="{StaticResource LcdText}"
+                                           HorizontalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{i18n:StringLocalizer Text='table.noGraph'}" />
+                            </Border>
+
+                            <!-- What the graph reads at the pointer: x, and each function's value there. -->
+                            <Grid Grid.Row="1" Margin="0,6,0,0" Style="{StaticResource WhenReading}">
+                                <StackPanel Orientation="Horizontal" DataContext="{Binding Reading}">
+                                    <TextBlock Style="{StaticResource LcdText}" Text="{Binding X, StringFormat='x = {0}'}" />
+                                    <ItemsControl ItemsSource="{Binding Values}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="16,0,0,0">
+                                                    <TextBlock Style="{StaticResource LcdText}" Text="{Binding Name, StringFormat='{}{0} = '}" />
+                                                    <TextBlock Style="{StaticResource LcdText}" Text="{Binding Text}" />
+                                                    <TextBlock Style="{StaticResource LcdErrorText}" Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Roots, extrema and intersections, left to right, each with the engine's calculation there. -->
+                    <ScrollViewer Grid.Row="2" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto" DataContext="{Binding Graph}">
+                        <ItemsControl ItemsSource="{Binding Features}">
+                            <ItemsControl.ItemTemplate>
+                                <!-- What it is and whose on one line, where it is below: a narrow window wraps x and y. -->
+                                <DataTemplate>
+                                    <StackPanel Margin="0,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Foreground="{StaticResource Ink}"
+                                                       Text="{i18n:StringLocalizer BindText={Binding Kind}, Namespace='graph'}" />
+                                            <TextBlock Margin="8,0,0,0"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       Foreground="{StaticResource InkMuted}"
+                                                       Text="{Binding Name}" />
+                                        </StackPanel>
+                                        <WrapPanel>
+                                            <TextBlock Margin="0,0,16,0"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       Foreground="{StaticResource Ink}"
+                                                       Text="{Binding X, StringFormat='x = {0}'}" />
+                                            <TextBlock FontFamily="{StaticResource MonoFont}"
+                                                       Foreground="{StaticResource Ink}"
+                                                       Text="{Binding Y, StringFormat='y = {0}'}" />
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
         </Border>
 
         <TextBlock Grid.Row="3"

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
+using Barbatos.Pallas.Graphing;
 using Barbatos.Pallas.Numerics;
 using Barbatos.Pallas.Presentation;
 using Barbatos.Pallas.Spreadsheet;
@@ -125,6 +126,23 @@ public sealed class LocalizationTests
         }
 
         foreach (string key in (string[])["mathbox.menu", "mathbox.attempts", "mathbox.sameResult", "mathbox.execute", "mathbox.store", "mathbox.stored", "mathbox.frequency", "mathbox.relativeFrequency", "mathbox.scale", "mathbox.center", "mathbox.applyWindow", "mathbox.resetWindow"])
+        {
+            text.Should().ContainKey(key);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void EveryPointTheGraphNamesHasAName(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+
+        foreach (GraphFeatureKind kind in Enum.GetValues<GraphFeatureKind>())
+        {
+            text.Should().ContainKey("graph:" + kind, "the graph of a table lists each {0} by name", kind);
+        }
+
+        foreach (string key in (string[])["table.graph", "table.fit", "table.noGraph"])
         {
             text.Should().ContainKey(key);
         }
