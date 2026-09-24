@@ -73,6 +73,7 @@ table.range: Đầu, cuối và bước
 table.graph: Đồ thị
 table.fit: Vừa với bảng
 table.noGraph: Tạo bảng để vẽ đồ thị của nó.
+table.drawing: Đang vẽ…
 sheet.commit: Nhập
 sheet.clearCell: Xoá ô
 sheet.clearAll: Xoá bảng

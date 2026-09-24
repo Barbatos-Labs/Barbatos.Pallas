@@ -30,6 +30,15 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <!-- A curve that takes long to work out is drawn once it is ready; until then the display says so. -->
+        <Style x:Key="WhenDrawing" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDrawing}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="WhenReading" TargetType="FrameworkElement">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Reading}" Value="{x:Null}">
@@ -147,6 +156,13 @@
                                            HorizontalAlignment="Center"
                                            TextWrapping="Wrap"
                                            Text="{i18n:StringLocalizer Text='table.noGraph'}" />
+                            </Border>
+                            <Border Grid.Row="0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Style="{StaticResource WhenDrawing}"
+                                    IsHitTestVisible="False">
+                                <TextBlock Style="{StaticResource LcdText}" Text="{i18n:StringLocalizer Text='table.drawing'}" />
                             </Border>
 
                             <!-- What the graph reads at the pointer: x, and each function's value there. -->

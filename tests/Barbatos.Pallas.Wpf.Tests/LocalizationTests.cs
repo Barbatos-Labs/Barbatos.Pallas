@@ -142,7 +142,7 @@ public sealed class LocalizationTests
             text.Should().ContainKey("graph:" + kind, "the graph of a table lists each {0} by name", kind);
         }
 
-        foreach (string key in (string[])["table.graph", "table.fit", "table.noGraph"])
+        foreach (string key in (string[])["table.graph", "table.fit", "table.noGraph", "table.drawing"])
         {
             text.Should().ContainKey(key);
         }

@@ -229,6 +229,8 @@ public static class GraphSampler
         private bool Beyond(double ya, double yb) =>
             Math.Min(ya, yb) > _viewport.Top || Math.Max(ya, yb) < _viewport.Bottom;
 
+        private bool Inside(double y) => y >= _viewport.Bottom && y <= _viewport.Top;
+
         private void Add(double x, double y) => _run.Add(new GraphPoint(x, Math.Clamp(y, -Reach, Reach)));
 
         /// <summary>Ends the run of points drawn so far, keeping what lies inside the viewport.</summary>
@@ -290,17 +292,18 @@ public static class GraphSampler
                 return true;
             }
 
-            // Where the segment crosses an edge, its y is the edge's own: worked out from a point near 10⁹⁹, it would
-            // keep none of its digits.
-            double bottom = (_viewport.Bottom - p.Y) / dy;
-            double top = (_viewport.Top - p.Y) / dy;
-            (double enter, double entry) = bottom < top ? (bottom, _viewport.Bottom) : (top, _viewport.Top);
-            (double leave, double exit) = bottom < top ? (top, _viewport.Top) : (bottom, _viewport.Bottom);
-            from = enter <= 0d ? p : new GraphPoint(p.X + (enter * (q.X - p.X)), entry);
-            to = leave >= 1d ? q : new GraphPoint(p.X + (leave * (q.X - p.X)), exit);
+            // A rising segment enters the band between bottom and top through the bottom and leaves through the top; a
+            // falling one the other way round. Where it crosses an edge, its y is the edge's own: worked out from a point
+            // near 10⁹⁹, it would keep none of its digits. An end inside the band is kept as it is, and one outside it
+            // is on the edge it crossed, whatever the arithmetic says: from −10³⁰⁰ up to −12.5, where the band is −37
+            // to −16, both crossings are at 1 to the last digit, and the end at −12.5 was kept outside the viewport
+            // (found by a property test, 24 Sep 2026).
+            (double entry, double exit) = dy > 0d ? (_viewport.Bottom, _viewport.Top) : (_viewport.Top, _viewport.Bottom);
+            from = Inside(p.Y) ? p : new GraphPoint(p.X + (Math.Clamp((entry - p.Y) / dy, 0d, 1d) * (q.X - p.X)), entry);
+            to = Inside(q.Y) ? q : new GraphPoint(p.X + (Math.Clamp((exit - p.Y) / dy, 0d, 1d) * (q.X - p.X)), exit);
 
-            // Not both beyond one edge, the segment runs from one side of the band between bottom and top to the
-            // other, or starts or ends in it: either way it crosses it.
+            // Not both beyond one edge, the segment runs from one side of the band to the other, or starts or ends in
+            // it: either way it crosses it.
             return true;
         }
 

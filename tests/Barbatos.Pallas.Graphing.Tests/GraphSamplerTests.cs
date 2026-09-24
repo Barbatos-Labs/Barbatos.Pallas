@@ -362,6 +362,21 @@ public sealed class GraphSamplerTests
         }
     }
 
+    [Theory]
+    [InlineData("√(x)÷(sin(x)−x)", -34d, 38d, -37d, -16d, 152, 128)]
+    [InlineData("1÷√(x÷0.5)", -36d, 17d, 48d, 82d, 214, 94)]
+    public void ACurveThatCrossesTheViewportFromNearItsAsymptoteIsClippedToIt(string input, double left, double right, double bottom, double top, int columns, int rows)
+    {
+        // Found by GraphPropertyTests on 24 Sep 2026. Followed to where it has a value just right of 0, each curve starts
+        // far beyond the viewport and is past its other edge by the next point: it crosses both edges at a fraction of
+        // the segment that is 1 to the last digit, and the point beyond the viewport was kept as the end of the piece.
+        GraphViewport view = new(left, right, bottom, top);
+        GraphTrace trace = GraphSampler.Sample(Compile(input), view, columns, rows);
+
+        trace.Pieces.Should().NotBeEmpty();
+        trace.Pieces.SelectMany(p => p).Should().OnlyContain(point => Inside(point, view));
+    }
+
     [Fact]
     public void ASamplingIsCancelled()
     {

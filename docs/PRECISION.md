@@ -326,7 +326,10 @@ converted to its 15 digits and rounded half away from zero to the decimal places
 places, so the x is 0 or at least 10⁻¹⁴, where the precision rule holds a value as `decimal`; for a finer pixel, or
 an x from 10¹⁵ on, which has no decimals left to round, it is the engine's own value of the double
 (`CompiledExpression.ValueOf`). The values read are the engine's calculations at that x, displayed as the line
-displays them, and nothing in the table is rounded by being drawn.
+displays them, and nothing in the table is rounded by being drawn. The curves, the named points and the readings are
+worked out off the window's thread, each on a session restored from a snapshot of the one the table was generated in
+(`CalculatorSession.Capture` and `Restore`, which keep every digit and every exact form): a session is used from one
+thread at a time, and the graph is then of the table's own values, even after a variable has changed since.
 
 **Equation, Inequality and Ratio** (Phase 4).
 - A system of linear equations is exact: each row is scaled into integers, which leaves the solution where it is, and

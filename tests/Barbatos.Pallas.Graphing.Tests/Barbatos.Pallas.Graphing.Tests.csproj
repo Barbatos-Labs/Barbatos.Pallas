@@ -4,8 +4,14 @@
     Barbatos.Pallas.Graphing is checked against curves whose shape is known, never against itself:
       * pieces, breaks and clipping against functions with known roots, poles, jumps and domains;
       * roots, extrema and intersections against their closed forms, and against the engine's own values there;
+      * CsCheck properties over generated curves and viewports: every point inside the viewport and at the engine's
+        value, every root a change of sign, the work bounded;
       * mutation testing (stryker-config.json).
   -->
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />

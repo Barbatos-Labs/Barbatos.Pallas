@@ -115,7 +115,7 @@ public sealed class ScreenResourceTests
     {
         // The graph is sampled at the size its drawing is laid out at, which only the view can say: laid out here, the
         // drawing has told the view model how large it is, and the curves, the rows, the named points and a reading
-        // are all drawn.
+        // are all drawn. They are worked out off this thread and applied back on it, which Settle waits for.
         OnUiThread(() =>
         {
             CalculatorShellViewModel shell = Shell();
@@ -130,18 +130,25 @@ public sealed class ScreenResourceTests
             table.Range[0, 0].Text = "-2";
             table.Range[0, 1].Text = "2";
             table.Generate();
+            table.Graph.IsDrawing.Should().BeTrue();
+            Draw(view).Should().BeGreaterThan(0, "the display says it is drawing");
+            Settle(table.Graph.Drawing);
             Draw(view).Should().BeGreaterThan(0);
 
+            table.Graph.IsDrawing.Should().BeFalse();
             table.Graph.Curves.Should().HaveCount(2, "the drawing said how large it is");
             table.Graph.Curves[0].Trace.Breaks.Should().NotBeEmpty("1÷x has an asymptote at 0");
             table.Graph.Features.Should().NotBeEmpty();
 
             table.Graph.Read(0.3);
+            Settle(table.Graph.Drawing);
             table.Graph.Reading.Should().NotBeNull();
             Draw(view).Should().BeGreaterThan(0, "a reading is drawn over the graph");
 
             table.Graph.ZoomIn();
+            Settle(table.Graph.Drawing);
             Draw(view).Should().BeGreaterThan(0);
+            table.Graph.Curves.Should().OnlyContain(curve => curve.Trace.Viewport == table.Graph.Viewport);
         });
     }
 
@@ -196,6 +203,14 @@ public sealed class ScreenResourceTests
     ];
 
     /// <summary>Lays a screen out at the window's size, draws it, and counts the pixels that are not blank.</summary>
+    // Runs the window's thread until a work of a screen has come back to it, as the application does between frames.
+    private static void Settle(Task work)
+    {
+        DispatcherFrame frame = new();
+        _ = work.ContinueWith(_ => frame.Continue = false, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+        Dispatcher.PushFrame(frame);
+    }
+
     private static int Draw(UserControl screen)
     {
         Size size = new(760, 900);

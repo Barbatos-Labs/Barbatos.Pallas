@@ -48,6 +48,25 @@ public sealed class GraphAnalysisTests
         roots.Should().ContainSingle().Which.X.ToDecimal().Should().Be(0m);
     }
 
+    [Theory]
+    [InlineData("x÷200")]
+    [InlineData("x^3÷10^40")]
+    [InlineData("-(x÷7)")]
+    public void ARootAtZeroIsZeroWhereTheValuesAroundItAreBelowTheSmallestNumber(string input)
+    {
+        // x÷200 is 0 to the engine from -2×10⁻⁹⁷ to 2×10⁻⁹⁷, where it is below 10⁻⁹⁹: any x there is a root, and 0 is
+        // the one named. The halving alone named -8.4×10⁻⁹⁸.
+        GraphAnalysis.Roots(Compile(input), Across(-0.53d, 0.47d), 10).Should().ContainSingle().Which.X.ToDecimal().Should().Be(0m);
+    }
+
+    [Fact]
+    public void AnIntersectionAtZeroIsZeroToo()
+    {
+        // x÷200 and x÷300 meet at 0, and differ by less than 10⁻⁹⁹ across a stretch of x around it.
+        GraphAnalysis.Intersections(Compile("x÷200"), Compile("x÷300"), Across(-0.53d, 0.47d), 10).Should().ContainSingle()
+            .Which.X.ToDecimal().Should().Be(0m);
+    }
+
     [Fact]
     public void ARootAtZeroIsZeroWhereTheRangeReachesTheSmallestDouble()
     {
@@ -110,6 +129,81 @@ public sealed class GraphAnalysisTests
 
         GraphAnalysis.Roots(touching, Across(-2.3d, 2.9d), 40).Should().BeEmpty();
         GraphAnalysis.Extrema(touching, Across(-2.3d, 2.9d), 40).Should().ContainSingle().Which.X.ToDecimal().Should().Be(1m);
+    }
+
+    [Fact]
+    public void ARootOnlyTouchedAtASampleIsNoRoot()
+    {
+        // From 0 to 2 in ten columns, 1 is a sample, where (x−1)² is 0 and the samples either side are both above it.
+        CompiledExpression touching = Compile("(x−1)^2");
+
+        GraphAnalysis.Roots(touching, Across(0d, 2d), 10).Should().BeEmpty();
+        GraphAnalysis.Extrema(touching, Across(0d, 2d), 10).Should().ContainSingle().Which.X.ToDecimal().Should().Be(1m);
+        GraphAnalysis.Intersections(touching, Compile("0"), Across(0d, 2d), 10).Should().BeEmpty("the curves touch and do not cross");
+    }
+
+    [Theory]
+    [InlineData("Int(x)")]
+    [InlineData("0")]
+    [InlineData("x−Abs(x)")]
+    public void ACurveAlongTheAxisHasNoRootToName(string input)
+    {
+        // Int(x) is 0 from -1 to 1 and jumps at either end, 0 is 0 everywhere, and x−Abs(x) is 0 from 0 on: every x
+        // there is a root, and none of them is one to name. Before 24 Sep 2026 each sample on the axis was one.
+        GraphAnalysis.Roots(Compile(input), Across(-2.5d, 2.5d), 50).Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(-1d, 1d)]
+    [InlineData(-0.53d, 0.47d)]
+    public void CurvesDoNotMeetWhereOneHasNoValue(double left, double right)
+    {
+        // x and -x(x÷x) change places through 0, where 0÷0 gives the second no value: at a sample, and between two.
+        GraphAnalysis.Intersections(Compile("x"), Compile("-x(x÷x)"), Across(left, right), 10).Should().BeEmpty();
+        GraphAnalysis.Intersections(Compile("-x(x÷x)"), Compile("x"), Across(left, right), 10).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CurvesThatAreOneHaveNoIntersectionToName()
+    {
+        GraphAnalysis.Intersections(Compile("2x"), Compile("x+x"), Across(-1d, 1d), 10).Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0d, 1d)]
+    [InlineData(-1d, 0d)]
+    public void ARootOnTheEdgeOfTheViewIsFound(double left, double right)
+    {
+        // 0 is the first sample, or the last: the sample beyond the edge says the curve crosses there.
+        GraphAnalysis.Roots(Compile("x"), Across(left, right), 10).Should().ContainSingle().Which.X.ToDecimal().Should().Be(0m);
+    }
+
+    [Theory]
+    [InlineData(0d, 1d)]
+    [InlineData(-1d, 0d)]
+    public void AKinkOnTheEdgeOfTheViewIsAnExtremum(double left, double right)
+    {
+        // The slope of |x| has no value at 0, the first sample or the last, and the one beyond the edge says it turns.
+        GraphAnalysis.Extrema(Compile("Abs(x)"), Across(left, right), 10).Should().ContainSingle()
+            .Which.Should().Match<GraphFeature>(turn => turn.Kind == GraphFeatureKind.Minimum && turn.X.ToDecimal() == 0m);
+    }
+
+    [Theory]
+    [InlineData(0d, 1d)]
+    [InlineData(-1d, 0d)]
+    public void APoleOrAHoleOnTheEdgeOfTheViewIsNoRoot(double left, double right)
+    {
+        GraphAnalysis.Roots(Compile("1÷x"), Across(left, right), 10).Should().BeEmpty();
+        GraphAnalysis.Roots(Compile("x(x÷x)"), Across(left, right), 10).Should().BeEmpty();
+        GraphAnalysis.Extrema(Compile("1÷x^2"), Across(left, right), 10).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AnExtremumOnTheEdgeOfTheViewIsFound()
+    {
+        // sin x is at its greatest at 90°, the first sample.
+        GraphAnalysis.Extrema(Compile("sin(x)"), Across(90d, 180d), 9).Should().ContainSingle()
+            .Which.Should().Match<GraphFeature>(turn => turn.Kind == GraphFeatureKind.Maximum && turn.X.ToDecimal() == 90m);
     }
 
     [Fact]

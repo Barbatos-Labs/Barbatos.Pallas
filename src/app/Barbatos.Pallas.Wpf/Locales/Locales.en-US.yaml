@@ -75,6 +75,7 @@ table.range: Start, end and step
 table.graph: Graph
 table.fit: Fit the table
 table.noGraph: Generate a table to draw its graph.
+table.drawing: Drawing…
 sheet.commit: Enter
 sheet.clearCell: Clear cell
 sheet.clearAll: Clear sheet

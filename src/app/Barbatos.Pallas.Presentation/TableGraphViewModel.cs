@@ -28,6 +28,12 @@ namespace Barbatos.Pallas.Presentation;
 /// calculation there, and a point read off the graph is calculated at the x it shows. The coordinates are
 /// <see langword="double"/> because they only place things on a screen.
 /// </para>
+/// <para>
+/// The view, its marks and the rows change at once; the curves, what the graph names and what it reads are worked out
+/// off the window's thread (<see cref="Drawing"/>), each on a session of its own restored from the one the table was
+/// generated in, because a session is used from one thread at a time. So the graph is always of the table as it was
+/// generated, whatever the session has done since.
+/// </para>
 /// </remarks>
 public sealed partial class TableGraphViewModel : ObservableObject
 {
@@ -50,7 +56,10 @@ public sealed partial class TableGraphViewModel : ObservableObject
     private const double Flat = 1e-9;
 
     private readonly CalculatorSession _session;
-    private readonly List<(TableFunction Function, CompiledExpression Expression)> _functions = [];
+    private readonly GraphWork _sampling;
+    private readonly GraphWork _analysis;
+    private readonly GraphWork _pointer;
+    private GraphSource? _source;
     private GraphViewport? _fitted;
     private int _columns;
     private int _rows;
@@ -62,6 +71,9 @@ public sealed partial class TableGraphViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
+        _sampling = new GraphWork(Busy);
+        _analysis = new GraphWork(Busy);
+        _pointer = new GraphWork(() => { });
     }
 
     /// <summary>Gets the region of the plane shown, or <see langword="null"/> when there is no table to draw.</summary>
@@ -94,13 +106,24 @@ public sealed partial class TableGraphViewModel : ObservableObject
     [ObservableProperty]
     private TableGraphReading? _reading;
 
+    /// <summary>Gets whether the curves or what the graph names are still being worked out.</summary>
+    [ObservableProperty]
+    private bool _isDrawing;
+
     /// <summary>Gets whether there is a graph to draw.</summary>
     public bool HasGraph => Viewport is not null;
+
+    /// <summary>Gets the work the graph is doing, completed once what it shows is what its view and its drawing ask for, and nothing more is on its way.</summary>
+    /// <remarks>The result is applied where the work was started from: on the window's thread, in the application.</remarks>
+    public Task Drawing => Task.WhenAll(_sampling.Completion, _analysis.Completion, _pointer.Completion);
 
     /// <summary>Says how large the drawing is, and samples the curves at its pixels.</summary>
     /// <param name="columns">Its width in pixels.</param>
     /// <param name="rows">Its height in pixels.</param>
-    /// <remarks>A drawing with no area, such as one not shown, is sampled at nothing.</remarks>
+    /// <remarks>
+    /// A drawing with no area, such as one not shown, is sampled at nothing. The curves sampled at the size before
+    /// stay until the new ones are ready: the view is the same, so they are drawn where they are.
+    /// </remarks>
     public void Resize(int columns, int rows)
     {
         _columns = Math.Clamp(columns, 0, GraphSampler.MaximumColumns);
@@ -124,24 +147,18 @@ public sealed partial class TableGraphViewModel : ObservableObject
             return;
         }
 
-        // Every x of a view is within ±10⁹⁹ (Reach), where the engine has a value for it.
+        GraphSource source = _source!;
         double x = view.Left + (view.Width * Math.Clamp(fraction, 0d, 1d));
-        Value at = Snap(x, view.Width / _columns) ?? _functions[0].Expression.ValueOf(x)!.Value;
-
-        List<TableGraphValue> values = [];
-        foreach ((TableFunction function, CompiledExpression expression) in _functions)
-        {
-            Calculation y = expression.Evaluate(at);
-            values.Add(y.Succeeded
-                ? new TableGraphValue(function, y.Display.Text, null, y.Result.ToDouble())
-                : new TableGraphValue(function, null, "error." + y.Error!.Value.Kind, null));
-        }
-
-        Reading = new TableGraphReading(at.ToDouble(), Decimal(at), [.. values]);
+        double pixel = view.Width / _columns;
+        _pointer.Start(token => ReadAt(source, x, pixel, token), reading => Reading = reading);
     }
 
     /// <summary>Stops reading the graph: the pointer has left it.</summary>
-    public void StopReading() => Reading = null;
+    public void StopReading()
+    {
+        _pointer.Cancel();
+        Reading = null;
+    }
 
     /// <summary>Shows half as much of the plane, around the same center.</summary>
     [RelayCommand(CanExecute = nameof(CanZoomIn))]
@@ -159,16 +176,7 @@ public sealed partial class TableGraphViewModel : ObservableObject
     /// <param name="table">The table.</param>
     internal void Show(NumberTable table)
     {
-        _functions.Clear();
-        if (table.Type != TableType.FunctionG)
-        {
-            _functions.Add((TableFunction.F, _session.Compile("f(x)")));
-        }
-
-        if (table.Type != TableType.FunctionF)
-        {
-            _functions.Add((TableFunction.G, _session.Compile("g(x)")));
-        }
+        _source = new GraphSource(_session.Engine, _session.Profile, _session.Capture(), table.Type);
 
         // A value is not a number where the function has none there: that row has no point on that curve. An x given to
         // a row by hand (p. 110) can be what the Table application has no value for, a complex number: that row is not
@@ -184,7 +192,7 @@ public sealed partial class TableGraphViewModel : ObservableObject
             }
 
             xs.Add(x.Value);
-            foreach ((TableFunction function, CompiledExpression _) in _functions)
+            foreach (TableFunction function in _source.Functions)
             {
                 double? y = Real(row.Value(function));
                 if (y is not null)
@@ -202,6 +210,7 @@ public sealed partial class TableGraphViewModel : ObservableObject
     /// <summary>Draws nothing.</summary>
     internal void Clear()
     {
+        _source = null;
         _fitted = null;
         Points = [];
         View(null);
@@ -213,47 +222,91 @@ public sealed partial class TableGraphViewModel : ObservableObject
 
     private bool CanFit() => Viewport is not null && Viewport != _fitted;
 
+    /// <summary>Shows a view: its marks at once, its curves and what it names once they are worked out.</summary>
     private void View(GraphViewport? view)
     {
         Viewport = view;
-        Reading = null;
-        XTicks = view is null ? [] : Ticks(view.Left, view.Right);
-        YTicks = view is null ? [] : Ticks(view.Bottom, view.Top);
-        Features = view is null ? [] : Analyse(view);
+        StopReading();
+        Features = [];
+        Curves = [];
+        if (view is null)
+        {
+            XTicks = [];
+            YTicks = [];
+            _analysis.Cancel();
+            _sampling.Cancel();
+            return;
+        }
+
+        GraphSource source = _source!;
+        XTicks = Ticks(view.Left, view.Right, source);
+        YTicks = Ticks(view.Bottom, view.Top, source);
+        _analysis.Start(token => Analyse(source, view, token), features => Features = features);
         Sample();
     }
 
     private void Sample()
     {
         GraphViewport? view = Viewport;
-        Curves = view is null || _columns == 0 || _rows == 0
-            ? []
-            : [.. _functions.Select(curve => new TableCurve(curve.Function, GraphSampler.Sample(curve.Expression, view, _columns, _rows)))];
-    }
-
-    private ImmutableArray<TableGraphFeature> Analyse(GraphViewport view)
-    {
-        List<TableGraphFeature> found = [];
-        foreach ((TableFunction function, CompiledExpression expression) in _functions)
+        (int columns, int rows) = (_columns, _rows);
+        if (view is null || columns == 0 || rows == 0)
         {
-            found.AddRange(GraphAnalysis.Roots(expression, view, AnalysisColumns).Select(feature => Named(feature, function)));
-            found.AddRange(GraphAnalysis.Extrema(expression, view, AnalysisColumns).Select(feature => Named(feature, function)));
+            _sampling.Cancel();
+            Curves = [];
+            return;
         }
 
-        if (_functions.Count == 2)
+        GraphSource source = _source!;
+        _sampling.Start(token => Sample(source, view, columns, rows, token), curves => Curves = curves);
+    }
+
+    private void Busy() => IsDrawing = _sampling.IsRunning || _analysis.IsRunning;
+
+    private static ImmutableArray<TableCurve> Sample(GraphSource source, GraphViewport view, int columns, int rows, CancellationToken token) =>
+        [.. source.Compile().Select(curve => new TableCurve(curve.Function, GraphSampler.Sample(curve.Expression, view, columns, rows, token)))];
+
+    private static ImmutableArray<TableGraphFeature> Analyse(GraphSource source, GraphViewport view, CancellationToken token)
+    {
+        List<(TableFunction Function, CompiledExpression Expression)> functions = source.Compile();
+        List<TableGraphFeature> found = [];
+        foreach ((TableFunction function, CompiledExpression expression) in functions)
         {
-            found.AddRange(GraphAnalysis.Intersections(_functions[0].Expression, _functions[1].Expression, view, AnalysisColumns).Select(feature => Named(feature, null)));
+            found.AddRange(GraphAnalysis.Roots(expression, view, AnalysisColumns, token).Select(feature => Named(feature, function, source)));
+            found.AddRange(GraphAnalysis.Extrema(expression, view, AnalysisColumns, token).Select(feature => Named(feature, function, source)));
+        }
+
+        if (functions.Count == 2)
+        {
+            found.AddRange(GraphAnalysis.Intersections(functions[0].Expression, functions[1].Expression, view, AnalysisColumns, token).Select(feature => Named(feature, null, source)));
         }
 
         return [.. found.OrderBy(feature => feature.At.X)];
     }
 
-    private TableGraphFeature Named(GraphFeature feature, TableFunction? function) => new(
+    private static TableGraphFeature Named(GraphFeature feature, TableFunction? function, GraphSource source) => new(
         feature.Kind,
         function,
-        Text(feature.X),
+        source.Text(feature.X),
         feature.Y.Display.Text,
         new GraphPoint(feature.X.ToDouble(), feature.Y.Result.ToDouble()));
+
+    private static TableGraphReading ReadAt(GraphSource source, double x, double pixel, CancellationToken token)
+    {
+        // Every x of a view is within ±10⁹⁹ (Reach), where the engine has a value for it.
+        List<(TableFunction Function, CompiledExpression Expression)> functions = source.Compile();
+        Value at = Snap(x, pixel) ?? functions[0].Expression.ValueOf(x)!.Value;
+
+        List<TableGraphValue> values = [];
+        foreach ((TableFunction function, CompiledExpression expression) in functions)
+        {
+            Calculation y = expression.Evaluate(at, token);
+            values.Add(y.Succeeded
+                ? new TableGraphValue(function, y.Display.Text, null, y.Result.ToDouble())
+                : new TableGraphValue(function, null, "error." + y.Error!.Value.Kind, null));
+        }
+
+        return new TableGraphReading(at.ToDouble(), source.Decimal(at), [.. values]);
+    }
 
     /// <summary>The view that shows every row: every x of the table, and every value of it.</summary>
     private static GraphViewport Fitted(List<double> xs, List<TablePoint> points)
@@ -315,7 +368,7 @@ public sealed partial class TableGraphViewModel : ObservableObject
     /// A mark is labelled with the engine's display of its value, as decimals: k times the step in
     /// <see langword="double"/> is 0.30000000000000004 for 3 × 0.1, which a value's fifteen digits make 0.3.
     /// </remarks>
-    private ImmutableArray<GraphTick> Ticks(double low, double high)
+    private static ImmutableArray<GraphTick> Ticks(double low, double high, GraphSource source)
     {
         double rough = (high - low) / 6d;
         double power = Math.Pow(10d, Math.Floor(Math.Log10(rough)));
@@ -325,7 +378,7 @@ public sealed partial class TableGraphViewModel : ObservableObject
         List<GraphTick> ticks = [];
         for (double k = Math.Ceiling(low / step); k * step <= high; k++)
         {
-            ticks.Add(new GraphTick(k * step, Decimal(Value.FromDouble(k * step))));
+            ticks.Add(new GraphTick(k * step, source.Decimal(Value.FromDouble(k * step))));
         }
 
         return [.. ticks];
@@ -338,15 +391,43 @@ public sealed partial class TableGraphViewModel : ObservableObject
         return places <= 14 && Math.Abs(x) < 1e15 ? Value.FromDecimal(Math.Round((decimal)x, places, MidpointRounding.AwayFromZero)) : null;
     }
 
-    private string Text(Value value) => PallasEngine.Format(value, _session.Settings, _session.Profile)?.Text ?? string.Empty;
-
-    // A place on an axis rather than a result: decimals, whatever the display's format.
-    private string Decimal(Value value) =>
-        PallasEngine.Format(value, SimulationViewModel.DecimalOutput(_session.Settings), _session.Profile)?.Text ?? string.Empty;
-
     // The Table application calculates in real numbers: a complex value, even an x given to a row by hand, is a Math
     // ERROR there, so what succeeds has a double.
     private static double? Real(Calculation? cell) => cell is { Succeeded: true } ? cell.Result.ToDouble() : null;
+
+    /// <summary>
+    /// What a graph draws: the functions of a table as the session held them when the table was generated, with the
+    /// settings it displayed them in.
+    /// </summary>
+    /// <remarks>
+    /// Each work compiles the functions on a session of its own, restored from the snapshot: a session and what is
+    /// compiled on it are used from one thread at a time, and two works - the curves and what they name - run at once.
+    /// </remarks>
+    private sealed class GraphSource(PallasEngine engine, CalculatorProfile profile, SessionSnapshot snapshot, TableType type)
+    {
+        /// <summary>Gets the functions the table holds, f(x) first.</summary>
+        public ImmutableArray<TableFunction> Functions { get; } = type switch
+        {
+            TableType.FunctionF => [TableFunction.F],
+            TableType.FunctionG => [TableFunction.G],
+            _ => [TableFunction.F, TableFunction.G],
+        };
+
+        /// <summary>Compiles the functions on a session of their own.</summary>
+        public List<(TableFunction Function, CompiledExpression Expression)> Compile()
+        {
+            CalculatorSession session = engine.CreateSession(snapshot.App, profile);
+            session.Restore(snapshot);
+            return [.. Functions.Select(function => (function, session.Compile(function == TableFunction.F ? "f(x)" : "g(x)")))];
+        }
+
+        /// <summary>Writes a value as the display writes a result.</summary>
+        public string Text(Value value) => PallasEngine.Format(value, snapshot.Settings, profile)?.Text ?? string.Empty;
+
+        /// <summary>Writes a place on an axis rather than a result: decimals, whatever the display's format.</summary>
+        public string Decimal(Value value) =>
+            PallasEngine.Format(value, SimulationViewModel.DecimalOutput(snapshot.Settings), profile)?.Text ?? string.Empty;
+    }
 }
 
 /// <summary>One curve of the graph.</summary>

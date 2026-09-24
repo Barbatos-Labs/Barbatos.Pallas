@@ -47,7 +47,9 @@ GraphAnalysis.Intersections(session.Compile("sin(x)"), session.Compile("cos(x)")
 ```
 
 An extremum is found on the engine's exact derivative, so the maximum of sin x is at exactly 90°. A change of sign at
-a pole or a jump is no root, and a curve that only touches the axis has an extremum there, not a root.
+a pole or a jump is no root, and a curve that only touches the axis has an extremum there, not a root. A curve that
+runs along the axis, as Int(x) does from -1 to 1, names no root there: every x is one. Two curves meet only where
+both have a value.
 
 Every coordinate here is a `double`: it places a point on a screen. No value this library shows is its own; see
 [docs/PRECISION.md](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/docs/PRECISION.md) §7.

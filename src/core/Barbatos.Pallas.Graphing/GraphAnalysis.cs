@@ -28,7 +28,9 @@ namespace Barbatos.Pallas.Graphing;
 /// </para>
 /// <para>
 /// What changes no sign between two samples is not found: a root where the curve only touches the axis is an extremum,
-/// and two roots closer together than a column are one change of sign or none. More columns see more.
+/// and two roots closer together than a column are one change of sign or none. More columns see more. A curve that runs
+/// along the axis changes no sign either, and every x there is as much a root as any: none is named. Two curves meet
+/// only where both have a value, so a change of places through a hole in one of them is no intersection.
 /// </para>
 /// </remarks>
 public static class GraphAnalysis
@@ -118,7 +120,10 @@ public static class GraphAnalysis
         List<GraphFeature> found = [];
         foreach (Crossing crossing in search.Crossings(viewport, columns))
         {
-            if (search.Unbroken(crossing) && Feature(GraphFeatureKind.Intersection, first, search.Settle(crossing), cancellationToken) is { } meeting)
+            // Named with the first curve's value, and only where the second has one too: x and -x(x÷x) change places
+            // through 0, where the second has none, and do not meet there (found by a property test, 24 Sep 2026).
+            GraphFeature? meeting = search.Unbroken(crossing) ? Feature(GraphFeatureKind.Intersection, first, search.Settle(crossing), cancellationToken) : null;
+            if (meeting is not null && second.Evaluate(meeting.X, cancellationToken).Succeeded)
             {
                 found.Add(meeting);
             }
@@ -182,48 +187,59 @@ public static class GraphAnalysis
         }
 
         /// <summary>The changes of sign between the samples of a viewport's x, left to right.</summary>
+        /// <remarks>
+        /// A sample at which the function is zero is a change of sign only where the samples either side have opposite
+        /// signs. Where it only touches zero, it turns there; where a neighbour is zero too, it runs along zero, and
+        /// every x there is as much a root as any other: Int(x) is 0 from -1 to 1, and named 145 roots across a table
+        /// of it before 24 Sep 2026. At the first and the last sample the side beyond is one more sample outside the
+        /// viewport, so a root on its edge is found as one inside it is.
+        /// </remarks>
         public List<Crossing> Crossings(GraphViewport viewport, int columns)
         {
             // Whether each sample has a value, and the value, held apart rather than matched as double?, so that every
             // condition here can be mutation-tested: a pattern's variable is unassigned in a mutant of its condition.
-            double[] xs = new double[columns + 1];
-            double[] ys = new double[columns + 1];
-            bool[] known = new bool[columns + 1];
-            for (int column = 0; column <= columns; column++)
+            // Sample i is at column i − 1: the first and the last are one column beyond each edge.
+            double[] xs = new double[columns + 3];
+            double[] ys = new double[columns + 3];
+            bool[] known = new bool[columns + 3];
+            for (int i = 0; i < columns + 3; i++)
             {
-                xs[column] = viewport.Left + (viewport.Width * column / columns);
-                double? y = At(xs[column]);
-                known[column] = y.HasValue;
-                ys[column] = y.GetValueOrDefault();
+                xs[i] = viewport.Left + (viewport.Width * (i - 1) / columns);
+                double? y = At(xs[i]);
+                known[i] = y.HasValue;
+                ys[i] = y.GetValueOrDefault();
             }
 
+            // A sample with no value has none of either sign: its y is held as 0.
             List<Crossing> crossings = [];
-            for (int column = 0; column <= columns; column++)
+            for (int i = 1; i <= columns + 1; i++)
             {
-                if (!known[column])
+                int before = Math.Sign(ys[i - 1]);
+                int after = Math.Sign(ys[i + 1]);
+                if (!known[i])
                 {
                     // No value at a sample between two of opposite signs: the slope of |x| at 0, a pole, a hole. The
-                    // interval over it is a change of sign, and what it is gets decided like any other.
-                    if (column > 0 && column < columns && known[column - 1] && known[column + 1]
-                        && Math.Sign(ys[column - 1]) * Math.Sign(ys[column + 1]) < 0)
+                    // interval over it is a change of sign, and what it is gets decided like any other. Halving it lands
+                    // on the sample itself first, so one on an edge of the viewport is named on that edge.
+                    if (before * after < 0)
                     {
-                        crossings.Add(new Crossing(xs[column - 1], ys[column - 1], xs[column + 1], ys[column + 1], Math.Sign(ys[column - 1]), Math.Sign(ys[column + 1])));
+                        crossings.Add(new Crossing(xs[i - 1], ys[i - 1], xs[i + 1], ys[i + 1], before, after));
                     }
 
                     continue;
                 }
 
-                double value = ys[column];
+                double value = ys[i];
                 if (value == 0d)
                 {
-                    // Zero at a sample: the signs either side say whether the curve crosses there or only touches.
-                    int before = column > 0 && known[column - 1] ? Math.Sign(ys[column - 1]) : 0;
-                    int after = column < columns && known[column + 1] ? Math.Sign(ys[column + 1]) : 0;
-                    crossings.Add(new Crossing(xs[column], 0d, xs[column], 0d, before, after));
+                    if (before * after < 0)
+                    {
+                        crossings.Add(new Crossing(xs[i], 0d, xs[i], 0d, before, after));
+                    }
                 }
-                else if (column < columns && known[column + 1] && Math.Sign(ys[column + 1]) == -Math.Sign(value))
+                else if (i <= columns && after == -Math.Sign(value))
                 {
-                    crossings.Add(new Crossing(xs[column], value, xs[column + 1], ys[column + 1], Math.Sign(value), Math.Sign(ys[column + 1])));
+                    crossings.Add(new Crossing(xs[i], value, xs[i + 1], ys[i + 1], Math.Sign(value), after));
                 }
             }
 
@@ -245,6 +261,15 @@ public static class GraphAnalysis
         public double Settle(Crossing crossing)
         {
             (double a, double fa, double b) = (crossing.A, crossing.ValueA, crossing.B);
+
+            // Across 0, a curve whose values there are below the calculator's smallest number is 0 over a stretch of
+            // x, every one of them a root to the engine: x÷200 is 0 from -2×10⁻⁹⁷ to 2×10⁻⁹⁷, and the halving named
+            // -8.4×10⁻⁹⁸ (24 Sep 2026). Where 0 is one of them, 0 is the root.
+            if (a < 0d && b > 0d && At(0d) == 0d)
+            {
+                return 0d;
+            }
+
             for (;;)
             {
                 double m = a + ((b - a) / 2d);
