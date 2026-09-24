@@ -1,0 +1,31 @@
+#nullable enable
+Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Numerics.AngleUnit.Degree = 0 -> Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Numerics.AngleUnit.Gradian = 2 -> Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Numerics.AngleUnit.Radian = 1 -> Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Numerics.ErrorFunction
+Barbatos.Pallas.Numerics.Fractions
+Barbatos.Pallas.Numerics.IntegerFunctions
+Barbatos.Pallas.Numerics.PoissonDistribution
+Barbatos.Pallas.Numerics.Sexagesimal
+Barbatos.Pallas.Numerics.Trigonometry
+static Barbatos.Pallas.Numerics.ErrorFunction.Erf(double x) -> double
+static Barbatos.Pallas.Numerics.ErrorFunction.Erfc(double x) -> double
+static Barbatos.Pallas.Numerics.ErrorFunction.InverseErfc(double value) -> double
+static Barbatos.Pallas.Numerics.Fractions.TryFromDecimal(decimal value, long maxDenominator, decimal tolerance, out long numerator, out long denominator) -> bool
+static Barbatos.Pallas.Numerics.IntegerFunctions.Combinations(long n, long r) -> System.Numerics.BigInteger
+static Barbatos.Pallas.Numerics.IntegerFunctions.Factorial(int n) -> System.Numerics.BigInteger
+static Barbatos.Pallas.Numerics.IntegerFunctions.LeastCommonMultiple(System.Numerics.BigInteger left, System.Numerics.BigInteger right) -> System.Numerics.BigInteger
+static Barbatos.Pallas.Numerics.IntegerFunctions.Permutations(long n, long r) -> System.Numerics.BigInteger
+static Barbatos.Pallas.Numerics.IntegerFunctions.PrimeFactors(long value) -> System.Collections.Generic.IReadOnlyList<(long Prime, int Exponent)>!
+static Barbatos.Pallas.Numerics.PoissonDistribution.Probability(double x, double mean) -> double
+static Barbatos.Pallas.Numerics.Sexagesimal.FromDegrees(decimal value, int secondsDecimals, System.MidpointRounding mode) -> (bool Negative, decimal Degrees, decimal Minutes, decimal Seconds)
+static Barbatos.Pallas.Numerics.Sexagesimal.ToDegrees(decimal degrees, decimal minutes, decimal seconds) -> decimal
+static Barbatos.Pallas.Numerics.Trigonometry.Acos(double value, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Asin(double value, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Atan(double value, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Atan2(double y, double x, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.ConvertAngle(double angle, Barbatos.Pallas.Numerics.AngleUnit from, Barbatos.Pallas.Numerics.AngleUnit to) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Cos(double angle, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Sin(double angle, Barbatos.Pallas.Numerics.AngleUnit unit) -> double
+static Barbatos.Pallas.Numerics.Trigonometry.Tan(double angle, Barbatos.Pallas.Numerics.AngleUnit unit) -> double

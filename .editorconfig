@@ -138,6 +138,13 @@ dotnet_diagnostic.RS0030.severity = error
 # Public API must be documented: every public member is a permanent commitment once on nuget.org.
 dotnet_diagnostic.CS1591.severity = warning
 
+# The public surface of src/core is tracked in PublicAPI.Shipped.txt and PublicAPI.Unshipped.txt (Phase 7): a member
+# added, removed or changed without saying so there is an error. RS0026 also forbids two public overloads that each end
+# in an optional parameter, which is what Calculate(input, cancellationToken = default) beside
+# Calculate(input, values, cancellationToken = default) is - the overloads differ in a required parameter, as the
+# BCL's own do, and adding a parameter to either later would change its line in the API files all the same.
+dotnet_diagnostic.RS0026.severity = none
+
 [tests/**.cs]
 # Pallas number types parse and format in the invariant culture unless a provider is passed, but CA1305 flags every
 # Parse(string) that has an IFormatProvider overload. Tests call the invariant overloads on purpose; library code

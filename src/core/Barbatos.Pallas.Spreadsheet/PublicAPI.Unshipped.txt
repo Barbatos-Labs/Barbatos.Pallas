@@ -1,0 +1,52 @@
+#nullable enable
+Barbatos.Pallas.Spreadsheet.NumberTable
+Barbatos.Pallas.Spreadsheet.NumberTable.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.NumberTable.RemoveRow(int row) -> void
+Barbatos.Pallas.Spreadsheet.NumberTable.Rows.get -> System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Spreadsheet.TableRow!>!
+Barbatos.Pallas.Spreadsheet.NumberTable.SetX(int row, Barbatos.Pallas.Engine.Value x, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> void
+Barbatos.Pallas.Spreadsheet.NumberTable.Succeeded.get -> bool
+Barbatos.Pallas.Spreadsheet.NumberTable.Type.get -> Barbatos.Pallas.Spreadsheet.TableType
+Barbatos.Pallas.Spreadsheet.NumberTable.Verify(int row, Barbatos.Pallas.Spreadsheet.TableFunction function, string! answer) -> bool?
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Address.get -> Barbatos.Pallas.Engine.CellAddress
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Input.get -> string!
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.IsFormula.get -> bool
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Succeeded.get -> bool
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Text.get -> string!
+Barbatos.Pallas.Spreadsheet.SpreadsheetCell.Value.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.AutoCalculate.get -> bool
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.AutoCalculate.set -> void
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Capacity.get -> int
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Cells.get -> System.Collections.Generic.IReadOnlyCollection<Barbatos.Pallas.Spreadsheet.SpreadsheetCell!>!
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Clear(Barbatos.Pallas.Engine.CellAddress address) -> void
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.ClearAll() -> void
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Columns.get -> int
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.CopyPaste(Barbatos.Pallas.Engine.CellAddress from, Barbatos.Pallas.Engine.CellAddress to) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.CutPaste(Barbatos.Pallas.Engine.CellAddress from, Barbatos.Pallas.Engine.CellAddress to) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Fill(string! formula, Barbatos.Pallas.Engine.CellAddress start, Barbatos.Pallas.Engine.CellAddress end) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.FillValue(string! input, Barbatos.Pallas.Engine.CellAddress start, Barbatos.Pallas.Engine.CellAddress end) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Recalculate() -> void
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.Rows.get -> int
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.SetConstant(Barbatos.Pallas.Engine.CellAddress address, string! input) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.SetFormula(Barbatos.Pallas.Engine.CellAddress address, string! formula) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.SpreadsheetGrid(Barbatos.Pallas.Engine.CalculatorSession! session) -> void
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.this[Barbatos.Pallas.Engine.CellAddress address].get -> Barbatos.Pallas.Spreadsheet.SpreadsheetCell?
+Barbatos.Pallas.Spreadsheet.SpreadsheetGrid.UsedBytes.get -> int
+Barbatos.Pallas.Spreadsheet.TableFunction
+Barbatos.Pallas.Spreadsheet.TableFunction.F = 0 -> Barbatos.Pallas.Spreadsheet.TableFunction
+Barbatos.Pallas.Spreadsheet.TableFunction.G = 1 -> Barbatos.Pallas.Spreadsheet.TableFunction
+Barbatos.Pallas.Spreadsheet.TableRow
+Barbatos.Pallas.Spreadsheet.TableRow.F.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Spreadsheet.TableRow.G.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Spreadsheet.TableRow.Value(Barbatos.Pallas.Spreadsheet.TableFunction function) -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Spreadsheet.TableRow.X.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Spreadsheet.TableType
+Barbatos.Pallas.Spreadsheet.TableType.FunctionF = 1 -> Barbatos.Pallas.Spreadsheet.TableType
+Barbatos.Pallas.Spreadsheet.TableType.FunctionG = 2 -> Barbatos.Pallas.Spreadsheet.TableType
+Barbatos.Pallas.Spreadsheet.TableType.FunctionsFAndG = 0 -> Barbatos.Pallas.Spreadsheet.TableType
+override Barbatos.Pallas.Spreadsheet.SpreadsheetCell.ToString() -> string!
+override Barbatos.Pallas.Spreadsheet.TableRow.ToString() -> string!
+static Barbatos.Pallas.Spreadsheet.NumberTable.Generate(Barbatos.Pallas.Engine.CalculatorSession! session, Barbatos.Pallas.Spreadsheet.TableType type, Barbatos.Pallas.Engine.Value start, Barbatos.Pallas.Engine.Value end, Barbatos.Pallas.Engine.Value step, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Spreadsheet.NumberTable!
+static Barbatos.Pallas.Spreadsheet.NumberTable.RowLimit(Barbatos.Pallas.Spreadsheet.TableType type, Barbatos.Pallas.Engine.CalculatorProfile profile) -> int

@@ -1,0 +1,7 @@
+#nullable enable
+Barbatos.Pallas.Data.AtomicWeightTables
+Barbatos.Pallas.Data.ConstantSets
+Barbatos.Pallas.Data.UnitSets
+static Barbatos.Pallas.Data.AtomicWeightTables.Ciaaw.get -> Barbatos.Pallas.Engine.AtomicWeightTable!
+static Barbatos.Pallas.Data.ConstantSets.Codata2022.get -> Barbatos.Pallas.Engine.ConstantSet!
+static Barbatos.Pallas.Data.UnitSets.NistSp811.get -> Barbatos.Pallas.Engine.UnitSet!

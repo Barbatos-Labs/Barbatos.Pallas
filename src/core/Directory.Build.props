@@ -30,6 +30,15 @@
     <AssemblyOriginatorKeyFile>$(RepositoryDirectory)src\barbatos.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <!-- The public surface of every core library, the carried ones included: after 1.0.0 an incompatible change to any
+       of them waits for 2.0.0 (docs/ARCHITECTURE.md §7). What shipped in a release is in PublicAPI.Shipped.txt, what
+       has been added since in PublicAPI.Unshipped.txt, and a public member in neither fails the build. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
   <!-- Items are evaluated after all properties, so a csproj override of PallasBanFloatingPoint is seen here. -->
   <ItemGroup Condition="'$(PallasBanFloatingPoint)' == 'true'">
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />

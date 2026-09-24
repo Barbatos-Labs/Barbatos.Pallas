@@ -19,7 +19,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 |---|---|
 | `src/core/*` | The ten engine libraries: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF`. Two are packages - Engine (carrying Expressions, Numerics, LinearAlgebra, Statistics, Solvers) and DependencyInjection (carrying Data, Spreadsheet, Graphing) |
 | `src/app/*` | Presentation (MVVM with no UI framework, so it is unit-tested), the WPF host (Barbatos.Wpf.Core, Aquarius, AquariusRouter, Barbatos.i18n.Wpf, WpfMath) |
-| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), and the floating-point IL/metadata scanner |
+| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), the public surface of every core library tracked (`PublicApiTrackingTests`), and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
@@ -52,6 +52,13 @@ M2 keypad and math input ✅, M3 Calculate end to end ✅, M4 the other screens 
 and look ✅, b a keypad per application ✅, c CATALOG, FORMAT, RCL and STO ✅), M5 persistence and shortcuts ✅,
 M6 hardening and the installer (in progress: the installer is built, signed and verified; the installed app is still to
 be walked). Phase 4 is complete.
+
+**Phase 7 - Hardening and 1.0.0 - in progress** (plan approved 24 Sep 2026): M1 the public API frozen and tracked ✅
+(`PublicAPI.*.txt` per core library), M2 `API-REFERENCE.md` per package, hand-written and checked complete by a
+test, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate, M4 calculations off the
+window's thread, M5 the release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with
+Barbatos.i18n and Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the
+maintainer.
 
 **Phase 6 - Graph and Math Box - complete ✅** (plan approved 24 Sep 2026): M1 Math Box in Engine, M2 its screens, M3
 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for screen coordinates, on a
@@ -291,6 +298,11 @@ Things that will save time:
 
 - **`ArchitectureMap` is the dependency graph.** A new `ProjectReference` means updating the map *and* the diagram
   in docs/ARCHITECTURE.md §2, or the tests fail.
+- **Every public member of `src/core` is declared** in the `PublicAPI.Unshipped.txt` beside its csproj until a release
+  moves it to `PublicAPI.Shipped.txt` (`Microsoft.CodeAnalysis.PublicApiAnalyzers`; RS0016 and RS0017 are errors). The
+  analyzer's code fix writes the line, and so does
+  `dotnet format analyzers src/core/<Library>/<Library>.csproj --diagnostics RS0016 --severity info`. A line in
+  `PublicAPI.Shipped.txt` is a promise until 2.0.0: removing or changing it is an incompatible change.
 - **Core `.csproj` files never set `TargetFramework(s)`;** `src/core/Directory.Build.props` owns it (tested).
 - **Two packages: Engine and DependencyInjection** (maintainer, 23 Sep 2026). Every other library ships inside the
   one published package that references it, and has no `PackageId` or `PackageTags`. Making a third package, or

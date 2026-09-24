@@ -11,6 +11,9 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
     <!-- Bans single-precision types in src/core. See docs/PRECISION.md §7. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
+    <!-- Tracks the public surface of src/core: a member added, changed or removed without saying so in
+         PublicAPI.*.txt is a build error (RS0016, RS0017). See docs/ARCHITECTURE.md §7. -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
   </ItemGroup>
 
   <ItemGroup Label="Core">
