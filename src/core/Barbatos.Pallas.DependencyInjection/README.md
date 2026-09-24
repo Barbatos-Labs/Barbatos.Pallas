@@ -59,5 +59,8 @@ that is not a defined value, throws there rather than producing a silently odd c
 returns the same builder and the options of every call apply in turn, so functions and data sets registered through
 any of the calls reach the one engine.
 
+Every public type and member of the package, with its signature, is in the
+[API reference](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/src/core/Barbatos.Pallas.DependencyInjection/API-REFERENCE.md).
+
 Part of [Barbatos.Pallas](https://github.com/Barbatos-Labs/Barbatos.Pallas), a precise scientific calculation
 engine for .NET 8, 9 and 10 built on decimal, double and BigInteger.

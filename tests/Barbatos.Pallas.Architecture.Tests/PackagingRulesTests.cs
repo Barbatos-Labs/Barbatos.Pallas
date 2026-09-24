@@ -105,7 +105,8 @@ public sealed class PackagingRulesTests
         }
     }
 
-    private static IEnumerable<string> Carried(string package)
+    /// <summary>The libraries a published package carries inside it.</summary>
+    internal static IEnumerable<string> Carried(string package)
     {
         XDocument document = XDocument.Load(RepositoryLayout.ProjectFile(package));
         return Property(document, "SuppressDependenciesWhenPacking") == "true"

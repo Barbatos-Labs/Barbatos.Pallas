@@ -10,11 +10,13 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
   distributions, equations, inequalities, complex numbers, Base-N, matrices, vectors, spreadsheet, tables and more,
   checked by a conformance suite built from the calculator's own worked examples.
 
-> **Status: Phase 5 - the desktop app - in progress.** The engine is complete for every application but Math Box -
-> Calculate, Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio, Spreadsheet and
-> Table - and every one of their conformance cases passes. The Windows app runs all of them, with the calculator's
-> keypad per application, its menus, and the session, history, window and language kept between runs; what remains
-> is hardening and the installer. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> **Status: Phase 7 - hardening and 1.0.0 - in progress.** The engine runs every application of the reference
+> calculator - Calculate, Complex, Base-N, Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio,
+> Spreadsheet, Table and Math Box - and every one of their conformance cases passes. The Windows app runs all of them,
+> with the calculator's keypad per application, its menus, the graph of a table, and the session, history, window and
+> language kept between runs. The public API is tracked and described member by member; what remains before 1.0.0 is on
+> nuget.org is benchmarks, a window that stays responsive through a long calculation, and the release pipeline. See the
+> [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ```csharp
 CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
@@ -39,8 +41,8 @@ dotnet add package Barbatos.Pallas.DependencyInjection
 
 | Package | What it is | Carries |
 |---|---|---|
-| `Barbatos.Pallas.Engine` | The calculation engine: evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex, and the Matrix, Vector, Statistics, Distribution, Equation, Inequality and Ratio applications. No dependencies | Expressions, Numerics, LinearAlgebra, Statistics, Solvers |
-| `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection, on Engine | Data, Spreadsheet |
+| `Barbatos.Pallas.Engine` | The calculation engine: evaluation, plugin registry, memory, formatting, calculus, Verify, Base-N, Complex, the Matrix, Vector, Statistics, Distribution, Equation, Inequality, Ratio and Math Box applications, and expressions compiled once to be calculated at many x. No dependencies | Expressions, Numerics, LinearAlgebra, Statistics, Solvers |
+| `Barbatos.Pallas.DependencyInjection` | `AddPallas()` for Microsoft.Extensions.DependencyInjection, on Engine | Data, Spreadsheet, Graphing |
 
 The engine is built from smaller libraries, each an assembly and a namespace of its own. They are too small to be worth
 a package, so each travels inside the package that references it, and its public types are there to use:
@@ -54,10 +56,12 @@ a package, so each travels inside the package that references it, and its public
 | `Barbatos.Pallas.Solvers` | Exact integer polynomials and the roots of a polynomial: the sign at a rational point, Sturm's count of the real roots, division by a rational root, Aberth's iteration | Engine |
 | `Barbatos.Pallas.Data` | CODATA constants, NIST SP 811 units, atomic weights | DependencyInjection |
 | `Barbatos.Pallas.Spreadsheet` | The sheet: constants and formulas, relative and absolute references, ranges, fills, circular-reference detection; and number tables of f(x) and g(x) | DependencyInjection |
-| `Barbatos.Pallas.Graphing` | Platform-neutral function graphing | Nothing yet: no code until Phase 6 |
+| `Barbatos.Pallas.Graphing` | Curves sampled across a viewport, with their asymptotes and jumps, and their roots, extrema and intersections on the engine's values | DependencyInjection |
 
 ## Documentation
 
+- API reference, every public type and member: [Barbatos.Pallas.Engine](src/core/Barbatos.Pallas.Engine/API-REFERENCE.md) and
+  [Barbatos.Pallas.DependencyInjection](src/core/Barbatos.Pallas.DependencyInjection/API-REFERENCE.md)
 - [Architecture](docs/ARCHITECTURE.md): packages, dependency graph, engine pipeline, plugin API, roadmap, decisions
 - [Precision strategy](docs/PRECISION.md): what Pallas promises, which built-in type holds a value, rounding, where `double` may appear
 - [Calculator catalog](docs/CALCULATOR-CATALOG.md): the functional reference

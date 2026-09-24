@@ -19,7 +19,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 |---|---|
 | `src/core/*` | The ten engine libraries: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF`. Two are packages - Engine (carrying Expressions, Numerics, LinearAlgebra, Statistics, Solvers) and DependencyInjection (carrying Data, Spreadsheet, Graphing) |
 | `src/app/*` | Presentation (MVVM with no UI framework, so it is unit-tested), the WPF host (Barbatos.Wpf.Core, Aquarius, AquariusRouter, Barbatos.i18n.Wpf, WpfMath) |
-| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), the public surface of every core library tracked (`PublicApiTrackingTests`), and the floating-point IL/metadata scanner |
+| `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), the public surface of every core library tracked (`PublicApiTrackingTests`) and described in its package's API reference (`ApiReferenceTests`), and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
@@ -55,7 +55,7 @@ be walked). Phase 4 is complete.
 
 **Phase 7 - Hardening and 1.0.0 - in progress** (plan approved 24 Sep 2026): M1 the public API frozen and tracked ✅
 (`PublicAPI.*.txt` per core library), M2 `API-REFERENCE.md` per package, hand-written and checked complete by a
-test, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate, M4 calculations off the
+test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate, M4 calculations off the
 window's thread, M5 the release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with
 Barbatos.i18n and Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the
 maintainer.
@@ -356,8 +356,11 @@ Things that will save time:
 - **XML docs on every public member** (CS1591). `<remarks>` carries the *why*, including the measurement or
   failure that produced a rule.
 - **`Directory.Build.targets` must exist** even where it adds nothing. **`.editorconfig` keeps `root = true`.**
-- **A public API change updates the package's `README.md`** (and later `API-REFERENCE.md`), and every example a
-  README shows is run by that package's `ReadmeTests`: a README that drifts from the API is a defect.
+- **A public API change updates the package's `README.md` and its `API-REFERENCE.md`.** Every example a README shows
+  is run by that package's `ReadmeTests`, and `ApiReferenceTests` fails a public type or member - an overload with its
+  parameters named - that the API reference of the package carrying it does not describe, or a type it describes that
+  is gone. The reference is written by hand in the manner of Barbatos.i18n and Barbatos.Wpf: namespaces, then types,
+  then members, each with its signature and the summary of its XML documentation.
 
 ### Identity
 

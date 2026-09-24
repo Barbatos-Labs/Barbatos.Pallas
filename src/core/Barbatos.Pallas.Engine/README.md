@@ -288,5 +288,8 @@ PallasEngine engine = PallasEngineBuilder.CreateDefault()
 Every calculation takes a `CancellationToken` and an `EngineBudget`. Exceeding either is a `TimeOut` error, never a
 hang: `Σ`, `Π`, `∫` and `d/dx` count their evaluations.
 
+Every public type and member of the package, with its signature, is in the
+[API reference](https://github.com/Barbatos-Labs/Barbatos.Pallas/blob/main/src/core/Barbatos.Pallas.Engine/API-REFERENCE.md).
+
 Part of [Barbatos.Pallas](https://github.com/Barbatos-Labs/Barbatos.Pallas), a precise scientific calculation
 engine for .NET 8, 9 and 10 built on decimal, double and BigInteger.
