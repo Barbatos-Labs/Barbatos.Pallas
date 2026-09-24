@@ -288,6 +288,21 @@ public sealed class CalculatorSession
         }
     }
 
+    /// <summary>Compiles an expression in x once, to be calculated at many values of x: a graph, a table.</summary>
+    /// <param name="input">The expression, in Canonical Linear Syntax; a relation, ÷R, Pol( and Rec( are not expressions in x.</param>
+    /// <returns>The compiled expression, or one that carries the error that kept the input from compiling.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="input"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// The input is read in the application the session is in, with its settings and its functions f and g as they are
+    /// now; <see cref="CompiledExpression.Settings"/> keeps them, so a change of the angle unit afterwards takes a new
+    /// compilation.
+    /// </remarks>
+    public CompiledExpression Compile(string input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        return Compile(input, App, _settings);
+    }
+
     /// <summary>Stores values in variables, then calculates: CALC (p. 40).</summary>
     /// <param name="input">The input in Canonical Linear Syntax.</param>
     /// <param name="values">The variable values.</param>
@@ -727,6 +742,56 @@ public sealed class CalculatorSession
 
         UpdateAnswers(result.Value);
         return new Calculation(input, app, settings, Profile, CalculationKind.Value, result.Value, null, null, null, [.. context.Integrals], hints);
+    }
+
+    /// <summary>Compiles an expression in x for an application and settings, which a derivative keeps from its expression.</summary>
+    internal CompiledExpression Compile(string input, CalculatorApp app, CalculatorSettings settings)
+    {
+        ParseResult parsed = ExpressionParser.Parse(input, new SyntaxContext(app, AllowRelations: false), _engine.Vocabulary);
+        if (!parsed.Succeeded)
+        {
+            return new CompiledExpression(this, input, app, settings, null, DisplayHints.None, ToError(parsed.Diagnostic!.Value));
+        }
+
+        StatisticsSetup statistics = new(StatisticsData.IsTwoVariable, _regression);
+        BoundStatement? statement = Binder.Bind(parsed.Root, _engine.Catalog, app, settings, _definitions, statistics, out int slotCount, out CalcError? bindError);
+        if (statement is null)
+        {
+            return new CompiledExpression(this, input, app, settings, null, DisplayHints.None, bindError);
+        }
+
+        // ÷R, Pol( and Rec( give two results, not a value of x.
+        if (statement.Kind != StatementKind.Expression)
+        {
+            return new CompiledExpression(this, input, app, settings, null, DisplayHints.None, new CalcError(CalcErrorKind.SyntaxError, statement.Span));
+        }
+
+        // Calculated at many x, so what is the same at every x is calculated once (ConstantFolder).
+        EvaluationContext folding = new(_engine.Catalog, app, settings, Profile, Budget, _random, CancellationToken.None, CellValues);
+        BoundStatement folded = statement with { Operands = [ConstantFolder.Fold(statement.Operands[0], folding)] };
+        return new CompiledExpression(this, input, app, settings, Compiler.Compile(folded, slotCount), DisplayHintReader.Read(parsed.Root), null);
+    }
+
+    /// <summary>Runs a compiled expression with x holding a value, storing nothing.</summary>
+    internal EvalResult RunCompiled(
+        CompiledProgram program,
+        CalculatorApp app,
+        CalculatorSettings settings,
+        Value x,
+        CancellationToken cancellationToken,
+        out EvaluationContext context,
+        out SourceSpan errorSpan)
+    {
+        EvaluationContext evaluation = new(_engine.Catalog, app, settings, Profile, Budget, _random, cancellationToken, CellValues);
+        Evaluator evaluator = new(
+            program,
+            evaluation,
+            memory => memory == MemorySlot.X ? x : LoadMemory(memory),
+            statistic => LoadStatistic(statistic, evaluation));
+        EvalResult result = evaluator.Run(0);
+        context = evaluation;
+        errorSpan = evaluator.ErrorSpan;
+        return result;
     }
 
     private Calculation Verify(string input, BoundStatement statement, Evaluator evaluator, EvaluationContext context)

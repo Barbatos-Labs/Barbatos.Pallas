@@ -141,8 +141,9 @@ using Barbatos.Pallas.DependencyInjection;
 using Barbatos.Pallas.Engine;
 using Microsoft.Extensions.DependencyInjection;
 
-// DependencyInjection brings Engine as a dependency and carries the reference data and the spreadsheet.
-Carried(typeof(Barbatos.Pallas.Data.ConstantSets), typeof(Barbatos.Pallas.Spreadsheet.SpreadsheetGrid));
+// DependencyInjection brings Engine as a dependency and carries the reference data, the spreadsheet and graphing.
+Carried(typeof(Barbatos.Pallas.Data.ConstantSets), typeof(Barbatos.Pallas.Spreadsheet.SpreadsheetGrid),
+    typeof(Barbatos.Pallas.Graphing.GraphSampler));
 
 ServiceCollection services = new();
 services.AddPallas();
@@ -150,6 +151,17 @@ using ServiceProvider provider = services.BuildServiceProvider();
 CalculatorSession session = provider.GetRequiredService<CalculatorSession>();
 Expect(session, "2/3+1/1/2", "13/6");
 Expect(session, "@c*2", "599584916");
+
+// The graph of x^2-2: one piece across the square, and its roots at plus and minus the square root of 2.
+Barbatos.Pallas.Graphing.GraphViewport view = new(-3, 3, -3, 3);
+CompiledExpression parabola = session.Compile("x^2" + char.ConvertFromUtf32(0x2212) + "2");
+int pieces = Barbatos.Pallas.Graphing.GraphSampler.Sample(parabola, view, 300, 300).Pieces.Length;
+decimal root = Barbatos.Pallas.Graphing.GraphAnalysis.Roots(parabola, view, 60)[1].X.ToDecimal();
+Console.WriteLine("graph of x^2-2: " + pieces + " piece, root " + root);
+if (pieces != 1 || root != 1.41421356237310m)
+{
+    throw new InvalidOperationException("The graph of x^2-2 was " + pieces + " pieces with a root at " + root + ".");
+}
 '@
 
 try {

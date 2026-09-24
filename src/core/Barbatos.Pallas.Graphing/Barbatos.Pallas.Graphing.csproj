@@ -2,12 +2,15 @@
 
   <PropertyGroup>
     <RootNamespace>Barbatos.Pallas.Graphing</RootNamespace>
-    <Description>Platform-neutral function graphing for Barbatos.Pallas: adaptive sampling, asymptote detection, and roots, extrema and intersections.</Description>
+    <Description>Platform-neutral function graphing for Barbatos.Pallas: adaptive sampling clipped to a viewport, asymptote and jump detection, and roots, extrema and intersections on the engine's own values.</Description>
   </PropertyGroup>
 
+  <!--
+    Not a package of its own: the DependencyInjection package carries it (docs/ARCHITECTURE.md §10). It reads only the
+    Engine's public CompiledExpression, and Solvers comes with the Engine.
+  -->
   <ItemGroup>
     <ProjectReference Include="..\Barbatos.Pallas.Engine\Barbatos.Pallas.Engine.csproj" />
-    <ProjectReference Include="..\Barbatos.Pallas.Solvers\Barbatos.Pallas.Solvers.csproj" />
   </ItemGroup>
 
 </Project>

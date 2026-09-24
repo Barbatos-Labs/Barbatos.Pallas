@@ -36,6 +36,13 @@ public sealed class CoreFloatingPointTests
                     "The engine calls System.Math and System.Numerics.Complex directly for transcendental and complex functions, "
                     + "holds values decimal cannot keep to 15 significant digits as double, and integrates numerically (PRECISION.md §§3, 6, 7)."),
             ],
+            ["Barbatos.Pallas.Graphing"] =
+            [
+                ("Barbatos.Pallas.Graphing.",
+                    "Screen coordinates: where a point of a curve is drawn, and where a root, an extremum or an intersection lies "
+                    + "between two samples. Every value shown is the engine's, calculated at that x as a value to 15 significant "
+                    + "digits (PRECISION.md §7, decision of 24 Sep 2026)."),
+            ],
         };
 
     public static TheoryData<string> CoreAssemblies => [.. ArchitectureMap.CoreProjects];

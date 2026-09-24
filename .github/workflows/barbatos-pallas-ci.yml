@@ -87,6 +87,10 @@ jobs:
         working-directory: tests/Barbatos.Pallas.Spreadsheet.Tests
         run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Spreadsheet
 
+      - name: Mutation testing (Graphing)
+        working-directory: tests/Barbatos.Pallas.Graphing.Tests
+        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Graphing
+
       # Data is only static initialization, whose mutants the MTP runner cannot switch; its tests check every value
       # against its defining relation instead.
       - name: Mutation testing (DependencyInjection)

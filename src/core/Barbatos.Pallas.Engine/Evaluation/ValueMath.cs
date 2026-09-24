@@ -387,14 +387,17 @@ internal static class ValueMath
     }
 
     /// <summary>Makes a real value from a <see cref="double"/>: Math ERROR for NaN, infinity or the profile's range.</summary>
-    public static EvalResult Real(double value, ExactForm? form, EvaluationContext context)
+    public static EvalResult Real(double value, ExactForm? form, EvaluationContext context) => Real(value, form, context.Profile);
+
+    /// <summary>A <see cref="double"/> as a value of a profile: its range, and the precision rule.</summary>
+    public static EvalResult Real(double value, ExactForm? form, CalculatorProfile profile)
     {
         if (!double.IsFinite(value))
         {
             return MathError;
         }
 
-        if (context.Profile == CalculatorProfile.Standard)
+        if (profile == CalculatorProfile.Standard)
         {
             double magnitude = Math.Abs(value);
             if (magnitude >= StandardLimit)

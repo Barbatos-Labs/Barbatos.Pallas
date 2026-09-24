@@ -14,8 +14,8 @@ dotnet add package Barbatos.Pallas.Engine
 The package has no dependencies. It carries the libraries the engine is built on, each an assembly and a namespace of
 its own, whose public types can be used directly: `Barbatos.Pallas.Expressions` (the lexer, the parser and the linear
 and LaTeX printers), `Barbatos.Pallas.Numerics`, `Barbatos.Pallas.LinearAlgebra`, `Barbatos.Pallas.Statistics` and
-`Barbatos.Pallas.Solvers`. The reference data - CODATA constants, NIST unit conversions, CIAAW atomic weights - and the
-spreadsheet come with
+`Barbatos.Pallas.Solvers`. The reference data - CODATA constants, NIST unit conversions, CIAAW atomic weights - the
+spreadsheet and function graphing come with
 [Barbatos.Pallas.DependencyInjection](https://www.nuget.org/packages/Barbatos.Pallas.DependencyInjection), which
 depends on this package.
 
@@ -222,6 +222,24 @@ NumberLine.Fit([axis]).Scale;                                                   
 
 session.CircleAngle(CircleKind.UnitCircle, N(45)).Sine!.Display.Text;               // "√(2)⌟2"
 session.Clock(3).Larger.Display.Text;                                                // "270"
+```
+
+## Compiled expressions
+
+An expression in x that is calculated at many x - a graph, a table - is compiled once. It calculates exactly as the
+session would with x holding the value, under the settings in effect when it was compiled, and stores nothing.
+`TryEvaluate` hands back a `double` for drawing, `ValueOf` says what value an x given as a `double` becomes, and
+`Derivative` compiles the exact derivative in x. What is the
+same at every x, such as √(2π), is calculated once when the expression is compiled.
+
+```csharp
+CompiledExpression density = session.Compile("e^(−x^2÷2)÷√(2π)");
+
+density.Evaluate(N(0)).Display.Text;                         // "0.3989422804"
+density.TryEvaluate(1.5, out double y);                      // true, y ≈ 0.129517595665892
+density.ValueOf(1e-100);                                     // 0: below the calculator's range
+session.Compile("x^3").Derivative().Evaluate(N(0.1m)).Result; // 0.03, exactly
+session.Compile("x=2").Error!.Value.Kind;                    // CalcErrorKind.SyntaxError: a relation is not an expression in x
 ```
 
 ## Spreadsheet cells and tables

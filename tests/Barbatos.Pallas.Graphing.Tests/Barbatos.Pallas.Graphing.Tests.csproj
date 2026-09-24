@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Barbatos.Pallas.Graphing is checked against curves whose shape is known, never against itself:
+      * pieces, breaks and clipping against functions with known roots, poles, jumps and domains;
+      * roots, extrema and intersections against their closed forms, and against the engine's own values there;
+      * mutation testing (stryker-config.json).
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\core\Barbatos.Pallas.Graphing\Barbatos.Pallas.Graphing.csproj" />
+  </ItemGroup>
+
+</Project>

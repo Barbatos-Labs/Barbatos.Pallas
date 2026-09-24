@@ -12,11 +12,12 @@ dotnet add package Barbatos.Pallas.DependencyInjection
 ```
 
 It depends on [Barbatos.Pallas.Engine](https://www.nuget.org/packages/Barbatos.Pallas.Engine),
-`Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Options`, and it carries two
+`Microsoft.Extensions.DependencyInjection.Abstractions` and `Microsoft.Extensions.Options`, and it carries three
 libraries of its own, each an assembly and a namespace whose public types can be used directly:
-`Barbatos.Pallas.Data` (the reference data below) and `Barbatos.Pallas.Spreadsheet` (the Spreadsheet and Table
-applications). A program without a container can take this package for the data alone and add it to
-`PallasEngineBuilder` itself.
+`Barbatos.Pallas.Data` (the reference data below), `Barbatos.Pallas.Spreadsheet` (the Spreadsheet and Table
+applications) and `Barbatos.Pallas.Graphing` (the graph of an expression in x: its pieces clipped to a viewport, its
+asymptotes and jumps, and its roots, extrema and intersections). A program without a container can take this package
+for the data alone and add it to `PallasEngineBuilder` itself.
 
 ## One call
 

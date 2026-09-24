@@ -24,8 +24,8 @@ internal static class ArchitectureMap
         ["Barbatos.Pallas.Engine"] = ["Barbatos.Pallas.Numerics", "Barbatos.Pallas.Expressions", "Barbatos.Pallas.LinearAlgebra", "Barbatos.Pallas.Statistics", "Barbatos.Pallas.Solvers"],
         ["Barbatos.Pallas.Spreadsheet"] = ["Barbatos.Pallas.Engine"],
         ["Barbatos.Pallas.Data"] = ["Barbatos.Pallas.Engine"],
-        ["Barbatos.Pallas.Graphing"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Solvers"],
-        ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Data", "Barbatos.Pallas.Spreadsheet"],
+        ["Barbatos.Pallas.Graphing"] = ["Barbatos.Pallas.Engine"],
+        ["Barbatos.Pallas.DependencyInjection"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Data", "Barbatos.Pallas.Spreadsheet", "Barbatos.Pallas.Graphing"],
         ["Barbatos.Pallas.Presentation"] = ["Barbatos.Pallas.Engine", "Barbatos.Pallas.Spreadsheet"],
         ["Barbatos.Pallas.Wpf"] = ["Barbatos.Pallas.Presentation", "Barbatos.Pallas.DependencyInjection"],
     };
@@ -40,11 +40,11 @@ internal static class ArchitectureMap
         "Barbatos.Pallas.DependencyInjection",
     ];
 
-    /// <summary>Libraries no package carries, with the reason; one that gains code has to be given a package.</summary>
-    public static readonly IReadOnlyDictionary<string, string> NotShipped = new Dictionary<string, string>
-    {
-        ["Barbatos.Pallas.Graphing"] = "it has no code until Phase 6",
-    };
+    /// <summary>
+    /// Libraries no package carries, with the reason; one that gains code has to be given a package. None since Phase 6
+    /// gave Graphing its code and the DependencyInjection package carries it.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> NotShipped = new Dictionary<string, string>();
 
     /// <summary>Projects under src/core: platform-neutral; binary floating point only where allow-listed.</summary>
     public static readonly string[] CoreProjects =

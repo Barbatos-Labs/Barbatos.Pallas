@@ -17,17 +17,18 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 
 | Path | What |
 |---|---|
-| `src/core/*` | The ten engine libraries: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF`. Two are packages - Engine (carrying Expressions, Numerics, LinearAlgebra, Statistics, Solvers) and DependencyInjection (carrying Data, Spreadsheet); Graphing has no code until Phase 6 |
+| `src/core/*` | The ten engine libraries: net8.0;net9.0;net10.0, platform-neutral; no `float`, `Half` or `MathF`. Two are packages - Engine (carrying Expressions, Numerics, LinearAlgebra, Statistics, Solvers) and DependencyInjection (carrying Data, Spreadsheet, Graphing) |
 | `src/app/*` | Presentation (MVVM with no UI framework, so it is unit-tested), the WPF host (Barbatos.Wpf.Core, Aquarius, AquariusRouter, Barbatos.i18n.Wpf, WpfMath) |
 | `tests/Barbatos.Pallas.Architecture.Tests` | Dependency graph (`ArchitectureMap`), which projects are packages and what each carries (`PackagingRulesTests`), and the floating-point IL/metadata scanner |
 | `tests/Barbatos.Pallas.Conformance.Tests` | Worked examples of the reference calculator's manual as JSON data (`Data/calculator`) |
 | `tests/Barbatos.Pallas.Numerics.Tests` | Accuracy against PeterO.Numbers 40-digit references (50-digit for erf, erfc and Poisson), CsCheck properties, manual values |
 | `tests/Barbatos.Pallas.Expressions.Tests` | Precedence as tree shapes, print-and-reparse properties per application, fuzzing, lexer allocations |
-| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, matrices and vectors, statistics, distributions, Math Box (the Same Result presets pinned value by value), plugins, integrals against PeterO.Numbers, evaluation properties |
+| `tests/Barbatos.Pallas.Engine.Tests` | The precision rule value by value, display forms, calculus, Verify, Base-N, matrices and vectors, statistics, distributions, Math Box (the Same Result presets pinned value by value), compiled expressions against the line (constant folding included), plugins, integrals against PeterO.Numbers, evaluation properties |
 | `tests/Barbatos.Pallas.LinearAlgebra.Tests` | Exact determinants, inverses and linear systems against the Leibniz formula and multiplication back |
 | `tests/Barbatos.Pallas.Statistics.Tests` | Exact sums, variances and fits against the manual's fractions, two-pass definitions and normal equations; quartile ranks |
 | `tests/Barbatos.Pallas.Solvers.Tests` | Integer polynomials against polynomials built from known roots (sign, square-free part, Sturm count, division); iterated roots against those roots |
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
+| `tests/Barbatos.Pallas.Graphing.Tests` | Curves whose shape is known: pieces clipped to the viewport, chords within half a pixel, asymptotes, jumps and domain edges; roots, extrema and intersections against their closed forms and the engine's values there |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
 | `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
@@ -53,8 +54,8 @@ M6 hardening and the installer (in progress: the installer is built, signed and 
 be walked). Phase 4 is complete.
 
 **Phase 6 - Graph and Math Box - in progress** (plan approved 24 Sep 2026). Milestones: M1 Math Box in Engine ✅,
-M2 its screens ✅, M3 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for
-screen coordinates, and a compiled-expression API in Engine), M4 the graph as a view of the Table application, M5
+M2 its screens ✅, M3 Graphing ✅ (a library carried by the DependencyInjection package, with an `AllowList` entry for
+screen coordinates, on a compiled-expression API in Engine), M4 the graph as a view of the Table application, M5
 hardening. Since M1 every application has its engine and every conformance case runs, none skipped.
 
 - The app: `CalculatorShellViewModel` owns the one session; `CalculatorApps` is the registry every screen and the
@@ -92,7 +93,13 @@ hardening. Since M1 every application has its engine and every conformance case 
 - Engine binds, compiles and evaluates that tree: `Value` with the precision rule, exact display forms, sessions and
   memory, the formatter and the FORMAT conversions, calculus, Verify, Complex and Base-N, the plugin API, and the Math
   Box application: `CalculatorSession.Simulate` (Dice Roll and Coin Toss, with the Same Result presets of D8),
-  `NumberLine` and `CalculatorSession.CircleAngle` and `Clock`.
+  `NumberLine` and `CalculatorSession.CircleAngle` and `Clock`. `CalculatorSession.Compile` gives a
+  `CompiledExpression` in x, read and bound once, calculated as the line would at many x (`Evaluate`, `TryEvaluate`
+  for drawing at the value `ValueOf` says an x becomes, `Derivative`), with its constant calls folded once
+  (`ConstantFolder`).
+- Graphing samples a `CompiledExpression` across a `GraphViewport` (`GraphSampler`: pieces clipped to it, breaks told
+  apart as asymptotes or jumps) and finds roots, extrema and intersections on the engine's values (`GraphAnalysis`,
+  `GraphFeature`: x a `Value`, y the engine's `Calculation`). Its `double` only places points.
 - Data ships the CODATA 2022 constants, the NIST SP 811 unit conversions and the CIAAW atomic weights;
   DependencyInjection ships `AddPallas()`.
 - LinearAlgebra holds exact elimination of `decimal` matrices (`ExactLinearAlgebra`); the Matrix and Vector
@@ -140,10 +147,10 @@ Things that will save time:
   - coverage comes from `Microsoft.Testing.Extensions.CodeCoverage`.
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
-  (a net8.0-only compile error). A full run is 12 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
-  = 37 assemblies.
+  (a net8.0-only compile error). A full run is 13 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
+  = 40 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the two published packages,
-  Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection; the other seven libraries with code travel inside
+  Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection; the other eight libraries travel inside
   them (docs/ARCHITECTURE.md §10). Then `./build/Test-Packages.ps1 -PackageDirectory artifacts/packages` installs them
   into programs outside the repository and calculates on net8.0, net9.0 and net10.0, which is the only check of what a
   user gets: a package that leaves out an assembly packs, builds and tests cleanly. Pack into an empty folder - the
@@ -170,14 +177,18 @@ Things that will save time:
   Run both from `tests/Barbatos.Pallas.Numerics.Tests`, `tests/Barbatos.Pallas.Expressions.Tests`,
   `tests/Barbatos.Pallas.Engine.Tests`, `tests/Barbatos.Pallas.LinearAlgebra.Tests`,
   `tests/Barbatos.Pallas.Statistics.Tests`, `tests/Barbatos.Pallas.Solvers.Tests`,
-  `tests/Barbatos.Pallas.Spreadsheet.Tests`, `tests/Barbatos.Pallas.DependencyInjection.Tests` or
-  `tests/Barbatos.Pallas.Presentation.Tests`, whose
+  `tests/Barbatos.Pallas.Spreadsheet.Tests`, `tests/Barbatos.Pallas.Graphing.Tests`,
+  `tests/Barbatos.Pallas.DependencyInjection.Tests` or `tests/Barbatos.Pallas.Presentation.Tests`, whose
   `stryker-config.json` selects the MTP runner and ignores string mutations (exception messages are not results). Data
   has no Stryker run: it is all static initialization (below). Stryker builds the test project it runs from, so a
   `dotnet test` of that project during a run replaces the mutated assembly, and a deliberately failing scratch test
   aborts the run. Four traps:
   - a `while (true)` makes Stryker skip every mutant in the method, because `while (false)` does not compile; write
     `for (;;)`;
+  - so does a pattern variable in a condition (`fa is not { } ya || fb is not { } yb`): a mutant of the condition
+    leaves the variable unassigned, and Stryker puts the whole method in "Safe Mode", testing nothing there. Read the
+    value out instead (`if (fa is null) … double ya = fa.Value;`). Graphing's `Interval` and `Crossings` went
+    untested this way until 24 Sep 2026; look for "Safe Mode" in the log;
   - a domain check that `System.Math` would also reject survives unless the test asserts `WithParameterName`;
   - the MTP runner cannot switch mutants inside static initialization, so they are all reported as survivors.
     `StandardVocabulary.cs` is data built once for `SyntaxVocabulary.Standard` and is excluded from mutation.
@@ -223,14 +234,15 @@ Things that will save time:
   Tests compare such values within a tolerance or at the 10 displayed digits. Exact comparisons are only for
   special angles and for tests that pin a measured platform behavior.
 - **`float`, `Half` and `MathF` nowhere in `src/core`; `double` and `System.Numerics.Complex` only in assemblies on
-  `CoreFloatingPointTests.AllowList`** (Numerics now, Engine from Phase 3). Two locks enforce it:
+  `CoreFloatingPointTests.AllowList`** (Numerics, `PolynomialRoots` in Solvers, Engine, and Graphing for screen
+  coordinates since Phase 6). Two locks enforce it:
   1. `BannedApiAnalyzers` (RS0030, an error) bans the single-precision types;
   2. `CoreFloatingPointTests` scans compiled IL and metadata against `AllowList`.
 - **The analyzer alone is not enough.** It was measured to catch member use but *not* declarations: a `double` field,
   parameter or local and a literal `1.5` compile cleanly. Only the scanner sees those. Never weaken or skip the
   scanner; if it misbehaves, fix it and keep its self-tests (`FloatingPointScannerTests`) green.
-- **A new `AllowList` entry** (Graphing's screen coordinates in Phase 6 is the expected one) is reviewed like a change
-  to PRECISION.md.
+- **A new `AllowList` entry** is reviewed like a change to PRECISION.md, as Graphing's was (PRECISION.md §7: its
+  `double` places points and never shows a value of its own; every y is the engine's calculation).
 - **Always pass a `MidpointRounding`.** .NET's defaults disagree: `Math.Round(2.5m)` is 2, `2.5m.ToString("F0")` is 3.
   The display default is `AwayFromZero`.
 - **Rounding only at explicit boundaries:** display, `Rnd`/`Round`, `double` → `decimal` conversion, and entering a
@@ -275,8 +287,8 @@ Things that will save time:
   one published package that references it, and has no `PackageId` or `PackageTags`. Making a third package, or
   moving a library from one package to the other, is the maintainer's decision; `PackagingRulesTests` fails until
   `ArchitectureMap.PublishedPackages` says so. A PackageReference in Engine would be dropped from its package without
-  a word (it suppresses its dependencies), which is why that test also fails on one. Graphing gets a package when
-  Phase 6 gives it code.
+  a word (it suppresses its dependencies), which is why that test also fails on one. Graphing ships inside
+  DependencyInjection, as Data and Spreadsheet do (Phase 6 plan, 24 Sep 2026).
 - **No reflection-based discovery, no `InternalsVisibleTo`.** iOS needs full AOT, and test needs are met through
   public API.
 - **The core is language-neutral:** errors are `CalcErrorKind` + span, and text is localized in the app.

@@ -238,8 +238,19 @@ itself tested: it must find every deliberately planted usage, and must not flag 
 reason.
 - `Barbatos.Pallas.Numerics` (`Trigonometry`).
 - `Barbatos.Pallas.Engine`: it calls `System.Math` and `System.Numerics.Complex` directly (§6), holds values `decimal`
-  cannot keep to 15 significant digits, and integrates numerically. Graphing's screen coordinates get an entry in
-  Phase 6.
+  cannot keep to 15 significant digits, and integrates numerically.
+- `Barbatos.Pallas.Graphing` (decision of 24 Sep 2026): screen coordinates, and where between two samples a root, an
+  extremum or an intersection lies. No value it shows is its own. A point is drawn at the engine's value for that x,
+  from `CompiledExpression.TryEvaluate`, which calculates exactly as the session does, at the value x becomes
+  (`CompiledExpression.ValueOf`: 15 significant digits, within the profile's range, so 10⁻¹⁰⁰ is 0 in the Standard
+  profile). A root is placed by halving on the engine's values until the two ends are neighbouring doubles. Of the
+  two 15-digit values those ends become, the one where the engine's value is nearer zero is taken, so a root at 1 is
+  exactly 1. Where the engine cannot tell them apart, the tie goes away from zero, as the display rounds a midpoint:
+  x² is held to 15 digits, so x²−2 is ±10⁻¹⁴ at both 1.41421356237309 and 1.41421356237310, and √2 is the second.
+  Across a break - a pole, a jump, a hole - nothing is named: the test is the sampler's own (`Continuity`), so the
+  curve drawn and the points named on it agree. An extremum is placed on the engine's exact derivative rather than
+  on the flat curve, where x would only be known to half the digits of y. Its y, like every y named, is the
+  engine's calculation at that x, exact forms included: sin and cos meet at 45° with y = √(2)⌟2.
 - `Barbatos.Pallas.Data` needs none: a published value is a `decimal` mantissa and a power of ten (`ScaledDecimal`).
 - `Barbatos.Pallas.LinearAlgebra` and `Barbatos.Pallas.Statistics` need none: they work on `decimal` values scaled to
   integers. The Phase 4 plan allowed `double` in Statistics; it was not needed, because square roots, logarithms and
@@ -299,6 +310,14 @@ The engine for each domain is designed in its phase. These are the rules it star
   calculator) but promises nothing more: `double` cannot guarantee it for a difficult integrand, and it used to end in
   Time Out (decision of 18 Sep 2026). Every integral of a calculation reports its estimate in
   `Calculation.Integrals` (I7).
+
+**Compiled expressions** (Phase 6). `CalculatorSession.Compile` reads, binds and compiles an expression in x once, for
+a graph that calculates it at thousands of x. It calculates exactly as the line does: the same program, the same
+settings, the same precision rule, with x lent to it and nothing stored. What is the same at every x, a call whose
+arguments are all constants such as √(2π), is calculated once when the expression is compiled (`ConstantFolder`). That
+is the same operation on the same values, so the same value and exact form, and the tests compare a compiled
+expression's result, display and error with the line's for such inputs. Ran#, RanInt#(, plugin functions and a call
+that fails are left to be calculated each time.
 
 **Equation, Inequality and Ratio** (Phase 4).
 - A system of linear equations is exact: each row is scaled into integers, which leaves the solution where it is, and

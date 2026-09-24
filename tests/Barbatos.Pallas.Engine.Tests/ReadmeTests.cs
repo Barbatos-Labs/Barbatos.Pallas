@@ -187,6 +187,22 @@ public sealed class ReadmeTests
     }
 
     [Fact]
+    public void CompiledExpressions()
+    {
+        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();
+        static Value N(decimal value) => Value.FromDecimal(value);
+
+        CompiledExpression density = session.Compile("e^(−x^2÷2)÷√(2π)");
+
+        density.Evaluate(N(0)).Display.Text.Should().Be("0.3989422804");
+        density.TryEvaluate(1.5, out double y).Should().BeTrue();
+        y.Should().BeApproximately(0.129517595665892, 1e-15);
+        density.ValueOf(1e-100)!.Value.ToDecimal().Should().Be(0m);
+        session.Compile("x^3").Derivative().Evaluate(N(0.1m)).Result.ToDecimal().Should().Be(0.03m);
+        session.Compile("x=2").Error!.Value.Kind.Should().Be(CalcErrorKind.SyntaxError);
+    }
+
+    [Fact]
     public void SpreadsheetCellsAndTables()
     {
         PallasEngine engine = PallasEngineBuilder.CreateDefault().Build();
