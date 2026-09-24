@@ -11,20 +11,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <TextBox MinWidth="56"
-                         TextAlignment="Right"
-                         Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource CellBox}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasError}" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource Danger}" />
-                                    <Setter Property="Foreground" Value="{StaticResource Danger}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
+                <TextBox Style="{StaticResource ValueCellBox}" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
     </ItemsControl>

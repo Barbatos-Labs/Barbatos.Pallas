@@ -149,6 +149,9 @@ public sealed partial class ValueGridViewModel : ObservableObject
     /// <summary>Gets whether any cell holds something that is not a value.</summary>
     public bool HasError => Cells.Any(cell => cell.HasError);
 
+    /// <summary>Gets the localization key of the error of the first cell that has one, or <see langword="null"/>.</summary>
+    public string? ErrorKey => Cells.Select(cell => cell.ErrorKey).FirstOrDefault(key => key is not null);
+
     /// <summary>Changes the size of the grid, keeping what fits.</summary>
     /// <param name="rows">How many rows.</param>
     /// <param name="columns">How many columns.</param>

@@ -33,6 +33,7 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     private RatioViewModel? _ratio;
     private TableViewModel? _table;
     private SpreadsheetViewModel? _spreadsheet;
+    private MathBoxViewModel? _mathBox;
 
     /// <summary>Creates the shell over a session and the store its snapshot goes to.</summary>
     /// <param name="session">The session every application shares.</param>
@@ -111,6 +112,9 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     /// <summary>Gets the Spreadsheet screen.</summary>
     public SpreadsheetViewModel Spreadsheet => _spreadsheet ??= new SpreadsheetViewModel(Session);
 
+    /// <summary>Gets the Math Box screen.</summary>
+    public MathBoxViewModel MathBox => _mathBox ??= new MathBoxViewModel(Session);
+
     /// <summary>Raised when a key asks for a screen the shell does not own, with the route of that screen.</summary>
     /// <remarks>The host navigates; the shell knows which application a route belongs to and nothing about windows.</remarks>
     public event EventHandler<string>? NavigationRequested;
@@ -146,6 +150,12 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         // the line of the calculator now belongs to another application.
         Settings.Refresh();
         Calculate.Refresh();
+
+        // A new angle unit clears the number lines of Math Box (p. 155), and its values are written in the settings.
+        if (app.App == CalculatorApp.MathBox)
+        {
+            _mathBox?.Refresh();
+        }
     }
 
     /// <summary>Returns the line of the calculator on the screen a route shows, which is where a shortcut types.</summary>

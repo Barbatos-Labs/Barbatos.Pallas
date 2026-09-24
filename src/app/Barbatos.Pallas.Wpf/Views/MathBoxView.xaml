@@ -1,0 +1,510 @@
+<UserControl x:Class="Barbatos.Pallas.Wpf.Views.MathBoxView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:i18n="http://schemas.barbatos.co/i18n/2026/xaml"
+             xmlns:aqr="http://schemas.barbatos.co/aquariusrouter/2026/xaml"
+             xmlns:wpfmath="clr-namespace:WpfMath.Controls;assembly=WpfMath"
+             xmlns:presentation="clr-namespace:Barbatos.Pallas.Presentation;assembly=Barbatos.Pallas.Presentation"
+             xmlns:views="clr-namespace:Barbatos.Pallas.Wpf.Views">
+    <UserControl.Resources>
+        <Style x:Key="WhenMenu" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMenu}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenTool" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMenu}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenResult" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasResult}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenList" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding View}" Value="{x:Static presentation:SimulationResultView.List}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenFrequencies" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding View}" Value="{x:Static presentation:SimulationResultView.RelativeFrequency}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Only two dice can count something other than their sum. -->
+        <Style x:Key="WhenTallies" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Tallies.Length}" Value="1">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenStored" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Stored}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenUpperBound" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasUpperBound}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenDrawn" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDrawn}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenClock" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsClock}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenCircle" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsClock}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="WhenValue" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ErrorKey}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+        <Style x:Key="WhenNoValue" TargetType="FrameworkElement">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ErrorKey}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="ChoiceText">
+            <TextBlock Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+        </DataTemplate>
+
+        <!-- ── Dice Roll and Coin Toss (pp. 147-153) ─────────────────────────────────────────────────────── -->
+        <DataTemplate DataType="{x:Type presentation:SimulationViewModel}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="0" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,8">
+                    <WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,14,2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer BindText={Binding Kind}, Namespace='count'}" />
+                            <ComboBox Style="{StaticResource Choice}" MinWidth="64" ItemsSource="{Binding Counts}" SelectedItem="{Binding Count}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,14,2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer Text='mathbox.attempts'}" />
+                            <views:ValueGridView Width="90" DataContext="{Binding Attempts}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,14,2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer Text='mathbox.sameResult'}" />
+                            <ComboBox Style="{StaticResource Choice}"
+                                      MinWidth="80"
+                                      ItemsSource="{Binding SameResults}"
+                                      SelectedItem="{Binding SameResult}"
+                                      ItemTemplate="{StaticResource ChoiceText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Command="{Binding ExecuteCommand}" Content="{i18n:StringLocalizer Text='mathbox.execute'}" />
+                            <Button Style="{StaticResource ActionButton}" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+                        </StackPanel>
+                    </WrapPanel>
+                </Border>
+
+                <WrapPanel Grid.Row="1" Margin="0,0,0,8" Style="{StaticResource WhenResult}">
+                    <ComboBox Style="{StaticResource Choice}"
+                              Margin="0,0,8,0"
+                              ItemsSource="{Binding Views}"
+                              SelectedItem="{Binding View}"
+                              ItemTemplate="{StaticResource ChoiceText}" />
+                    <StackPanel Orientation="Horizontal" Style="{StaticResource WhenFrequencies}">
+                        <Grid Style="{StaticResource WhenTallies}" Margin="0,0,8,0">
+                            <ComboBox Style="{StaticResource Choice}"
+                                      ItemsSource="{Binding Tallies}"
+                                      SelectedItem="{Binding Tally}"
+                                      ItemTemplate="{StaticResource ChoiceText}" />
+                        </Grid>
+                        <!-- [A=] > [Store] puts the highlighted relative frequency in a variable (p. 149). -->
+                        <ComboBox x:Name="StoreTarget"
+                                  Style="{StaticResource Choice}"
+                                  MinWidth="64"
+                                  Margin="0,0,4,0"
+                                  ItemsSource="{Binding Variables}"
+                                  SelectedIndex="0" />
+                        <Button Style="{StaticResource ActionButton}"
+                                Command="{Binding StoreInCommand}"
+                                CommandParameter="{Binding SelectedItem, ElementName=StoreTarget}"
+                                Content="{i18n:StringLocalizer Text='mathbox.store'}" />
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0" Style="{StaticResource WhenStored}">
+                            <TextBlock Style="{StaticResource FieldLabel}" Margin="0,0,4,0" Text="{i18n:StringLocalizer Text='mathbox.stored'}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" FontFamily="{StaticResource MonoFont}" Text="{Binding Stored}" />
+                        </StackPanel>
+                    </StackPanel>
+                </WrapPanel>
+
+                <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Background="{StaticResource Bezel}">
+                    <Grid Style="{StaticResource WhenResult}">
+                        <!-- List: every attempt, and its sum and difference or its heads. -->
+                        <Grid Style="{StaticResource WhenList}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <DockPanel Grid.Row="0" Margin="0,0,0,4" TextElement.Foreground="{StaticResource InkFaint}">
+                                <TextBlock DockPanel.Dock="Left" MinWidth="44" FontFamily="{StaticResource MonoFont}" Text="#" />
+                                <ItemsControl ItemsSource="{Binding Columns}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Rows="1" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontFamily="{StaticResource MonoFont}" Text="{i18n:StringLocalizer BindText={Binding}, Namespace='heading'}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </DockPanel>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,2">
+                                                <TextBlock DockPanel.Dock="Left"
+                                                           MinWidth="44"
+                                                           FontFamily="{StaticResource MonoFont}"
+                                                           Foreground="{StaticResource InkMuted}"
+                                                           Text="{Binding Number}" />
+                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <UniformGrid Rows="1" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource Ink}" Text="{Binding}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- Relative Freq: how often each outcome came up; the highlighted row is what a store takes. -->
+                        <Grid Style="{StaticResource WhenFrequencies}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <UniformGrid Grid.Row="0" Rows="1" Margin="10,0,10,4" TextElement.Foreground="{StaticResource InkFaint}">
+                                <TextBlock FontFamily="{StaticResource MonoFont}" Text="{i18n:StringLocalizer BindText={Binding OutcomeHeading}, Namespace='heading'}" />
+                                <TextBlock FontFamily="{StaticResource MonoFont}" Text="{i18n:StringLocalizer Text='mathbox.frequency'}" />
+                                <TextBlock FontFamily="{StaticResource MonoFont}" Text="{i18n:StringLocalizer Text='mathbox.relativeFrequency'}" />
+                            </UniformGrid>
+                            <ListBox Grid.Row="1"
+                                     Style="{StaticResource GroupList}"
+                                     ItemsSource="{Binding Frequencies}"
+                                     SelectedItem="{Binding Selected}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <UniformGrid Rows="1" TextElement.FontFamily="{StaticResource MonoFont}">
+                                            <TextBlock Text="{Binding Outcome}" />
+                                            <TextBlock Text="{Binding Frequency}" />
+                                            <TextBlock Text="{Binding RelativeFrequency}" />
+                                        </UniformGrid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="3"
+                           Margin="0,8,0,0"
+                           Foreground="{StaticResource Danger}"
+                           Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── Number Line (pp. 153-157) ─────────────────────────────────────────────────────────────────── -->
+        <DataTemplate DataType="{x:Type presentation:NumberLineViewModel}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="0" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,8">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Entries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Style="{StaticResource FieldLabel}" MinWidth="14" FontFamily="{StaticResource MonoFont}" Text="{Binding Label}" />
+                                        <ComboBox Style="{StaticResource Choice}"
+                                                  MinWidth="96"
+                                                  Margin="0,0,6,0"
+                                                  ItemsSource="{Binding Forms}"
+                                                  SelectedValuePath="Form"
+                                                  SelectedValue="{Binding Form}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontFamily="{StaticResource MonoFont}" Text="{Binding Text}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Style="{StaticResource FieldLabel}" FontFamily="{StaticResource MonoFont}" Text="a" />
+                                        <TextBox Style="{StaticResource ValueCellBox}"
+                                                 Width="68"
+                                                 DataContext="{Binding Bounds.Cells[0]}"
+                                                 Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                                        <StackPanel Orientation="Horizontal" Style="{StaticResource WhenUpperBound}">
+                                            <TextBlock Style="{StaticResource FieldLabel}" Margin="6,0,8,0" FontFamily="{StaticResource MonoFont}" Text="b" />
+                                            <TextBox Style="{StaticResource ValueCellBox}"
+                                                     Width="68"
+                                                     DataContext="{Binding Bounds.Cells[1]}"
+                                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <Button Style="{StaticResource ActionButton}" Margin="6,0,0,0" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='matrix.delete'}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Command="{Binding ExecuteCommand}" Content="{i18n:StringLocalizer Text='mathbox.execute'}" />
+                            <Button Style="{StaticResource ActionButton}" Command="{Binding ClearCommand}" Content="{i18n:StringLocalizer Text='equation.clear'}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- The View-Window: Scale and Center set by hand, until View-Reset (p. 156). -->
+                <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Margin="0,0,0,8">
+                    <WrapPanel>
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer Text='mathbox.scale'}" />
+                        <TextBox Style="{StaticResource ValueCellBox}"
+                                 Width="90"
+                                 Margin="0,2,12,2"
+                                 DataContext="{Binding Window.Cells[0]}"
+                                 Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{i18n:StringLocalizer Text='mathbox.center'}" />
+                        <TextBox Style="{StaticResource ValueCellBox}"
+                                 Width="90"
+                                 Margin="0,2,12,2"
+                                 DataContext="{Binding Window.Cells[1]}"
+                                 Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Style="{StaticResource ActionButton}" Margin="0,2,8,2" Command="{Binding ApplyWindowCommand}" Content="{i18n:StringLocalizer Text='mathbox.applyWindow'}" />
+                        <Button Style="{StaticResource ActionButton}" Margin="0,2" Command="{Binding ResetWindowCommand}" Content="{i18n:StringLocalizer Text='mathbox.resetWindow'}" />
+                    </WrapPanel>
+                </Border>
+
+                <!-- Nothing registered is nothing drawn: the display appears with the first Execute. -->
+                <Grid Grid.Row="2" VerticalAlignment="Top" Style="{StaticResource WhenDrawn}">
+                    <Border Style="{StaticResource LcdPanel}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <views:NumberLineDrawing Grid.Row="0"
+                                                     Style="{StaticResource NumberLine}"
+                                                     Bars="{Binding Bars}"
+                                                     Labels="{Binding ScaleLabels}"
+                                                     Selected="{Binding Selected}" />
+                            <!-- ▲ and ▼ choose which expression is written under the axis (p. 155). -->
+                            <DockPanel Grid.Row="1" Margin="0,6,0,0">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource ActionButton}" Command="{Binding NextCommand}" Content="▼" />
+                                <Button DockPanel.Dock="Right" Style="{StaticResource ActionButton}" Margin="0,0,6,0" Command="{Binding PreviousCommand}" Content="▲" />
+                                <TextBlock Style="{StaticResource LcdReadout}" Text="{Binding SelectedText}" />
+                            </DockPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <TextBlock Grid.Row="3"
+                           Margin="0,8,0,0"
+                           Foreground="{StaticResource Danger}"
+                           Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── Circle (pp. 157-161) ───────────────────────────────────────────────────────────────────────── -->
+        <DataTemplate DataType="{x:Type presentation:CircleViewModel}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="0" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,8">
+                    <WrapPanel>
+                        <ComboBox Style="{StaticResource Choice}"
+                                  Margin="0,2,14,2"
+                                  ItemsSource="{Binding Screens}"
+                                  SelectedItem="{Binding Screen}"
+                                  ItemTemplate="{StaticResource ChoiceText}" />
+                        <StackPanel Orientation="Horizontal" Style="{StaticResource WhenCircle}">
+                            <TextBlock Style="{StaticResource FieldLabel}" FontFamily="{StaticResource MonoFont}" Text="θ1" />
+                            <TextBox Style="{StaticResource ValueCellBox}"
+                                     Width="100"
+                                     Margin="0,2,12,2"
+                                     DataContext="{Binding Angles.Cells[0]}"
+                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" FontFamily="{StaticResource MonoFont}" Text="θ2" />
+                            <TextBox Style="{StaticResource ValueCellBox}"
+                                     Width="100"
+                                     Margin="0,2,12,2"
+                                     DataContext="{Binding Angles.Cells[1]}"
+                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Style="{StaticResource PrimaryButton}" Margin="0,2" Command="{Binding ExecuteCommand}" Content="{i18n:StringLocalizer Text='mathbox.execute'}" />
+                        </StackPanel>
+                    </WrapPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource LcdPanel}" VerticalAlignment="Top">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <views:CircleDrawing Grid.Column="0"
+                                             Style="{StaticResource CircleFace}"
+                                             Screen="{Binding Screen}"
+                                             First="{Binding FirstDirection}"
+                                             Second="{Binding SecondDirection}"
+                                             Selected="{Binding Selected}"
+                                             Hour="{Binding Hour}" />
+                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <!-- The Clock: its time, and ▲ ▼ to turn the hour hand (p. 161). -->
+                            <DockPanel Style="{StaticResource WhenClock}" Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource ActionButton}" Command="{Binding DownCommand}" Content="▼" />
+                                <Button DockPanel.Dock="Right" Style="{StaticResource ActionButton}" Margin="0,0,6,0" Command="{Binding UpCommand}" Content="▲" />
+                                <TextBlock Style="{StaticResource LcdReadout}" Text="{Binding ClockText}" />
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,3">
+                                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource LcdText}" MinWidth="56" Text="{Binding Name}" />
+                                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource LcdText}" Margin="0,0,6,0" Text="=" />
+                                            <Grid>
+                                                <wpfmath:FormulaControl Style="{StaticResource WhenValue}"
+                                                                        HorizontalAlignment="Left"
+                                                                        Formula="{Binding Latex}"
+                                                                        Scale="18" />
+                                                <Grid Style="{StaticResource WhenNoValue}">
+                                                    <TextBlock Style="{StaticResource LcdErrorText}" Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+                                                </Grid>
+                                            </Grid>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- θ1 is the smaller angle between the hands, θ2 the larger (p. 161). -->
+                            <Grid Style="{StaticResource WhenClock}">
+                                <TextBlock Style="{StaticResource LcdText}" Margin="0,3,0,0" Text="θ1≤θ2" />
+                            </Grid>
+                            <!-- ▲ and ▼ choose θ1 or θ2 (p. 160). -->
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Style="{StaticResource WhenDrawn}">
+                                <Button Style="{StaticResource ActionButton}" Margin="0,0,6,0" Command="{Binding UpCommand}" Content="▲ θ1" />
+                                <Button Style="{StaticResource ActionButton}" Command="{Binding DownCommand}" Content="▼ θ2" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="2"
+                           Margin="0,8,0,0"
+                           Foreground="{StaticResource Danger}"
+                           Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="0" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <Button DockPanel.Dock="Left"
+                    Style="{StaticResource BackButton}"
+                    aqr:RouterLink.To="/"
+                    Content="{i18n:StringLocalizer Text='settings.back'}" />
+            <!-- On a tool, ↩ goes back to the Math Box menu rather than home (p. 149). -->
+            <Grid DockPanel.Dock="Right" Style="{StaticResource WhenTool}">
+                <Button Style="{StaticResource ActionButton}" Command="{Binding BackCommand}" Content="{i18n:StringLocalizer Text='mathbox.menu'}" />
+            </Grid>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Style="{StaticResource ScreenTitle}" Text="{i18n:StringLocalizer Text='app.math-box'}" />
+                <TextBlock Style="{StaticResource ScreenTitle}" Foreground="{StaticResource InkMuted}" Margin="10,0,0,0" Text="{i18n:StringLocalizer BindText={Binding Tool}, Namespace='choice'}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- The menu: the four tools, in the calculator's order (p. 146). -->
+        <ItemsControl Grid.Row="1" VerticalAlignment="Top" Style="{StaticResource WhenMenu}" ItemsSource="{Binding Tools}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource AppTile}"
+                            Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                            CommandParameter="{Binding}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource TileTitle}" Text="{i18n:StringLocalizer BindText={Binding}, Namespace='choice'}" />
+                            <TextBlock Style="{StaticResource TileNote}" Text="{i18n:StringLocalizer BindText={Binding}, Namespace='about'}" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ContentControl Grid.Row="1" Focusable="False" Content="{Binding Current}" />
+    </Grid>
+</UserControl>

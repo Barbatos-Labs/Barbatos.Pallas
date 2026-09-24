@@ -17,7 +17,6 @@ app.matrix: Matrix
 app.vector: Vector
 app.ratio: Ratio
 app.math-box: Math Box
-app.screenLater: The engine of this application is finished; its screen is being built.
 
 settings.title: Calculator settings
 settings.back: Back
@@ -83,6 +82,18 @@ statistics.frequencies: Frequencies
 statistics.apply: Apply
 statistics.addRow: Add row
 statistics.removeRow: Remove row
+mathbox.menu: All tools
+mathbox.attempts: Attempts
+mathbox.sameResult: Same result
+mathbox.execute: Execute
+mathbox.store: Store in
+mathbox.stored: Stored in
+mathbox.frequency: Frequency
+mathbox.relativeFrequency: Relative freq
+mathbox.scale: Scale
+mathbox.center: Center
+mathbox.applyWindow: Set View-Window
+mathbox.resetWindow: View-Reset
 
 # The menus the display shows over the keypad: the CATALOG (pp. 51-69), FORMAT and the variables.
 catalog.title: CATALOG
@@ -173,6 +184,45 @@ choice:
   MixedFraction: Mixed fraction
   Engineering: ENG notation
   Sexagesimal: Degrees, minutes, seconds
+  DiceRoll: Dice Roll
+  CoinToss: Coin Toss
+  NumberLine: Number Line
+  Circle: Circle
+  Off: "Off"
+  First: "#1"
+  Second: "#2"
+  Third: "#3"
+  List: List
+  RelativeFrequency: Relative Freq
+  Sum: Sum
+  Difference: Difference
+  Heads: Heads
+  UnitCircle: Unit Circle
+  HalfCircle: Half Circle
+  Clock: Clock
+
+# What a Math Box simulation throws, as its parameter screen counts it (p. 147).
+count:
+  DiceRoll: Dice
+  CoinToss: Coins
+
+# The headings of the Math Box tables, as the calculator prints them (pp. 149, 153).
+heading:
+  A: A
+  B: B
+  C: C
+  Sum: Sum
+  Diff: Diff
+  Side: Side
+  ●: ●
+
+# What each tool of the Math Box menu does.
+about:
+  DiceRoll: Roll one to three dice up to 250 times, and count what came up.
+  CoinToss: Toss one to three coins up to 250 times, and count the heads.
+  NumberLine: Draw up to three inequalities on the number line.
+  Circle: An angle on the unit circle with its sine, cosine and tangent, or the hands of a clock.
+
 
 # The languages of the application: each is named in itself, Windows' own in the language on the screen.
 language:

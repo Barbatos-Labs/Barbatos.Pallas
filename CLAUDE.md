@@ -30,8 +30,8 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool laid out and drawn (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
@@ -53,7 +53,7 @@ M6 hardening and the installer (in progress: the installer is built, signed and 
 be walked). Phase 4 is complete.
 
 **Phase 6 - Graph and Math Box - in progress** (plan approved 24 Sep 2026). Milestones: M1 Math Box in Engine ✅,
-M2 its screens, M3 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for
+M2 its screens ✅, M3 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for
 screen coordinates, and a compiled-expression API in Engine), M4 the graph as a view of the Table application, M5
 hardening. Since M1 every application has its engine and every conformance case runs, none skipped.
 
@@ -68,9 +68,11 @@ hardening. Since M1 every application has its engine and every conformance case 
   says so, and saves it too whenever the window loses the focus. The keypad has the input method off, or Windows'
   Vietnamese one swallows the digit row. Every application has its own view model over that session (`MatrixViewModel`,
   `VectorViewModel`, `StatisticsViewModel`, `DistributionViewModel`, `EquationViewModel`, `InequalityViewModel`,
-  `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`), built the first time it is opened
-  and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was typed through the
-  session. Screens of applications whose own screen is still to come render `AppScreenView`. The look is
+  `RatioViewModel`, `TableViewModel`, `SpreadsheetViewModel`, `BaseNViewModel`, `MathBoxViewModel`), built the first
+  time it is opened and kept; numbers are typed into the one `ValueGridViewModel`, whose cells calculate what was
+  typed through the session. Math Box is a menu of four screens (`SimulationViewModel` for dice and coins,
+  `NumberLineViewModel`, `CircleViewModel`), drawn by `NumberLineDrawing` and `CircleDrawing`, which place lines and
+  calculate nothing the screen shows. The look is
   `Theme/Tokens.xaml` (colours, roundings, sizes) and `Theme/Controls.xaml` (every style); `KeypadView` draws the
   key table and `CalculationPanelView` the one display, input above and answer below.
 - The line the user types on is `MathDocument` (immutable, a cursor path through template slots), written as
@@ -111,7 +113,7 @@ hardening. Since M1 every application has its engine and every conformance case 
   `SolvePolynomial`, `SolveEquation`, `SolveInequality`, `SolveRatio`), which is why Engine references Solvers and
   not the other way round (decision of 22 Sep 2026).
 
-Math Box, the last application, has its engine since Phase 6 M1; its screens come in M2.
+Math Box, the last application, has its engine since Phase 6 M1 and its screens since M2.
 
 ## Build and test
 

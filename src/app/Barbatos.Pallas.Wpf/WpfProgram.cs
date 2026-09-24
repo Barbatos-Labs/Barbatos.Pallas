@@ -77,7 +77,6 @@ public static class WpfProgram
         builder.Services.AddTransient<MainWindow>();
         builder.Services.AddTransient<HomeView>();
         builder.Services.AddTransient<SettingsView>();
-        builder.Services.AddTransient<AppScreenView>();
         builder.Services.AddTransient<CalculateView>();
         builder.Services.AddTransient<BaseNView>();
         builder.Services.AddTransient<MatrixView>();
@@ -89,6 +88,7 @@ public static class WpfProgram
         builder.Services.AddTransient<RatioView>();
         builder.Services.AddTransient<TableView>();
         builder.Services.AddTransient<SpreadsheetView>();
+        builder.Services.AddTransient<MathBoxView>();
 
         WpfApp app = builder.Build();
 

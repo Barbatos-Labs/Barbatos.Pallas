@@ -8,6 +8,8 @@ using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Barbatos.Pallas.Engine;
 using Barbatos.Pallas.Expressions;
@@ -62,6 +64,53 @@ public sealed class ScreenResourceTests
     }
 
     [Fact]
+    public void EveryMathBoxToolIsDrawnWithTheTheme()
+    {
+        // A tool's screen is a template, built only when the tool is opened: building MathBoxView alone reads none of
+        // them. Each is opened, filled and laid out here, and drawn, so every style and both drawings are used.
+        OnUiThread(() =>
+        {
+            CalculatorShellViewModel shell = Shell();
+            shell.Open(CalculatorApps.Of(CalculatorApp.MathBox));
+            MathBoxView view = new(shell);
+            MathBoxViewModel box = shell.MathBox;
+
+            box.Dice.Count = 2;
+            box.Dice.Execute();
+            box.Coins.Count = 3;
+            box.Coins.Execute();
+            box.Coins.View = SimulationResultView.RelativeFrequency;
+            box.NumberLine.Entries[0].Form = NumberLineForm.LessOrEqual;
+            box.NumberLine.Entries[0].Bounds[0, 0].Text = "-1.5";
+            box.NumberLine.Entries[1].Form = NumberLineForm.Greater;
+            box.NumberLine.Entries[1].Bounds[0, 0].Text = "-1";
+            box.NumberLine.Entries[2].Form = NumberLineForm.ToIncluded;
+            box.NumberLine.Entries[2].Bounds[0, 0].Text = "-2";
+            box.NumberLine.Entries[2].Bounds[0, 1].Text = "-0.5";
+            box.NumberLine.Execute();
+            box.Circle.Angles[0, 0].Text = "45";
+            box.Circle.Angles[0, 1].Text = "90";
+            box.Circle.Execute();
+
+            foreach (MathBoxTool tool in box.Tools)
+            {
+                box.Open(tool);
+                Draw(view).Should().BeGreaterThan(0, "{0} draws something", tool);
+            }
+
+            foreach (CircleScreen screen in box.Circle.Screens)
+            {
+                box.Circle.Screen = screen;
+                box.Circle.Execute();
+                Draw(view).Should().BeGreaterThan(0, "{0} draws something", screen);
+            }
+
+            box.Back();
+            Draw(view).Should().BeGreaterThan(0, "the menu draws its tools");
+        });
+    }
+
+    [Fact]
     public void TheKeypadTakesKeysAndNotText()
     {
         // Windows' Vietnamese input method takes keys of the digit row, and WPF then reports them as ImeProcessed:
@@ -93,7 +142,6 @@ public sealed class ScreenResourceTests
     [
         (null, shell => new HomeView(shell)),
         (null, shell => new SettingsView(shell)),
-        (null, shell => new AppScreenView(shell)),
         (CalculatorApp.Calculate, shell => new CalculateView(shell)),
         (null, _ => new CalculationPanelView()),
         (null, _ => new KeypadView()),
@@ -109,7 +157,24 @@ public sealed class ScreenResourceTests
         (CalculatorApp.Ratio, shell => new RatioView(shell)),
         (CalculatorApp.Table, shell => new TableView(shell)),
         (CalculatorApp.Spreadsheet, shell => new SpreadsheetView(shell)),
+        (CalculatorApp.MathBox, shell => new MathBoxView(shell)),
     ];
+
+    /// <summary>Lays a screen out at the window's size, draws it, and counts the pixels that are not blank.</summary>
+    private static int Draw(UserControl screen)
+    {
+        Size size = new(760, 900);
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Background);
+        screen.Measure(size);
+        screen.Arrange(new Rect(size));
+        screen.UpdateLayout();
+
+        RenderTargetBitmap bitmap = new((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(screen);
+        int[] pixels = new int[(int)size.Width * (int)size.Height];
+        bitmap.CopyPixels(pixels, (int)size.Width * 4, 0);
+        return pixels.Count(pixel => pixel != 0);
+    }
 
     /// <summary>One shell over one engine, as the application has.</summary>
     private static CalculatorShellViewModel Shell()

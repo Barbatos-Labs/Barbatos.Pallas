@@ -16,8 +16,7 @@ namespace Barbatos.Pallas.Wpf;
 /// <remarks>
 /// The thirteen application routes are built from <see cref="CalculatorApps.All"/> rather than written out, so the
 /// registry stays the only list of what the calculator does: adding an application to it adds its route, its place on
-/// the home screen and its name in every language at once. Each one renders the screen of its application; the ones
-/// whose screens are still to come render <see cref="AppScreenView"/>, which says so.
+/// the home screen and its name in every language at once. Each one renders the screen of its application.
 /// </remarks>
 public static class AppRoutes
 {
@@ -26,8 +25,8 @@ public static class AppRoutes
 
     /// <summary>Returns the screen an application is shown on.</summary>
     /// <param name="app">The application.</param>
-    /// <returns>Its screen, or the one that says the screen is still to come.</returns>
-    /// <remarks>The list grows one screen per milestone; what is not here yet says so rather than pretending.</remarks>
+    /// <returns>Its screen.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="app"/> is not an application of the calculator.</exception>
     public static Type Screen(CalculatorApp app) => app switch
     {
         CalculatorApp.Calculate or CalculatorApp.Complex => typeof(CalculateView),
@@ -41,7 +40,8 @@ public static class AppRoutes
         CalculatorApp.Ratio => typeof(RatioView),
         CalculatorApp.Table => typeof(TableView),
         CalculatorApp.Spreadsheet => typeof(SpreadsheetView),
-        _ => typeof(AppScreenView),
+        CalculatorApp.MathBox => typeof(MathBoxView),
+        _ => throw new ArgumentOutOfRangeException(nameof(app), app, "Not an application of the calculator."),
     };
 
     /// <summary>Builds the route table.</summary>

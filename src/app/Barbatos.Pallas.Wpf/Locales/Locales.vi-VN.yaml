@@ -16,7 +16,6 @@ app.matrix: Ma trận
 app.vector: Vectơ
 app.ratio: Tỉ lệ
 app.math-box: Hộp toán học
-app.screenLater: Phần tính toán đã xong; màn hình của ứng dụng này đang được dựng.
 
 settings.title: Cài đặt máy tính
 settings.back: Quay lại
@@ -81,6 +80,18 @@ statistics.frequencies: Tần số
 statistics.apply: Áp dụng
 statistics.addRow: Thêm dòng
 statistics.removeRow: Bớt dòng
+mathbox.menu: Các công cụ
+mathbox.attempts: Số lần thử
+mathbox.sameResult: Kết quả giống nhau
+mathbox.execute: Thực hiện
+mathbox.store: Lưu vào
+mathbox.stored: Đã lưu vào
+mathbox.frequency: Tần số
+mathbox.relativeFrequency: Tần suất
+mathbox.scale: Tỉ lệ
+mathbox.center: Tâm
+mathbox.applyWindow: Đặt khung nhìn
+mathbox.resetWindow: Khung nhìn tự động
 
 # Các menu hiện trên màn hình, đè lên bàn phím: CATALOG (tr. 51-69), FORMAT và các biến.
 catalog.title: CATALOG
@@ -171,6 +182,45 @@ choice:
   MixedFraction: Hỗn số
   Engineering: Ký hiệu ENG
   Sexagesimal: Độ, phút, giây
+  DiceRoll: Tung xúc xắc
+  CoinToss: Tung đồng xu
+  NumberLine: Trục số
+  Circle: Đường tròn
+  Off: Tắt
+  First: "#1"
+  Second: "#2"
+  Third: "#3"
+  List: Danh sách
+  RelativeFrequency: Tần suất tương đối
+  Sum: Tổng
+  Difference: Hiệu
+  Heads: Số mặt ngửa
+  UnitCircle: Đường tròn đơn vị
+  HalfCircle: Nửa đường tròn
+  Clock: Đồng hồ
+
+# What a Math Box simulation throws, as its parameter screen counts it (p. 147).
+count:
+  DiceRoll: Số xúc xắc
+  CoinToss: Số đồng xu
+
+# The headings of the Math Box tables, as the calculator prints them (pp. 149, 153).
+heading:
+  A: A
+  B: B
+  C: C
+  Sum: Tổng
+  Diff: Hiệu
+  Side: Mặt
+  ●: ●
+
+# What each tool of the Math Box menu does.
+about:
+  DiceRoll: Tung một đến ba con xúc xắc, tối đa 250 lần, và đếm kết quả.
+  CoinToss: Tung một đến ba đồng xu, tối đa 250 lần, và đếm số mặt ngửa.
+  NumberLine: Vẽ tối đa ba bất đẳng thức trên trục số.
+  Circle: Một góc trên đường tròn đơn vị cùng sin, cos và tan của nó, hoặc hai kim đồng hồ.
+
 
 # The languages of the application: each is named in itself, Windows' own in the language on the screen.
 language:

@@ -88,11 +88,45 @@ public sealed class LocalizationTests
             .. Enum.GetValues<RegressionModel>().Select(value => value.ToString()),
             .. Enum.GetValues<SolutionOutcome>().Select(value => value.ToString()),
             .. Enum.GetValues<FormatTarget>().Select(value => value.ToString()),
+            .. Enum.GetValues<MathBoxTool>().Select(value => value.ToString()),
+            .. Enum.GetValues<SameResult>().Select(value => value.ToString()),
+            .. Enum.GetValues<SimulationResultView>().Select(value => value.ToString()),
+            .. Enum.GetValues<SimulationTally>().Select(value => value.ToString()),
+            .. Enum.GetValues<CircleScreen>().Select(value => value.ToString()),
         ];
 
         foreach (string choice in choices)
         {
             text.Should().ContainKey("choice:" + choice, "a screen shows this choice by name");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void EveryToolOfMathBoxHasItsWords(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+        CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession(CalculatorApp.MathBox);
+
+        foreach (MathBoxTool tool in Enum.GetValues<MathBoxTool>())
+        {
+            text.Should().ContainKey("about:" + tool, "the menu says what {0} does", tool);
+        }
+
+        foreach (SimulationKind kind in Enum.GetValues<SimulationKind>())
+        {
+            text.Should().ContainKey("count:" + kind, "the parameters say what is thrown");
+            SimulationViewModel simulation = new(session, kind) { Count = 3 };
+            IEnumerable<string> headings = [.. simulation.Columns, "Sum", "Diff", "Side"];
+            foreach (string heading in headings)
+            {
+                text.Should().ContainKey("heading:" + heading, "a table of {0} is headed by it", kind);
+            }
+        }
+
+        foreach (string key in (string[])["mathbox.menu", "mathbox.attempts", "mathbox.sameResult", "mathbox.execute", "mathbox.store", "mathbox.stored", "mathbox.frequency", "mathbox.relativeFrequency", "mathbox.scale", "mathbox.center", "mathbox.applyWindow", "mathbox.resetWindow"])
+        {
+            text.Should().ContainKey(key);
         }
     }
 
