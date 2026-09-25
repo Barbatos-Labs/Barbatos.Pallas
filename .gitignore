@@ -381,7 +381,12 @@ skills/.evals/results/
 
 # The code-signing chain the installer is signed with: the leaf's .pfx and the password beside it (Barbatos.PackagingEngine
 # reads packaging/certificates/). Private keys and a password in plain text - never in the repository.
-packaging/certificates/
+#
+# The two PUBLIC certificates are deliberately NOT ignored, as in Barbatos.RMCP: they carry no key, and the app's
+# release workflow trusts the root on its runner so that signtool verify can anchor the chain. The re-inclusion is
+# *.cer and nothing else, so the .pfx and the password file stay ignored by the rule above it.
+packaging/certificates/*
+!packaging/certificates/*.cer
 
 # The reference calculator's user's guide is its manufacturer's copyrighted work. It is the functional reference
 # this project is built against, kept locally for reading - not redistributed. Remove this line only with permission.

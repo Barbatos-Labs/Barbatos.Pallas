@@ -46,7 +46,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `build/Move-PublicApiToShipped.ps1` | Moves every core library's `PublicAPI.Unshipped.txt` into its `PublicAPI.Shipped.txt`, as a release does |
 | `docs/RELEASING.md` | How a release is published: the one-time setup (the `production` environment, `STRONG_NAME_KEY`, the nuget.org trusted publishing policy) and the steps of each release |
 | `build/New-AppIcon.ps1` | Draws the app icon (`Assets/Pallas.ico`) from the mark in `build/nuget.svg` |
-| `packaging/` | The installer: the barbatos-pack profile, the AppGuid ledger, the Vietnamese wizard text; `certificates/` is gitignored (packaging/README.md) |
+| `packaging/` | The installer: the barbatos-pack profile, the AppGuid ledger, the Vietnamese wizard text; in `certificates/` the key and its password are gitignored and the two public `.cer` committed (packaging/README.md) |
 
 ## Current phase
 
@@ -64,8 +64,8 @@ times inside its target or more, on one thread: no parallelism or SIMD), M4 calc
 release pipeline ✅ (a GitHub Release, NuGet trusted publishing, strong naming with `barbatos.snk`, the key of
 Barbatos.Pallas alone - token `1c94c30b213a8345`, maintainer, 25 Sep 2026: each Barbatos library has its own), M6 the
 release candidate, walked installed, and 1.0.0 - the app too - published by the maintainer (in progress: the public
-API shipped, the app at 1.0.0, the remote, the secret and the nuget.org policy set up; the rehearsal on GitHub and the
-installed walk remain).
+API shipped, the app at 1.0.0, the remote, the secret and the nuget.org policy set up, the app released by a workflow
+of its own from a tag `app-v…`; the app's three secrets, the rehearsals on GitHub and the installed walk remain).
 
 **Phase 6 - Graph and Math Box - complete ✅** (plan approved 24 Sep 2026): M1 Math Box in Engine, M2 its screens, M3
 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for screen coordinates, on a
@@ -192,7 +192,8 @@ Things that will save time:
   UI and GDI assemblies. Nothing measures a `double` result on another OS (docs/PRECISION.md I5).
 - **The installer** is `barbatos-pack release --profile packaging/Barbatos.Pallas.json --strict`, run from a checkout of
   Barbatos.PackagingEngine beside this one (packaging/README.md). It needs Inno Setup 6, the Windows SDK's signtool and
-  the signing leaf in `packaging/certificates/`, which is gitignored and must stay so. The app's version is numeric
+  the signing leaf's `.pfx` in `packaging/certificates/`, which is gitignored and must stay so (only the two public `.cer`
+  are committed); in CI it is `barbatos-pallas-release-app.yml`, on a tag `app-v<version>`. The app's version is numeric
   (the engine refuses a prerelease label for an app), so a release changes `<Version>` in the Wpf csproj and
   `Identity.Version` in the profile together; `PackagingProfileTests` fails otherwise. Close the running app first:
   the publish writes over files it holds.
@@ -253,10 +254,15 @@ Things that will save time:
   got, only on what was applied.
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
-- **Releasing** is the maintainer's: a GitHub Release tagged `v<version>` runs `barbatos-pallas-cd-nuget.yml`, which
-  signs, tests, packs and pushes the packages (docs/RELEASING.md); run by hand it rehearses and publishes nothing. The
-  commit it releases has had `./build/Move-PublicApiToShipped.ps1` run, or the workflow refuses it. Strong naming
-  needs `src/barbatos.snk`: the workflow writes it from the `STRONG_NAME_KEY` secret, and the maintainer's machine
+- **Releasing** is the maintainer's, and the packages and the app are released apart (docs/RELEASING.md): a GitHub
+  Release tagged `v<version>` runs `barbatos-pallas-cd-nuget.yml`, which signs, tests, packs and pushes the packages;
+  a pushed tag `app-v<version>` runs `barbatos-pallas-release-app.yml`, which builds, signs and checks the installer
+  and creates its release. Run by hand, either rehearses and publishes nothing. Barbatos.PackagingEngine is private
+  and this repository public, and GitHub lets no public repository call a private one's reusable workflow: the app
+  workflow installs barbatos-pack from the private feed itself (maintainer, 25 Sep 2026). The run logs of a public
+  repository are public - a step never prints a secret, and only the installer is uploaded. The packages' release
+  refuses a commit that has not had `./build/Move-PublicApiToShipped.ps1` run. Strong naming
+  needs `src/barbatos.snk`: each workflow writes it from the `STRONG_NAME_KEY` secret, and the maintainer's machine
   keeps it there (25 Sep 2026), so every build on it - tests and installer included - is signed. It is gitignored and
   is never committed, copied, read or moved. Every assembly of the packages carries its token, `1c94c30b213a8345`
   (`Test-Packages.ps1 -PublicKeyToken`); a key made for testing elsewhere is deleted afterwards and followed by a

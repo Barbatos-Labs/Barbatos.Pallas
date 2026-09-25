@@ -3,7 +3,8 @@ name: barbatos-pallas-cd-nuget
 # Publishing the two packages is a GitHub Release, and nothing else: the maintainer publishes a release whose tag is
 # v<the version of Directory.Build.props>, on a commit CI has passed, and this workflow signs, tests, packs and pushes
 # them to nuget.org, then attaches them to the release (docs/RELEASING.md). Run by hand from the Actions tab it does
-# everything but the push and the attaching: a rehearsal whose signed packages are the run's artifact.
+# everything but the push and the attaching: a rehearsal whose signed packages are the run's artifact. The app is
+# released apart, from a tag app-v<its version>, by barbatos-pallas-release-app.yml (maintainer, 25 Sep 2026).
 on:
   release:
     types: [published]
@@ -21,6 +22,8 @@ env:
 jobs:
   release:
     name: Sign, test, pack and publish the packages
+    # A release of the app is not the packages': its tag is app-v<version>, and its workflow is the other one.
+    if: github.event_name != 'release' || !startsWith(github.event.release.tag_name, 'app-')
     runs-on: windows-latest
     environment: production
     permissions:

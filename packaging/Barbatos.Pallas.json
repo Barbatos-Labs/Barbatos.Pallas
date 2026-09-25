@@ -46,7 +46,8 @@
 
     "SelfSigned": {
       // The leaf of the Barbatos Labs chain, the one every Barbatos app is signed with - one root for the
-      // organisation, not one per repository. packaging/certificates/ is gitignored and never committed.
+      // organisation, not one per repository. Its .pfx and password are gitignored and never committed; the two public
+      // .cer beside them are committed, for the release workflow to trust the root on its runner.
       "PfxPath": "packaging/certificates/barbatos-codesign.pfx",
       // Never a password - only where it is: this variable in CI, else the .password.txt beside the .pfx.
       "PasswordEnvironmentVariable": "BARBATOS_CERT_PASSWORD"

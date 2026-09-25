@@ -9,7 +9,7 @@ validate → build → sign → verify → package, in that order, so nothing un
 | `Barbatos.Pallas.json` | The profile: the app's identity, how it is built, how it is signed, the Inno Setup installer. JSONC - the comments are documentation of the values |
 | `identity.lock.json` | The ledger that pins `Identity.AppGuid`. **Committed**, written by `validate`. A different AppGuid fails validation, because it names the folder every user's session lives in |
 | `languages/Vietnamese.isl` | Inno Setup's Vietnamese wizard text, which Inno does not bundle. **Committed** - unofficial, by memecoder, from [issrc](https://github.com/jrsoftware/issrc/blob/main/Files/Languages/Unofficial/Vietnamese.isl), written for Inno 6.5; under 6.4 a few download messages fall back to English |
-| `certificates/` | The code-signing leaf of the Barbatos Labs chain and its password. **Gitignored, never committed** |
+| `certificates/` | The code-signing leaf of the Barbatos Labs chain and its password - **gitignored, never committed** - and the two public certificates, which are committed |
 
 ## Cutting an installer
 
@@ -32,11 +32,19 @@ found.
 ## Signing
 
 The app is signed with the same chain as every Barbatos app - one root for the organisation, not one per repository.
-`certificates/` holds its leaf, `barbatos-codesign.pfx` (which carries the chain), `barbatos-codesign.password.txt`,
-and the two public certificates. The password is read from `BARBATOS_CERT_PASSWORD` when that is set - as it would be
-in CI - and from the `.password.txt` otherwise; it is never written into the profile. A machine that has not trusted
-the Barbatos Labs root fails the verify step; that is the machine's trust, not a bad signature
-(Barbatos.PackagingEngine's `install-certificate.ps1`).
+`certificates/` holds its leaf, `barbatos-codesign.pfx` (which carries the chain), and `barbatos-codesign.password.txt`,
+both gitignored, and the two public certificates, `barbatos-ca.cer` and `barbatos-codesign.cer`, which are committed:
+they carry no key, and the release workflow trusts the root on its runner. The password is read from
+`BARBATOS_CERT_PASSWORD` when that is set - as it is in CI - and from the `.password.txt` otherwise; it is never
+written into the profile. A machine that has not trusted the Barbatos Labs root fails the verify step; that is the
+machine's trust, not a bad signature (Barbatos.PackagingEngine's `install-certificate.ps1`).
+
+## Releasing from CI
+
+Pushing a tag `app-v<version>` runs `.github/workflows/barbatos-pallas-release-app.yml`, which builds this same
+profile through the same pipeline on a Windows runner and publishes a GitHub Release with the installer
+(docs/RELEASING.md). Barbatos.PackagingEngine is private and this repository is public, so the workflow installs
+barbatos-pack from the private feed itself, pinned, rather than calling the engine's reusable workflow.
 
 ## Versions
 
