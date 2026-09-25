@@ -1,102 +1,29 @@
 name: barbatos-pallas-release-app
 
-# The app's release, apart from the packages' (maintainer, 25 Sep 2026): pushing a tag app-v<version> builds the
-# signed installer and publishes a GitHub Release carrying it. The packages are released by
-# barbatos-pallas-cd-nuget.yml, from a release tagged v<version>, and each version is its own. Run by hand this
-# builds and signs the installer as the run's artifact and publishes nothing: a rehearsal.
+# Builds the signed installer of the app and publishes it as a GitHub Release (docs/RELEASING.md). The packages are
+# released apart, by barbatos-pallas-cd-nuget.yml.
 #
-# Three jobs, as Barbatos.RMCP's release has them: the version is resolved once, in a job of its own, the
-# installer is built on Windows, and only the last job may write to the repository.
-#
-# The installer is built by barbatos-pack, the tool of Barbatos.PackagingEngine - a private repository whose
-# reusable workflows a public repository such as this one may not call (GitHub: access to a private repository's
-# reusable workflows "is allowed only from private repositories"). So the tool is installed here, from the
-# private feed, and the steps its reusable workflow for an add-in takes are taken here too: Inno Setup pinned and
-# checked, the signing certificate from a secret, the root trusted on the runner. This repository is public and
-# so are its run logs: no step prints a secret, and nothing but the installer is uploaded.
-
+# barbatos-pack is the tool of Barbatos.PackagingEngine, a private repository whose reusable workflows a public
+# repository such as this one may not call, so it is installed here from the private feed.
 on:
+  # When a tag app-v<version> is pushed
   push:
     tags:
-      - 'app-v[0-9]+.[0-9]+.[0-9]+'
+      - 'app-v*'
+  # By hand from the Actions tab: the installer as the run's artifact, and no release
   workflow_dispatch:
 
-env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  # Pinned, so that a release is reproducible and a new version is somebody's choice. barbatos-pack 1.0.0 is the
-  # engine the 1.0.0 release candidate was built with; Inno Setup 6.4.3 is the maintainer's, and 6.5.0 is where
-  # jrsoftware began asking commercial users for a licence.
-  PACKAGING_ENGINE_VERSION: 1.0.0
-  INNO_SETUP_VERSION: 6.4.3
-  # The token of the key of Barbatos.Pallas, which the libraries the installer carries are strong-named with, as
-  # the packages' are.
-  PALLAS_PUBLIC_KEY_TOKEN: 1c94c30b213a8345
-
-permissions:
-  contents: read
-
 jobs:
-  version:
-    name: Resolve the version
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # Reading whether CI passed on the commit.
-      actions: read
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
-      tag: ${{ steps.resolve.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v4
-
-      # The installer's version is the profile's, which PackagingProfileTests keeps equal to the csproj's; a tag
-      # that says another would publish an installer under a version it does not carry.
-      - name: The tag is the version of the app
-        id: resolve
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          $project = [xml](Get-Content src/app/Barbatos.Pallas.Wpf/Barbatos.Pallas.Wpf.csproj -Raw)
-          $version = @($project.Project.PropertyGroup.Version | Where-Object { $_ }) | Select-Object -First 1
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "The app's version '$version' is not MAJOR.MINOR.PATCH." }
-
-          if ($env:GITHUB_EVENT_NAME -eq 'push') {
-            if ($env:GITHUB_REF_NAME -cne "app-v$version") { throw "The tag is '$env:GITHUB_REF_NAME', but the app is ${version}: tag it app-v${version}." }
-
-            # What is released has passed CI - the build, the tests and the package test - on this very commit. The
-            # benchmark and mutation gates are run on the maintainer's machine before a release (docs/RELEASING.md).
-            $runs = @(gh run list --workflow barbatos-pallas-ci.yml --commit $env:GITHUB_SHA --status success --json databaseId | ConvertFrom-Json)
-            if ($LASTEXITCODE -ne 0) { throw 'The runs of barbatos-pallas-ci could not be read.' }
-            if ($runs.Count -eq 0) { throw "barbatos-pallas-ci has not passed on $env:GITHUB_SHA. Run it on the commit, then push the tag again." }
-          }
-
-          Write-Host "Barbatos Pallas $version"
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "tag=app-v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-
-  package:
-    name: Build and sign the installer
-    needs: version
-    # signtool and ISCC are Windows-only, and the app is WPF.
+  release:
     runs-on: windows-latest
-    # Its protection rules hold the release, as they hold the packages'; its secrets are the job's.
     environment: production
+
+    # Creating the release
     permissions:
-      contents: read
-    outputs:
-      installer-name: ${{ steps.check.outputs.installer-name }}
-      installer-size: ${{ steps.check.outputs.installer-size }}
-      installer-sha256: ${{ steps.check.outputs.installer-sha256 }}
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
@@ -106,273 +33,72 @@ jobs:
             9.0.x
             10.0.x
 
-      # From jrsoftware's own release, which keeps every version (Chocolatey does not, and the runner image ships
-      # a newer Inno of its own), and run only once its Authenticode signature is its publisher's.
-      - name: Install Inno Setup
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $wanted = $env:INNO_SETUP_VERSION
-
-          function Get-InnoSetup {
-            Get-ChildItem 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue |
-              ForEach-Object { Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue } |
-              Where-Object { $_.DisplayName -like 'Inno Setup*' } |
-              Select-Object -First 1
-          }
-
-          $existing = Get-InnoSetup
-          if (-not $existing -or $existing.DisplayVersion -ne $wanted) {
-            if ($existing) {
-              Write-Host "Removing Inno Setup $($existing.DisplayVersion)."
-              Start-Process -FilePath $existing.UninstallString.Trim('"') -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait
-              # The uninstaller relaunches itself from TEMP, so its registry entry going is what is waited for.
-              $deadline = (Get-Date).AddMinutes(2)
-              while ((Get-InnoSetup) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
-              if (Get-InnoSetup) { throw 'The Inno Setup on the runner did not uninstall within two minutes.' }
-            }
-
-            $url = "https://github.com/jrsoftware/issrc/releases/download/is-$($wanted -replace '\.', '_')/innosetup-$wanted.exe"
-            $installer = Join-Path $env:RUNNER_TEMP "innosetup-$wanted.exe"
-            Invoke-WebRequest -Uri $url -OutFile $installer -UseBasicParsing
-
-            $signature = Get-AuthenticodeSignature $installer
-            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Pyrsys B\.V\.') {
-              throw "innosetup-$wanted.exe is not validly signed by Inno Setup's publisher ($($signature.Status), $($signature.SignerCertificate.Subject)). Refusing to run it."
-            }
-
-            $install = Start-Process -FilePath $installer -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait -PassThru
-            if ($install.ExitCode -ne 0) { throw "innosetup-$wanted.exe exited $($install.ExitCode)." }
-          }
-
-          $now = (Get-InnoSetup).DisplayVersion
-          if ($now -ne $wanted) { throw "Inno Setup $wanted was asked for and the runner has $now." }
-
-          $iscc = Get-ChildItem -Path 'C:\Program Files (x86)', 'C:\Program Files' -Filter 'ISCC.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $iscc) { throw 'Inno Setup is installed, but ISCC.exe was not found.' }
-          Split-Path $iscc.FullName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          Write-Host "Inno Setup $now, $($iscc.FullName)"
-
-      # A tool path and a NuGet config of its own, in RUNNER_TEMP, so that this repository's nuget.config - nuget.org
-      # only - and its tool manifest are left as every contributor has them. The config holds the feed token and is
-      # deleted once the tool is installed, whatever happens.
-      - name: Install barbatos-pack
-        working-directory: ${{ runner.temp }}
-        shell: pwsh
-        env:
-          FEED_TOKEN: ${{ secrets.BARBATOS_PACKAGES_TOKEN }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          # GitHub Packages always requires authentication; without a token NuGet reports NU1301, which reads as
-          # "not found" and is a 401.
-          if (-not $env:FEED_TOKEN) { throw 'The BARBATOS_PACKAGES_TOKEN secret is not set.' }
-
-          $config = Join-Path $env:RUNNER_TEMP 'barbatos-internal.nuget.config'
-          $tools = Join-Path $env:RUNNER_TEMP 'barbatos-pack'
-          $xml = @(
-            '<?xml version="1.0" encoding="utf-8"?>',
-            '<configuration>',
-            '  <packageSources>',
-            '    <clear />',
-            '    <add key="barbatos-internal" value="https://nuget.pkg.github.com/Barbatos-Labs/index.json" />',
-            '  </packageSources>',
-            '  <packageSourceCredentials>',
-            '    <barbatos-internal>',
-            '      <add key="Username" value="github-actions" />',
-            "      <add key=""ClearTextPassword"" value=""$([Security.SecurityElement]::Escape($env:FEED_TOKEN))"" />",
-            '    </barbatos-internal>',
-            '  </packageSourceCredentials>',
-            '</configuration>') -join "`n"
-
-          try {
-            [IO.File]::WriteAllText($config, $xml)
-            dotnet tool install Barbatos.PackagingEngine.Cli --version $env:PACKAGING_ENGINE_VERSION --tool-path $tools --configfile $config
-            if ($LASTEXITCODE -ne 0) { throw "barbatos-pack $env:PACKAGING_ENGINE_VERSION could not be installed (exit $LASTEXITCODE). NU1301 is the token, not the version." }
-          }
-          finally {
-            if (Test-Path $config) { [IO.File]::Delete($config) }
-          }
-
-          $tools | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          & (Join-Path $tools 'barbatos-pack.exe') doctor
-          if ($LASTEXITCODE -ne 0) { throw 'The toolchain is incomplete: see what doctor says above.' }
-
-      # The .pfx holds the private key, so it is gitignored and arrives as a secret; it is read back with its
-      # password here, because a truncated secret makes a file that exists and cannot sign.
-      - name: Place the signing certificate
-        shell: pwsh
-        env:
-          CERTIFICATE_PFX: ${{ secrets.SIGNING_CERTIFICATE_PFX }}
-          BARBATOS_CERT_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          if (-not $env:CERTIFICATE_PFX) { throw 'The SIGNING_CERTIFICATE_PFX secret is not set. A committed .cer is the public half and cannot sign.' }
-          if (-not $env:BARBATOS_CERT_PASSWORD) { throw 'The SIGNING_CERTIFICATE_PASSWORD secret is not set.' }
-
-          try { $bytes = [Convert]::FromBase64String($env:CERTIFICATE_PFX) }
-          catch { throw 'SIGNING_CERTIFICATE_PFX is not valid base64.' }
-
-          $path = Join-Path $env:GITHUB_WORKSPACE 'packaging\certificates\barbatos-codesign.pfx'
-          [IO.File]::WriteAllBytes($path, $bytes)
-
-          try { $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 $path, $env:BARBATOS_CERT_PASSWORD }
-          catch { throw 'The signing certificate could not be opened: SIGNING_CERTIFICATE_PFX and SIGNING_CERTIFICATE_PASSWORD do not belong to each other.' }
-
-          if ($certificate.NotAfter -lt (Get-Date)) { throw "The signing certificate expired on $($certificate.NotAfter.ToString('yyyy-MM-dd'))." }
-          Write-Host "Signing with $($certificate.Subject), expiring $($certificate.NotAfter.ToString('yyyy-MM-dd'))."
-
-      # signtool verify /pa builds the chain up to a root the machine trusts, and a fresh runner trusts nothing of
-      # Barbatos Labs: without this the files sign and then stop at Verify. The public root is committed; the runner
-      # is gone when the job ends, and the trust with it.
-      - name: Trust the signing root on this runner
-        shell: pwsh
-        env:
-          BARBATOS_CERT_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          $root = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 (Join-Path $env:GITHUB_WORKSPACE 'packaging\certificates\barbatos-ca.cer')
-          if ($root.Subject -ne $root.Issuer) { throw "packaging/certificates/barbatos-ca.cer is issued by '$($root.Issuer)', so it is no root." }
-
-          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store 'Root', 'LocalMachine'
-          $store.Open('ReadWrite')
-          try { $store.Add($root) } finally { $store.Close() }
-
-          # The leaf chains to it now, or signtool would say so minutes later with nothing but an exit code.
-          $leaf = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 (Join-Path $env:GITHUB_WORKSPACE 'packaging\certificates\barbatos-codesign.pfx'), $env:BARBATOS_CERT_PASSWORD
-          $chain = New-Object System.Security.Cryptography.X509Certificates.X509Chain
-          $chain.ChainPolicy.RevocationMode = 'NoCheck'
-          if (-not $chain.Build($leaf)) {
-            throw "The signing certificate does not chain to the root: $(($chain.ChainStatus | ForEach-Object { $_.Status }) -join ', ')."
-          }
-
-          Write-Host "Trusted on this runner: $($root.Subject), $($root.Thumbprint)."
-
-      # src/core/Directory.Build.props strong-names every core library once this file exists, so the libraries the
-      # installer carries have the identity of the packages'.
-      - name: Write the strong-name key
-        shell: pwsh
+      # The strong-name key for the libraries, as the packages are signed, and the code-signing certificate
+      - name: Write the keys
         env:
           STRONG_NAME_KEY: ${{ secrets.STRONG_NAME_KEY }}
+          SIGNING_CERTIFICATE_PFX: ${{ secrets.SIGNING_CERTIFICATE_PFX }}
         run: |
-          $ErrorActionPreference = 'Stop'
-          if ([string]::IsNullOrWhiteSpace($env:STRONG_NAME_KEY)) { throw 'The STRONG_NAME_KEY secret is not set.' }
-          $key = [Convert]::FromBase64String($env:STRONG_NAME_KEY)
-          if ($key.Length -eq 0) { throw 'STRONG_NAME_KEY decodes to nothing; it must be the base64 of barbatos.snk.' }
-          [IO.File]::WriteAllBytes((Join-Path $env:GITHUB_WORKSPACE 'src\barbatos.snk'), $key)
+          if ([string]::IsNullOrWhiteSpace($env:STRONG_NAME_KEY)) { Write-Error "STRONG_NAME_KEY secret is not set or is empty."; exit 1 }
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_CERTIFICATE_PFX)) { Write-Error "SIGNING_CERTIFICATE_PFX secret is not set or is empty."; exit 1 }
+          [IO.File]::WriteAllBytes((Join-Path (Get-Location) "src\barbatos.snk"), [System.Convert]::FromBase64String($env:STRONG_NAME_KEY))
+          [IO.File]::WriteAllBytes((Join-Path (Get-Location) "packaging\certificates\barbatos-codesign.pfx"), [System.Convert]::FromBase64String($env:SIGNING_CERTIFICATE_PFX))
 
-      # validate -> build -> sign -> verify -> package, by the profile: the version it stamps is Identity.Version.
-      - name: Build, sign and package the app
-        shell: pwsh
+      # signtool verifies each signature up to a root this machine trusts, and a new runner does not know the Barbatos
+      # Labs root: without it the files sign and verification fails (measured on Barbatos.RMCP).
+      - name: Trust the Barbatos Labs root
+        run: |
+          $root = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 (Join-Path (Get-Location) "packaging\certificates\barbatos-ca.cer")
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store "Root", "LocalMachine"
+          $store.Open("ReadWrite")
+          $store.Add($root)
+          $store.Close()
+
+      # Into a folder of its own, with a NuGet config of its own that holds the feed token, so that this repository's
+      # nuget.config stays nuget.org only for everyone who builds it.
+      - name: Install barbatos-pack
         env:
-          # Read by the profile's Signing.SelfSigned.PasswordEnvironmentVariable, never passed on a command line.
+          BARBATOS_PACKAGES_TOKEN: ${{ secrets.BARBATOS_PACKAGES_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:BARBATOS_PACKAGES_TOKEN)) { Write-Error "BARBATOS_PACKAGES_TOKEN secret is not set or is empty."; exit 1 }
+          $config = Join-Path $env:RUNNER_TEMP "barbatos-internal.nuget.config"
+          Set-Content -Path $config -Value @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="barbatos-internal" value="https://nuget.pkg.github.com/Barbatos-Labs/index.json" />
+            </packageSources>
+            <packageSourceCredentials>
+              <barbatos-internal>
+                <add key="Username" value="github-actions" />
+                <add key="ClearTextPassword" value="$env:BARBATOS_PACKAGES_TOKEN" />
+              </barbatos-internal>
+            </packageSourceCredentials>
+          </configuration>
+          "@
+          dotnet tool install Barbatos.PackagingEngine.Cli --version 1.0.0 --tool-path "$env:RUNNER_TEMP\barbatos-pack" --configfile $config
+          $installed = $LASTEXITCODE
+          Remove-Item $config
+          if ($installed -ne 0) { exit $installed }
+          "$env:RUNNER_TEMP\barbatos-pack" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      # validate, build, sign, verify, package; the password is read from BARBATOS_CERT_PASSWORD by the profile
+      - name: Build the installer
+        env:
           BARBATOS_CERT_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
-        run: |
-          barbatos-pack release --profile packaging/Barbatos.Pallas.json --strict
-          if ($LASTEXITCODE -ne 0) { throw "barbatos-pack release failed (exit $LASTEXITCODE)." }
+        run: barbatos-pack release --profile packaging/Barbatos.Pallas.json --strict
 
-      # The engine reports only signtool's exit code; Get-AuthenticodeSignature says whether a failure is trust (the
-      # root), corruption (a file changed after signing) or somewhere else entirely.
-      - name: Explain a signature failure
-        if: failure()
-        shell: pwsh
-        run: |
-          $files = Get-ChildItem -Path artifacts -Recurse -Include 'Barbatos.*.dll', 'Barbatos.*.exe', '*-setup.exe' -ErrorAction SilentlyContinue
-          if (-not $files) { Write-Host 'Nothing was built, so the failure came before signing.'; exit 0 }
-          $files | ForEach-Object { Get-AuthenticodeSignature $_.FullName } | Group-Object Status | ForEach-Object {
-            Write-Host "$($_.Count) file(s) $($_.Name): $($_.Group[0].StatusMessage)"
-          }
-
-      - name: Remove the keys
-        if: always()
-        shell: pwsh
-        run: |
-          foreach ($path in 'src\barbatos.snk', 'packaging\certificates\barbatos-codesign.pfx') {
-            $full = Join-Path $env:GITHUB_WORKSPACE $path
-            if (Test-Path $full) { [IO.File]::Delete($full); Write-Host "$path deleted." }
-          }
-
-      # What is published is checked on the artefact itself: the installer's version is the release's, its signature
-      # and every Barbatos binary's is valid and timestamped, and the libraries carry the key of Barbatos.Pallas.
-      - name: Check the installer
-        id: check
-        shell: pwsh
-        env:
-          EXPECTED_VERSION: ${{ needs.version.outputs.version }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          $installer = Get-Item "artifacts/installer/barbatos-pallas-v$env:EXPECTED_VERSION-setup.exe"
-          $actual = "$($installer.VersionInfo.ProductVersion)".Trim()
-          if ($actual -ne $env:EXPECTED_VERSION) { throw "$($installer.Name) is version '$actual', not $env:EXPECTED_VERSION." }
-
-          $payload = "artifacts/installer/$env:EXPECTED_VERSION"
-          foreach ($file in @($installer) + @(Get-ChildItem $payload -Filter 'Barbatos.*' -Include '*.dll', '*.exe' -Recurse | Where-Object { $_.Name -notlike '*.resources.dll' })) {
-            $signature = Get-AuthenticodeSignature $file.FullName
-            if ($signature.Status -ne 'Valid' -or -not $signature.TimeStamperCertificate) { throw "$($file.Name) is not validly signed and timestamped ($($signature.Status))." }
-          }
-
-          $engine = [Reflection.AssemblyName]::GetAssemblyName((Resolve-Path "$payload/Barbatos.Pallas.Engine.dll"))
-          $token = (($engine.GetPublicKeyToken()) | ForEach-Object { $_.ToString('x2') }) -join ''
-          if ($token -ne $env:PALLAS_PUBLIC_KEY_TOKEN) { throw "Barbatos.Pallas.Engine.dll carries the token '$token', not $env:PALLAS_PUBLIC_KEY_TOKEN." }
-
-          $sha256 = (Get-FileHash $installer.FullName -Algorithm SHA256).Hash
-          Write-Host "$($installer.Name): $actual, $($installer.Length) bytes, SHA-256 $sha256"
-          "installer-name=$($installer.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "installer-size=$($installer.Length)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "installer-sha256=$sha256" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "| ``$($installer.Name)`` | $([math]::Round($installer.Length / 1MB, 1)) MB | ``$sha256`` |" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-
-      # The installer alone: this repository is public, and so are its artifacts.
-      - name: Upload the installer
+      - name: Upload the installer as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: barbatos-pallas-installer
-          path: artifacts/installer/${{ steps.check.outputs.installer-name }}
-          if-no-files-found: error
+          path: artifacts\installer\*-setup.exe
 
-  release:
-    name: Publish the GitHub Release
-    needs: [version, package]
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download the installer
-        uses: actions/download-artifact@v4
-        with:
-          name: barbatos-pallas-installer
-          path: installer
-
-      # The file that arrived is the one the package job checked, by name, size and hash.
-      - name: Verify what was downloaded
-        shell: pwsh
-        env:
-          EXPECTED_NAME: ${{ needs.package.outputs.installer-name }}
-          EXPECTED_SIZE: ${{ needs.package.outputs.installer-size }}
-          EXPECTED_SHA256: ${{ needs.package.outputs.installer-sha256 }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $file = Get-Item (Join-Path installer $env:EXPECTED_NAME)
-          if ("$($file.Length)" -ne $env:EXPECTED_SIZE) { throw "$($file.Name) arrived as $($file.Length) bytes, not $env:EXPECTED_SIZE." }
-          $sha256 = (Get-FileHash $file.FullName -Algorithm SHA256).Hash
-          if ($sha256 -ne $env:EXPECTED_SHA256) { throw "$($file.Name) arrived with SHA-256 $sha256, not $env:EXPECTED_SHA256." }
-          Write-Host "$($file.Name) verified."
-
-      - name: Create the release
+      - name: Create the GitHub Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.version.outputs.tag }}
-          name: Barbatos Pallas ${{ needs.version.outputs.version }}
-          draft: false
-          prerelease: false
+          name: Barbatos Pallas ${{ github.ref_name }}
           generate_release_notes: true
-          fail_on_unmatched_files: true
-          body: |
-            The Windows installer of Barbatos Pallas ${{ needs.version.outputs.version }}, signed by Barbatos Labs.
-
-            SHA-256 of `${{ needs.package.outputs.installer-name }}`: `${{ needs.package.outputs.installer-sha256 }}`
-          files: installer/${{ needs.package.outputs.installer-name }}
+          files: artifacts/installer/*-setup.exe

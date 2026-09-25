@@ -167,8 +167,7 @@ Things that will save time:
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
   (a net8.0-only compile error). A full run is 13 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
-  = 40 assemblies. Count the `... passed` lines the run prints, as the workflows do, not the `.trx` files: xunit names
-  each after the moment its run ends, and a release run found 39 of them where every test had passed (25 Sep 2026).
+  = 40 assemblies.
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the two published packages,
   Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection; the other eight libraries travel inside
   them (docs/ARCHITECTURE.md §10). Then `./build/Test-Packages.ps1 -PackageDirectory artifacts/packages` installs them
@@ -258,19 +257,14 @@ Things that will save time:
   got, only on what was applied.
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
-- **Releasing** is the maintainer's, and the packages and the app are released apart (docs/RELEASING.md): a GitHub
-  Release tagged `v<version>` runs `barbatos-pallas-cd-nuget.yml`, which signs, tests, packs and pushes the packages;
-  a pushed tag `app-v<version>` runs `barbatos-pallas-release-app.yml`, which builds, signs and checks the installer
-  and creates its release. Run by hand, either rehearses and publishes nothing. Barbatos.PackagingEngine is private
-  and this repository public, and GitHub lets no public repository call a private one's reusable workflow: the app
-  workflow installs barbatos-pack from the private feed itself (maintainer, 25 Sep 2026). The run logs of a public
-  repository are public - a step never prints a secret, and only the installer is uploaded. The packages' release
-  refuses a commit that has not had `./build/Move-PublicApiToShipped.ps1` run. Strong naming
+- **Releasing** is the maintainer's (docs/RELEASING.md), by workflows as simple as Barbatos.i18n's and Barbatos.Wpf's:
+  a published GitHub Release runs `barbatos-pallas-cd-nuget.yml` for the packages, a pushed tag `app-v<version>` runs
+  `barbatos-pallas-release-app.yml` for the installer. Keep them that simple (maintainer, 25 Sep 2026): a check that
+  has not run on GitHub is a check that can stop a release by itself - two did, counting test results. Before a
+  release the maintainer runs `./build/Move-PublicApiToShipped.ps1` and the benchmark and mutation gates. Strong naming
   needs `src/barbatos.snk`: each workflow writes it from the `STRONG_NAME_KEY` secret, and the maintainer's machine
-  keeps it there (25 Sep 2026), so every build on it - tests and installer included - is signed. It is gitignored and
-  is never committed, copied, read or moved. Every assembly of the packages carries its token, `1c94c30b213a8345`
-  (`Test-Packages.ps1 -PublicKeyToken`); a key made for testing elsewhere is deleted afterwards and followed by a
-  `--no-incremental` build, so that nothing signed with it is left in `bin/`.
+  keeps it there, so every build on it is signed. It is gitignored and is never committed, copied, read or moved; its
+  token is `1c94c30b213a8345` (`Test-Packages.ps1 -PublicKeyToken` checks a pack for it).
 
 ## Hard rules
 

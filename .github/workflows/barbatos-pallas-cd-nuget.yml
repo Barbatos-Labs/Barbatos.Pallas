@@ -1,43 +1,27 @@
 name: barbatos-pallas-cd-nuget
 
-# Publishing the two packages is a GitHub Release, and nothing else: the maintainer publishes a release whose tag is
-# v<the version of Directory.Build.props>, on a commit CI has passed, and this workflow signs, tests, packs and pushes
-# them to nuget.org, then attaches them to the release (docs/RELEASING.md). Run by hand from the Actions tab it does
-# everything but the push and the attaching: a rehearsal whose signed packages are the run's artifact. The app is
-# released apart, from a tag app-v<its version>, by barbatos-pallas-release-app.yml (maintainer, 25 Sep 2026).
+# Publishes the two packages, as Barbatos.i18n and Barbatos.Wpf publish theirs (docs/RELEASING.md).
 on:
+  # When a GitHub Release is published
   release:
     types: [published]
+  # By hand from the Actions tab
   workflow_dispatch:
 
-env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  # The public key token of barbatos.snk, the key of Barbatos.Pallas and of nothing else (maintainer, 25 Sep 2026): it
-  # is part of every assembly's identity from 1.0.0 on. A package whose assemblies carry any other, or none, is not
-  # published.
-  PALLAS_PUBLIC_KEY_TOKEN: 1c94c30b213a8345
-
 jobs:
-  release:
-    name: Sign, test, pack and publish the packages
-    # A release of the app is not the packages': its tag is app-v<version>, and its workflow is the other one.
-    if: github.event_name != 'release' || !startsWith(github.event.release.tag_name, 'app-')
+  deploy:
     runs-on: windows-latest
     environment: production
+
+    # The OIDC token NuGet trusted publishing exchanges for a short-lived key
     permissions:
-      # NuGet trusted publishing: nuget.org exchanges the run's OIDC token for a key that lives an hour.
       id-token: write
-      # Attaching the packages to the release.
-      contents: write
-      # Reading whether CI passed on the commit.
-      actions: read
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
+      # The core libraries target net8.0, net9.0 and net10.0, and the tests run on all three
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
@@ -46,56 +30,24 @@ jobs:
             9.0.x
             10.0.x
 
-      # A tag that says one version over packages of another would publish what nobody meant to.
-      - name: The tag is the version of the packages
-        if: github.event_name == 'release'
-        shell: pwsh
-        env:
-          TAG: ${{ github.event.release.tag_name }}
-        run: |
-          $version = (& dotnet msbuild src/core/Barbatos.Pallas.Engine/Barbatos.Pallas.Engine.csproj -getProperty:PackageVersion).Trim()
-          if ($LASTEXITCODE -ne 0 -or -not $version) { throw 'The version of the packages could not be read.' }
-          if ($env:TAG -cne "v$version") { throw "The release is tagged '$env:TAG', but the packages are ${version}: tag it v${version}." }
-          Write-Host "Releasing $version."
-
-      # What is released has passed CI - the build, the 40 test assemblies and the package test - on this very commit.
-      # The benchmark and mutation gates are run on the maintainer's machine before a release (docs/RELEASING.md).
-      - name: CI passed on the commit
-        if: github.event_name == 'release'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $runs = @(gh run list --workflow barbatos-pallas-ci.yml --commit $env:GITHUB_SHA --status success --json databaseId | ConvertFrom-Json)
-          if ($LASTEXITCODE -ne 0) { throw 'The runs of barbatos-pallas-ci could not be read.' }
-          if ($runs.Count -eq 0) { throw "barbatos-pallas-ci has not passed on $env:GITHUB_SHA. Run it on the commit (workflow_dispatch), then publish the release again." }
-          Write-Host "barbatos-pallas-ci passed on $env:GITHUB_SHA (run $($runs[0].databaseId))."
-
-      # A release ships its public API: what PublicAPI.Unshipped.txt still declares belongs in PublicAPI.Shipped.txt,
-      # which build/Move-PublicApiToShipped.ps1 does before the release commit (docs/RELEASING.md).
-      - name: Every public API entry is shipped
-        shell: pwsh
-        run: |
-          $unshipped = @(Get-ChildItem src/core -Recurse -Filter PublicAPI.Unshipped.txt | Where-Object {
-            @(Get-Content $_.FullName | Where-Object { $_.Trim() -and $_.Trim() -ne '#nullable enable' }).Count -gt 0
-          })
-          if ($unshipped.Count -eq 0) { Write-Host 'Every public API entry is in PublicAPI.Shipped.txt.'; exit 0 }
-          $message = "Entries not yet shipped in: $(($unshipped | ForEach-Object { $_.Directory.Name }) -join ', '). Run build/Move-PublicApiToShipped.ps1."
-          if ($env:GITHUB_EVENT_NAME -eq 'release') { throw $message }
-          Write-Host "::warning::$message"
-
-      # src/core/Directory.Build.props signs every core library once this file exists. The secret is the base64 of
-      # barbatos.snk; it is read from the environment, never written into the script.
+      # src/core/Directory.Build.props strong-names every core library once this file exists
       - name: Write the strong-name key
-        shell: pwsh
         env:
           STRONG_NAME_KEY: ${{ secrets.STRONG_NAME_KEY }}
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:STRONG_NAME_KEY)) { throw 'The STRONG_NAME_KEY secret is not set.' }
-          $key = [Convert]::FromBase64String($env:STRONG_NAME_KEY)
-          if ($key.Length -eq 0) { throw 'STRONG_NAME_KEY decodes to nothing; it must be the base64 of barbatos.snk.' }
-          [IO.File]::WriteAllBytes((Join-Path $env:GITHUB_WORKSPACE 'src\barbatos.snk'), $key)
-          Write-Host "src\barbatos.snk written ($($key.Length) bytes)."
+          if ([string]::IsNullOrWhiteSpace($env:STRONG_NAME_KEY)) {
+            Write-Error "STRONG_NAME_KEY secret is not set or is empty."
+            exit 1
+          }
+          $key = [System.Convert]::FromBase64String($env:STRONG_NAME_KEY)
+          [IO.File]::WriteAllBytes((Join-Path (Get-Location) "src\barbatos.snk"), $key)
+          Write-Host "Strong-name key written ($($key.Length) bytes)"
+
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: phamhung
 
       - name: Restore
         run: dotnet restore Barbatos.Pallas.slnx
@@ -103,73 +55,23 @@ jobs:
       - name: Build
         run: dotnet build Barbatos.Pallas.slnx --configuration Release --no-restore
 
-      # The signed assemblies are other assemblies than the ones CI tested, so every test runs again on them.
+      # A release must not reach nuget.org with failing tests: a published version cannot be taken back.
       - name: Test
-        shell: pwsh
-        run: |
-          dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build --report-xunit-trx --results-directory TestResults | Tee-Object -FilePath test-run.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        run: dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build
 
-      # A test project that failed to build for one framework is silently absent from a --no-build run while the
-      # summary still reads "Passed!". So the assemblies that passed are counted, by name and framework, from what the
-      # run printed. Not the .trx files: xunit names each after the moment its run ends, and forty run at once - the
-      # release of 25 Sep 2026 found 39 files where CI, on the same commit and with every test passing, had found 40.
-      - name: Verify every test assembly ran
-        shell: pwsh
-        run: |
-          $expected = 40   # 13 test projects x 3 target frameworks, plus Wpf.Tests on Windows only
-          $ran = @(Select-String -Path test-run.log -Pattern '([\w.]+)\.dll \((net[^|)]+)\|[^)]+\) passed' |
-            ForEach-Object { "$($_.Matches[0].Groups[1].Value) on $($_.Matches[0].Groups[2].Value)" } | Sort-Object -Unique)
-          $ran | ForEach-Object { Write-Host "  $_" }
-          if ($ran.Count -lt $expected) { throw "Expected $expected test assemblies to pass, found $($ran.Count)." }
-          Write-Host "$($ran.Count) test assemblies passed."
-
-      # Not --no-build, as in CI: a package finds the libraries it carries by resolving its references.
-      - name: Pack the published packages
+      # IsPackable decides what comes out: only Engine and DependencyInjection
+      - name: Pack
         run: dotnet pack Barbatos.Pallas.slnx --configuration Release --output artifacts/packages
 
-      # Installed outside the repository and calculated with on every runtime, as in CI - and every assembly the two
-      # packages hold, the carried ones included, strong-named with the key of Barbatos.Pallas.
-      - name: Test the packages as a user installs them
-        shell: pwsh
-        run: ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken $env:PALLAS_PUBLIC_KEY_TOKEN
+      # --skip-duplicate: a version already on nuget.org cannot be pushed again, so it is passed over
+      - name: Publish the packages to NuGet.org
+        run: dotnet nuget push artifacts\packages\*.nupkg --source https://api.nuget.org/v3/index.json --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --skip-duplicate
 
-      - name: Remove the strong-name key
-        if: always()
-        shell: pwsh
-        run: Remove-Item -Path src\barbatos.snk -ErrorAction SilentlyContinue
+      - name: Publish the symbols to NuGet.org
+        run: dotnet nuget push artifacts\packages\*.snupkg --source https://api.nuget.org/v3/index.json --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --skip-duplicate
 
-      - name: Upload the packages
+      - name: Upload NuGet packages as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages
-          path: artifacts/packages/*
-          if-no-files-found: error
-
-      - name: NuGet login (trusted publishing)
-        if: github.event_name == 'release'
-        uses: NuGet/login@v1
-        id: login
-        with:
-          user: phamhung
-
-      # --skip-duplicate lets a run that failed after pushing one package be run again; a version on nuget.org is
-      # never replaced.
-      - name: Publish the packages to nuget.org
-        if: github.event_name == 'release'
-        run: dotnet nuget push "artifacts\packages\*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --skip-duplicate
-
-      # A symbol package beside its package is usually pushed with it; pushing it by name makes sure it is.
-      - name: Publish the symbols to nuget.org
-        if: github.event_name == 'release'
-        run: dotnet nuget push "artifacts\packages\*.snupkg" --source https://api.nuget.org/v3/index.json --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --skip-duplicate
-
-      - name: Attach the packages to the release
-        if: github.event_name == 'release'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: |
-          gh release upload $env:TAG (Get-ChildItem artifacts/packages -File).FullName --clobber
-          if ($LASTEXITCODE -ne 0) { throw 'The packages could not be attached to the release.' }
+          path: artifacts\packages\*
