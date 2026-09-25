@@ -6,7 +6,7 @@ as the release workflows of Barbatos.i18n and Barbatos.Wpf:
 | What | How | Workflow |
 |---|---|---|
 | The packages, Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection | Publish a GitHub Release tagged `v<version>` | `barbatos-pallas-cd-nuget.yml`: builds signed, runs the tests, packs, pushes to nuget.org |
-| The app, its signed Windows installer | Push a tag `app-v<version>` | `barbatos-pallas-release-app.yml`: builds the installer with barbatos-pack and creates a GitHub Release with it |
+| The app, its signed Windows installer | Publish a GitHub Release tagged `app-v<version>`, or push the tag | `barbatos-pallas-release-app.yml`: builds the installer with barbatos-pack and attaches it to that release, creating it when only the tag was pushed. The package workflow passes over an `app-` tag |
 
 Their versions are their own: `VersionPrefix` in `Directory.Build.props` for the packages, `<Version>` in the Wpf
 csproj and `Identity.Version` in `packaging/Barbatos.Pallas.json` for the app (`PackagingProfileTests` keeps those two
@@ -64,7 +64,7 @@ On the commit to release, with CI green:
 ## Releasing
 
 - **The packages:** publish a GitHub Release tagged `v1.0.0` on that commit.
-- **The app:** `git tag app-v1.0.0` on that commit, and push the tag.
+- **The app:** publish a GitHub Release tagged `app-v1.0.0` on that commit, or push that tag.
 
 ## After
 
