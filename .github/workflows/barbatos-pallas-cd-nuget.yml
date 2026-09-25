@@ -105,15 +105,24 @@ jobs:
 
       # The signed assemblies are other assemblies than the ones CI tested, so every test runs again on them.
       - name: Test
-        run: dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build --report-xunit-trx --results-directory TestResults
+        shell: pwsh
+        run: |
+          dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build --report-xunit-trx --results-directory TestResults | Tee-Object -FilePath test-run.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      # A test project that failed to build for one framework is silently absent from a --no-build run while the
+      # summary still reads "Passed!". So the assemblies that passed are counted, by name and framework, from what the
+      # run printed. Not the .trx files: xunit names each after the moment its run ends, and forty run at once - the
+      # release of 25 Sep 2026 found 39 files where CI, on the same commit and with every test passing, had found 40.
       - name: Verify every test assembly ran
         shell: pwsh
         run: |
           $expected = 40   # 13 test projects x 3 target frameworks, plus Wpf.Tests on Windows only
-          $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
-          if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
-          Write-Host "$($trx.Count) test result files."
+          $ran = @(Select-String -Path test-run.log -Pattern '([\w.]+)\.dll \((net[^|)]+)\|[^)]+\) passed' |
+            ForEach-Object { "$($_.Matches[0].Groups[1].Value) on $($_.Matches[0].Groups[2].Value)" } | Sort-Object -Unique)
+          $ran | ForEach-Object { Write-Host "  $_" }
+          if ($ran.Count -lt $expected) { throw "Expected $expected test assemblies to pass, found $($ran.Count)." }
+          Write-Host "$($ran.Count) test assemblies passed."
 
       # Not --no-build, as in CI: a package finds the libraries it carries by resolving its references.
       - name: Pack the published packages

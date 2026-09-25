@@ -167,7 +167,8 @@ Things that will save time:
 - **Count the test assemblies, not just the summary.** With `--no-build`, a test project that failed to compile for
   one framework is silently missing from the run and the summary still says "Passed!". This happened on 17 Sep 2026
   (a net8.0-only compile error). A full run is 13 test projects × 3 frameworks + Wpf.Tests, which is Windows-only,
-  = 40 assemblies.
+  = 40 assemblies. Count the `... passed` lines the run prints, as the workflows do, not the `.trx` files: xunit names
+  each after the moment its run ends, and a release run found 39 of them where every test had passed (25 Sep 2026).
 - **Packing.** `dotnet pack Barbatos.Pallas.slnx -c Release -o artifacts/packages` packs the two published packages,
   Barbatos.Pallas.Engine and Barbatos.Pallas.DependencyInjection; the other eight libraries travel inside
   them (docs/ARCHITECTURE.md §10). Then `./build/Test-Packages.ps1 -PackageDirectory artifacts/packages` installs them
