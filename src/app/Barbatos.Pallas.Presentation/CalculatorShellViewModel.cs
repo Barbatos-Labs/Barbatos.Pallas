@@ -34,22 +34,36 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     private TableViewModel? _table;
     private SpreadsheetViewModel? _spreadsheet;
     private MathBoxViewModel? _mathBox;
+    private StoredSession? _lent;
 
     /// <summary>Creates the shell over a session and the store its snapshot goes to.</summary>
     /// <param name="session">The session every application shares.</param>
     /// <param name="store">Where the session is kept between runs.</param>
-    /// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
-    public CalculatorShellViewModel(CalculatorSession session, ISessionStore store)
+    /// <param name="work">
+    /// The work of the session, which every screen of the shell calculates through; <see langword="null"/> for one
+    /// that calculates where it is asked. The application's runs off the window's thread.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="session"/> or <paramref name="store"/> is <see langword="null"/>.</exception>
+    public CalculatorShellViewModel(CalculatorSession session, ISessionStore store, SessionWork? work = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(store);
         Session = session;
         _store = store;
+        Work = work ?? SessionWork.Immediate;
+        Work.Lending += (_, _) => _lent = Stored();
         _currentApp = CalculatorApps.Of(session.App);
         History = new SessionHistory(session);
         Settings = new SettingsViewModel(session);
-        Calculate = Line(new CalculateViewModel(session, History));
+        Calculate = Line(new CalculateViewModel(session, History, Work));
     }
+
+    /// <summary>Gets the work of the session: what its screens calculate, one after another.</summary>
+    /// <remarks>
+    /// While it is busy the session is another thread's: the shell switches no application and saves the session as
+    /// it was before the work, and the window takes no input but AC, which stops the work (<see cref="SessionWork.Cancel"/>).
+    /// </remarks>
+    public SessionWork Work { get; }
 
     /// <summary>Gets the history of the session, which every screen of the shell shows and the store keeps.</summary>
     public SessionHistory History { get; }
@@ -83,19 +97,19 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     public CalculateViewModel Calculate { get; }
 
     /// <summary>Gets the Base-N screen.</summary>
-    public BaseNViewModel BaseN => _baseN ??= Wire(new BaseNViewModel(Session, History));
+    public BaseNViewModel BaseN => _baseN ??= Wire(new BaseNViewModel(Session, History, Work));
 
     /// <summary>Gets the Matrix screen.</summary>
-    public MatrixViewModel Matrix => _matrix ??= Wire(new MatrixViewModel(Session, History));
+    public MatrixViewModel Matrix => _matrix ??= Wire(new MatrixViewModel(Session, History, Work));
 
     /// <summary>Gets the Vector screen.</summary>
-    public VectorViewModel Vector => _vector ??= Wire(new VectorViewModel(Session, History));
+    public VectorViewModel Vector => _vector ??= Wire(new VectorViewModel(Session, History, Work));
 
     /// <summary>Gets the Statistics screen.</summary>
-    public StatisticsViewModel Statistics => _statistics ??= Wire(new StatisticsViewModel(Session, History));
+    public StatisticsViewModel Statistics => _statistics ??= Wire(new StatisticsViewModel(Session, History, Work));
 
     /// <summary>Gets the Distribution screen.</summary>
-    public DistributionViewModel Distribution => _distribution ??= new DistributionViewModel(Session);
+    public DistributionViewModel Distribution => _distribution ??= new DistributionViewModel(Session, Work);
 
     /// <summary>Gets the Equation screen.</summary>
     public EquationViewModel Equation => _equation ??= new EquationViewModel(Session);
@@ -107,10 +121,10 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     public RatioViewModel Ratio => _ratio ??= new RatioViewModel(Session);
 
     /// <summary>Gets the Table screen.</summary>
-    public TableViewModel Table => _table ??= new TableViewModel(Session);
+    public TableViewModel Table => _table ??= new TableViewModel(Session, Work);
 
     /// <summary>Gets the Spreadsheet screen.</summary>
-    public SpreadsheetViewModel Spreadsheet => _spreadsheet ??= new SpreadsheetViewModel(Session);
+    public SpreadsheetViewModel Spreadsheet => _spreadsheet ??= new SpreadsheetViewModel(Session, Work);
 
     /// <summary>Gets the Math Box screen.</summary>
     public MathBoxViewModel MathBox => _mathBox ??= new MathBoxViewModel(Session);
@@ -127,11 +141,11 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     private CalculatorAppInfo _currentApp;
 
     /// <summary>Opens an application, which switches the session to it.</summary>
-    /// <param name="app">The application; one without an engine is not opened.</param>
+    /// <param name="app">The application; one without an engine is not opened, and none is while the session calculates.</param>
     [RelayCommand]
     public void Open(CalculatorAppInfo? app)
     {
-        if (app is null || !app.IsAvailable)
+        if (app is null || !app.IsAvailable || Work.IsBusy)
         {
             return;
         }
@@ -177,12 +191,17 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
     public bool OpenRoute(string? route)
     {
         CalculatorAppInfo? app = CalculatorApps.ByRoute(route);
+        bool opens = app is not null && app.IsAvailable && !Work.IsBusy;
         Open(app);
-        return app is not null && app.IsAvailable;
+        return opens;
     }
 
     /// <summary>Writes the session and its history to the store, as the application closes.</summary>
-    public void Save() => _store.Save(new StoredSession(Session.Capture(), History.ToKeep));
+    /// <remarks>
+    /// While the session calculates it is another thread's, and reading it could tear it: what is written then is the
+    /// session as it was just before the work that has it (<see cref="SessionWork.Lending"/>).
+    /// </remarks>
+    public void Save() => _store.Save(Work.IsBusy ? _lent! : Stored());
 
     /// <summary>Reads back the session that was stored, if there is one.</summary>
     /// <returns><see langword="true"/> when a session was restored.</returns>
@@ -212,6 +231,8 @@ public sealed partial class CalculatorShellViewModel : ObservableObject
         Calculate.Refresh();
         return true;
     }
+
+    private StoredSession Stored() => new(Session.Capture(), History.ToKeep);
 
     private CalculateViewModel Line(CalculateViewModel line)
     {

@@ -80,4 +80,8 @@
     <sys:Double x:Key="PanelMaxHeight">760</sys:Double>
 
     <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+    <!-- How long a calculation runs before the window says so: the slowest the benchmarks measured takes 1.5 ms, so a
+         calculation that is over in a moment shows nothing, and one the user waits for is named at once. -->
+    <KeyTime x:Key="BusyDelay">0:0:0.3</KeyTime>
 </ResourceDictionary>

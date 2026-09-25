@@ -18,10 +18,16 @@ namespace Barbatos.Pallas.Presentation.Tests;
 internal static class OneThread
 {
     /// <summary>Runs the body to its end, and whatever it posts back on the way.</summary>
-    public static void Run(Func<Task> body)
+    public static void Run(Func<Task> body) => Run(body, faults: null);
+
+    /// <summary>
+    /// Runs the body to its end, and whatever it posts back on the way; what that throws is kept, and the loop goes on,
+    /// as the window's reports a fault and carries on.
+    /// </summary>
+    public static void Run(Func<Task> body, ICollection<Exception>? faults)
     {
         SynchronizationContext? previous = SynchronizationContext.Current;
-        Loop loop = new();
+        Loop loop = new(faults);
         SynchronizationContext.SetSynchronizationContext(loop);
         try
         {
@@ -36,7 +42,7 @@ internal static class OneThread
         }
     }
 
-    private sealed class Loop : SynchronizationContext
+    private sealed class Loop(ICollection<Exception>? faults) : SynchronizationContext
     {
         private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _posted = [];
 
@@ -60,7 +66,14 @@ internal static class OneThread
         {
             foreach ((SendOrPostCallback callback, object? state) in _posted.GetConsumingEnumerable())
             {
-                callback(state);
+                try
+                {
+                    callback(state);
+                }
+                catch (Exception fault) when (faults is not null)
+                {
+                    faults.Add(fault);
+                }
             }
         }
     }

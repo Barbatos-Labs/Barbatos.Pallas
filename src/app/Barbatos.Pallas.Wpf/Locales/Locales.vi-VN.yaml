@@ -25,6 +25,9 @@ settings.language: Ngôn ngữ
 crash.title: Barbatos Pallas
 crash.message: Máy tính vừa gặp lỗi. Phiên làm việc đã được lưu, có thể dùng tiếp như bình thường. Báo cáo lỗi được ghi tại {0}
 
+busy.calculating: Đang tính…
+busy.stop: AC  Dừng
+
 setting.inputOutput: Nhập và xuất
 setting.angleUnit: Đơn vị góc
 setting.numberFormat: Dạng số

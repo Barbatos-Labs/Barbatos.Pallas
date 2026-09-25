@@ -314,8 +314,8 @@ public sealed class ApplicationScreenTests
         screen.Generate();
 
         screen.Rows.Should().HaveCount(5);
-        screen.Rows[0].X.Display.Text.Should().Be("1");
-        screen.Rows[4].F!.Display.Text.Should().Be("25");
+        screen.Rows[0].X.Text.Should().Be("1");
+        screen.Rows[4].F!.Text.Should().Be("25");
         screen.ErrorKey.Should().BeNull();
         screen.RowLimit.Should().Be(45, "a table of one function holds more rows");
     }
@@ -330,7 +330,7 @@ public sealed class ApplicationScreenTests
         screen.Generate();
 
         screen.SetX(0, Value.FromDecimal(10)).Should().BeTrue();
-        screen.Rows[0].F!.Display.Text.Should().Be("100");
+        screen.Rows[0].F!.Text.Should().Be("100");
 
         screen.Verify(0, TableFunction.F, "100").Should().BeTrue();
         screen.Verify(0, TableFunction.F, "99").Should().BeFalse();
@@ -389,6 +389,7 @@ public sealed class ApplicationScreenTests
         screen.Commit();
 
         screen.Editing.ErrorKey.Should().Be("error.CircularError");
+        screen.Editing.Text.Should().BeEmpty("the error is shown in the place of its value (U34)");
     }
 
     [Fact]
@@ -400,8 +401,11 @@ public sealed class ApplicationScreenTests
         screen.Input = "5";
         screen.Commit();
 
-        screen.Copy(new CellAddress(0, 0), new CellAddress(1, 0)).Should().BeTrue();
-        screen.Fill("7", new CellAddress(2, 0), new CellAddress(2, 2)).Should().BeTrue();
+        screen.Copy(new CellAddress(0, 0), new CellAddress(1, 0));
+        screen.ErrorKey.Should().BeNull();
+        screen.Cells.Single(cell => cell.Address == new CellAddress(1, 0)).Text.Should().Be("5");
+        screen.Fill("7", new CellAddress(2, 0), new CellAddress(2, 2));
+        screen.ErrorKey.Should().BeNull();
         screen.Cells.Count(cell => cell.Text == "7").Should().Be(3);
 
         screen.AutoCalculate = false;

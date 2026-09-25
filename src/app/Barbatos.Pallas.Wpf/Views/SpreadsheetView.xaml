@@ -50,7 +50,8 @@
                  Style="{StaticResource SheetList}"
                  ItemsSource="{Binding Cells}"
                  SelectedValuePath="Address"
-                 SelectedValue="{Binding Selected}">
+                 SelectedValue="{Binding Selected, Mode=OneWay}"
+                 SelectionChanged="OnSelectionChanged">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Columns="{Binding Columns}" />
@@ -60,10 +61,15 @@
                 <DataTemplate>
                     <StackPanel MinWidth="64">
                         <TextBlock FontSize="9" Foreground="{StaticResource InkFaint}" Text="{Binding Address}" />
-                        <TextBlock FontFamily="{StaticResource MonoFont}"
-                                   Foreground="{StaticResource Ink}"
-                                   TextTrimming="CharacterEllipsis"
-                                   Text="{Binding Text}" />
+                        <!-- The value, or the error the cell's calculation ended in in its place (U34). -->
+                        <Grid>
+                            <TextBlock FontFamily="{StaticResource MonoFont}"
+                                       Foreground="{StaticResource Ink}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Text="{Binding Text}" />
+                            <TextBlock Style="{StaticResource CellError}"
+                                       Text="{i18n:StringLocalizer BindText={Binding ErrorKey}}" />
+                        </Grid>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

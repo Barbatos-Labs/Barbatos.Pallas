@@ -30,6 +30,7 @@ public sealed partial class CalculateViewModel : ObservableObject
 {
     private readonly CalculatorSession _session;
     private readonly SessionHistory _history;
+    private readonly SessionWork _work;
     private int _recalled = -1;
 
     /// <summary>Creates the screen over a session.</summary>
@@ -38,12 +39,17 @@ public sealed partial class CalculateViewModel : ObservableObject
     /// The session's history, shared by every screen of it; <see langword="null"/> for a screen of its own, whose
     /// history is this run's.
     /// </param>
+    /// <param name="work">
+    /// The work of the session, shared by every screen of it; <see langword="null"/> for a screen of its own, which
+    /// calculates where it is asked.
+    /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public CalculateViewModel(CalculatorSession session, SessionHistory? history = null)
+    public CalculateViewModel(CalculatorSession session, SessionHistory? history = null, SessionWork? work = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
         _history = history ?? new SessionHistory(session);
+        _work = work ?? SessionWork.Immediate;
         Input = new MathInputViewModel { App = session.App };
         Input.Requested += OnRequested;
         Input.StoreRequested += (_, name) => StoreIn(name);
@@ -178,7 +184,8 @@ public sealed partial class CalculateViewModel : ObservableObject
     /// <summary>Calculates what is on the line.</summary>
     /// <remarks>
     /// An empty line calculates nothing. A line that fails leaves what was typed where it is, with the cursor at the
-    /// place the engine could not read, so the next keystroke corrects it.
+    /// place the engine could not read, so the next keystroke corrects it. The calculation is a work of the session:
+    /// what is shown until it is done is what was shown before, and a calculation that is stopped shows nothing new.
     /// </remarks>
     [RelayCommand]
     public void Execute()
@@ -189,16 +196,7 @@ public sealed partial class CalculateViewModel : ObservableObject
             return;
         }
 
-        Calculation calculation = _session.Calculate(text);
-        Calculation = calculation;
-        Display = calculation.Display;
-        Notice = null;
-        _recalled = -1;
-
-        if (calculation.Error is { } error)
-        {
-            Input.MoveTo(error.Span.Start);
-        }
+        _work.Start(token => _session.Calculate(text, token), Show);
     }
 
     /// <summary>Shows the result another way (the FORMAT menu, manual pp. 42-50).</summary>
@@ -297,6 +295,19 @@ public sealed partial class CalculateViewModel : ObservableObject
     /// <summary>The newer calculation, as a command.</summary>
     [RelayCommand]
     private void RecallNewer() => RecallNext();
+
+    private void Show(Calculation calculation)
+    {
+        Calculation = calculation;
+        Display = calculation.Display;
+        Notice = null;
+        _recalled = -1;
+
+        if (calculation.Error is { } error)
+        {
+            Input.MoveTo(error.Span.Start);
+        }
+    }
 
     private void Recall(ImmutableArray<HistoryEntry> history, int index)
     {

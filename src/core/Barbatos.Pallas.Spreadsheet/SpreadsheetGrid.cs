@@ -26,6 +26,10 @@ namespace Barbatos.Pallas.Spreadsheet;
 /// <para>
 /// The grid takes the cell references of the session while it exists: a session has one sheet, as a calculator does.
 /// </para>
+/// <para>
+/// Every change that calculates takes a <see cref="CancellationToken"/>, as every long operation of the engine does,
+/// and is made whole or not at all: a change that is stopped leaves the sheet as it was before it.
+/// </para>
 /// </remarks>
 public sealed class SpreadsheetGrid
 {
@@ -46,6 +50,7 @@ public sealed class SpreadsheetGrid
     private readonly Dictionary<CellAddress, SpreadsheetCell> _cells = [];
     private readonly Dictionary<CellAddress, EvalResult> _values = [];
     private readonly HashSet<CellAddress> _calculating = [];
+    private CancellationToken _cancellation;
 
     /// <summary>Creates an empty sheet on a session of the Spreadsheet application.</summary>
     /// <param name="session">The session, which the sheet calculates through and reads cell references from.</param>
@@ -79,6 +84,11 @@ public sealed class SpreadsheetGrid
     public int Capacity { get; }
 
     /// <summary>Gets or sets whether a change calculates the sheet again; initially on (p. 107).</summary>
+    /// <remarks>
+    /// Off, a formula entered is calculated as it is entered, reading every other cell as it holds its value, and the
+    /// formulas that refer to it wait for <see cref="Recalculate"/>, as they do for a constant entered or a cell cleared
+    /// (assumption U33).
+    /// </remarks>
     public bool AutoCalculate { get; set; } = true;
 
     /// <summary>Gets the cells that have content, in no particular order.</summary>
@@ -95,55 +105,65 @@ public sealed class SpreadsheetGrid
     /// <summary>Enters a constant: an expression without a leading <c>=</c>, calculated once and then fixed (p. 101).</summary>
     /// <param name="address">The cell.</param>
     /// <param name="input">The input, in Canonical Linear Syntax.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
     /// <returns>The error of the input, or <see langword="null"/>; the value of a cell in error is 0.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="input"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="address"/> is outside the sheet.</exception>
-    public CalcError? SetConstant(CellAddress address, string input) => Set(address, input, formula: false);
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? SetConstant(CellAddress address, string input, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        return Change(() => Set(address, input, formula: false), cancellationToken);
+    }
 
     /// <summary>Enters a formula, the text after the <c>=</c>, which is calculated again whenever the sheet is (p. 101).</summary>
     /// <param name="address">The cell.</param>
     /// <param name="formula">The formula without its leading <c>=</c>, in Canonical Linear Syntax.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
     /// <returns>The error of the formula, or <see langword="null"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="formula"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="address"/> is outside the sheet.</exception>
-    public CalcError? SetFormula(CellAddress address, string formula) => Set(address, formula, formula: true);
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? SetFormula(CellAddress address, string formula, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(formula);
+        return Change(() => Set(address, formula, formula: true), cancellationToken);
+    }
 
     /// <summary>Clears one cell (p. 104).</summary>
     /// <param name="address">The cell.</param>
-    public void Clear(CellAddress address)
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public void Clear(CellAddress address, CancellationToken cancellationToken = default)
     {
-        if (_cells.Remove(address))
-        {
-            Recalculate();
-        }
+        _ = Change(
+            () =>
+            {
+                if (_cells.Remove(address))
+                {
+                    Changed(address, formula: false);
+                }
+
+                return null;
+            },
+            cancellationToken);
     }
 
     /// <summary>Clears every cell (p. 104).</summary>
     public void ClearAll()
     {
         _cells.Clear();
+        _values.Clear();
     }
 
     /// <summary>Copies a cell and pastes it, moving the relative references by the distance between the two (p. 103).</summary>
     /// <param name="from">The cell to copy.</param>
     /// <param name="to">Where to paste it.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
     /// <returns>The error of the pasted content, or <see langword="null"/>; nothing happens when <paramref name="from"/> is empty.</returns>
     /// <exception cref="ArgumentOutOfRangeException">A cell is outside the sheet.</exception>
-    public CalcError? CopyPaste(CellAddress from, CellAddress to)
-    {
-        Require(from);
-        SpreadsheetCell? cell = _cells.GetValueOrDefault(from);
-        return cell is null
-            ? null
-            : Set(to, CellFormula.Shift(cell.Input, to.Column - from.Column, to.Row - from.Row, Columns, Rows, _session.Engine.Vocabulary), cell.IsFormula);
-    }
-
-    /// <summary>Cuts a cell and pastes it, leaving every reference where it is (p. 104).</summary>
-    /// <param name="from">The cell to cut.</param>
-    /// <param name="to">Where to paste it.</param>
-    /// <returns>The error of the pasted content, or <see langword="null"/>; nothing happens when <paramref name="from"/> is empty.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">A cell is outside the sheet.</exception>
-    public CalcError? CutPaste(CellAddress from, CellAddress to)
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? CopyPaste(CellAddress from, CellAddress to, CancellationToken cancellationToken = default)
     {
         Require(from);
         SpreadsheetCell? cell = _cells.GetValueOrDefault(from);
@@ -152,30 +172,149 @@ public sealed class SpreadsheetGrid
             return null;
         }
 
-        _cells.Remove(from);
-        return Set(to, cell.Input, cell.IsFormula);
+        return Change(() => Set(to, CellFormula.Shift(cell.Input, to.Column - from.Column, to.Row - from.Row, Columns, Rows, _session.Engine.Vocabulary), cell.IsFormula), cancellationToken);
+    }
+
+    /// <summary>Cuts a cell and pastes it, leaving every reference where it is (p. 104).</summary>
+    /// <param name="from">The cell to cut.</param>
+    /// <param name="to">Where to paste it.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
+    /// <returns>The error of the pasted content, or <see langword="null"/>; nothing happens when <paramref name="from"/> is empty.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">A cell is outside the sheet.</exception>
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? CutPaste(CellAddress from, CellAddress to, CancellationToken cancellationToken = default)
+    {
+        Require(from);
+        SpreadsheetCell? cell = _cells.GetValueOrDefault(from);
+        if (cell is null)
+        {
+            return null;
+        }
+
+        return Change(
+            () =>
+            {
+                _cells.Remove(from);
+                return Set(to, cell.Input, cell.IsFormula);
+            },
+            cancellationToken);
     }
 
     /// <summary>Enters one formula in every cell of a range, its relative references taken from the first cell (p. 106).</summary>
     /// <param name="formula">The formula without its leading <c>=</c>, as it belongs in the first cell of the range.</param>
     /// <param name="start">The first cell of the range.</param>
     /// <param name="end">The last cell of the range.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
     /// <returns>The first error the range produced, or <see langword="null"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="formula"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A cell of the range is outside the sheet.</exception>
-    public CalcError? Fill(string formula, CellAddress start, CellAddress end) => Fill(formula, start, end, asFormula: true);
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? Fill(string formula, CellAddress start, CellAddress end, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(formula);
+        return Change(() => Fill(formula, start, end, asFormula: true), cancellationToken);
+    }
 
     /// <summary>Enters one constant in every cell of a range, its relative references taken from the first cell (p. 106).</summary>
     /// <param name="input">The input, as it belongs in the first cell of the range.</param>
     /// <param name="start">The first cell of the range.</param>
     /// <param name="end">The last cell of the range.</param>
+    /// <param name="cancellationToken">Stops the calculation, and with it the change.</param>
     /// <returns>The first error the range produced, or <see langword="null"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="input"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A cell of the range is outside the sheet.</exception>
-    public CalcError? FillValue(string input, CellAddress start, CellAddress end) => Fill(input, start, end, asFormula: false);
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public CalcError? FillValue(string input, CellAddress start, CellAddress end, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        return Change(() => Fill(input, start, end, asFormula: false), cancellationToken);
+    }
 
     /// <summary>Calculates every formula of the sheet again, as the Recalculate command does (p. 107).</summary>
-    public void Recalculate()
+    /// <param name="cancellationToken">Stops the calculation.</param>
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    /// <remarks>A calculation that is stopped leaves the sheet as it was, as every change does.</remarks>
+    public void Recalculate(CancellationToken cancellationToken = default) => _ = Change(
+        () =>
+        {
+            CalculateAll();
+            return null;
+        },
+        cancellationToken);
+
+    /// <summary>Makes a change under a token, whole or not at all.</summary>
+    /// <remarks>
+    /// The engine reads a cell through the session (<see cref="CalculatorSession.CellValues"/>), which takes no token,
+    /// so the token of the change is kept here while it lasts. A change that is stopped leaves the sheet as it was
+    /// before it: its cells are put back, a formula reads the values the others held, and no cell stays marked as
+    /// being calculated, which would have read as a Circular ERROR the next time.
+    /// </remarks>
+    private CalcError? Change(Func<CalcError?> change, CancellationToken cancellationToken)
+    {
+        Dictionary<CellAddress, SpreadsheetCell> before = new(_cells);
+        _cancellation = cancellationToken;
+        try
+        {
+            return change();
+        }
+        catch (OperationCanceledException)
+        {
+            _cells.Clear();
+            foreach ((CellAddress address, SpreadsheetCell cell) in before)
+            {
+                _cells[address] = cell;
+            }
+
+            Remember();
+            throw;
+        }
+        finally
+        {
+            _cancellation = CancellationToken.None;
+            _calculating.Clear();
+        }
+    }
+
+    /// <summary>After a cell changed: the whole sheet is calculated again with Auto Calc on; with it off, only a formula entered is.</summary>
+    /// <remarks>
+    /// p. 107 says only that with Auto Calc off the sheet is calculated again by Recalculate. What is entered then is
+    /// assumption U33: a formula is calculated as it is entered, reading every other cell as it holds its value, and
+    /// the formulas that refer to it wait for Recalculate, as a constant entered or a cell cleared makes them wait.
+    /// </remarks>
+    private void Changed(CellAddress address, bool formula)
+    {
+        if (AutoCalculate)
+        {
+            CalculateAll();
+        }
+        else if (formula)
+        {
+            Remember();
+            _values.Remove(address);
+            _cells[address] = Cell(address, _cells[address].Input, isFormula: true, Read(address));
+        }
+        else
+        {
+            _values.Remove(address);
+        }
+    }
+
+    /// <summary>Makes what a formula reads from another formula the value that formula holds.</summary>
+    private void Remember()
+    {
+        _values.Clear();
+        foreach ((CellAddress address, SpreadsheetCell cell) in _cells)
+        {
+            if (cell.IsFormula)
+            {
+                _values[address] = Held(cell);
+            }
+        }
+    }
+
+    private static EvalResult Held(SpreadsheetCell cell) => cell.Succeeded ? cell.Value : EvalResult.Failure(cell.Error!.Value.Kind);
+
+    private void CalculateAll()
     {
         _values.Clear();
         foreach (CellAddress address in _cells.Keys.ToArray())
@@ -204,7 +343,7 @@ public sealed class SpreadsheetGrid
 
         if (!cell.IsFormula)
         {
-            return cell.Error is { } error ? EvalResult.Failure(error.Kind) : cell.Value;
+            return Held(cell);
         }
 
         if (!_calculating.Add(address))
@@ -213,7 +352,7 @@ public sealed class SpreadsheetGrid
             return EvalResult.Failure(CalcErrorKind.CircularError);
         }
 
-        Calculation calculation = _session.Evaluate(cell.Input);
+        Calculation calculation = _session.Evaluate(cell.Input, _cancellation);
         _calculating.Remove(address);
         EvalResult result = calculation.Succeeded ? calculation.Result : EvalResult.Failure(calculation.Error!.Value.Kind);
         _values[address] = result;
@@ -222,15 +361,16 @@ public sealed class SpreadsheetGrid
 
     private CalcError? Set(CellAddress address, string input, bool formula)
     {
-        ArgumentNullException.ThrowIfNull(input);
         Require(address);
         if (CellFormula.Bytes(input, _session.Engine.Vocabulary) > InputBytes)
         {
             return new CalcError(CalcErrorKind.MemoryError, new SourceSpan(0, input.Length));
         }
 
+        // A formula is calculated once it is in the sheet, where the cells it refers to can read it; until then it is
+        // only what its bytes are counted on.
         SpreadsheetCell entered = formula
-            ? Cell(address, input, isFormula: true, EvalResult.Failure(CalcErrorKind.SyntaxError))
+            ? Cell(address, input, isFormula: true, Value.Zero)
             : Constant(address, input);
 
         // p. 100: the sheet holds so many bytes, whatever they are spent on.
@@ -241,22 +381,18 @@ public sealed class SpreadsheetGrid
         }
 
         _cells[address] = entered;
-        if (AutoCalculate || !formula)
-        {
-            Recalculate();
-        }
-
+        Changed(address, formula);
         return _cells[address].Error;
     }
 
     /// <summary>A constant: calculated once, and stored with ten significant digits when it was typed with more (p. 101).</summary>
     private SpreadsheetCell Constant(CellAddress address, string input)
     {
-        Calculation calculation = _session.Evaluate(input);
+        Calculation calculation = _session.Evaluate(input, _cancellation);
         if (calculation.Succeeded && CellFormula.SignificantDigits(input) > ConstantDigits)
         {
             string rounded = PallasEngine.Format(calculation.Result, Rounding, _session.Profile)!.Text;
-            calculation = _session.Evaluate(rounded);
+            calculation = _session.Evaluate(rounded, _cancellation);
         }
 
         EvalResult result = calculation.Succeeded ? calculation.Result : EvalResult.Failure(calculation.Error!.Value.Kind);
@@ -265,7 +401,6 @@ public sealed class SpreadsheetGrid
 
     private CalcError? Fill(string input, CellAddress start, CellAddress end, bool asFormula)
     {
-        ArgumentNullException.ThrowIfNull(input);
         Require(start);
         Require(end);
         // p. 106: the relative references belong to the cell at the top left of the range, wherever its corners were given.

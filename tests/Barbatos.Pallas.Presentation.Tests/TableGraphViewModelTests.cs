@@ -591,7 +591,7 @@ public sealed class TableGraphViewModelTests
         await screen.Graph.Drawing;
 
         screen.Graph.Reading!.Values[0].Text.Should().Be("6", "2 × 3, as the row for 3 says");
-        screen.Rows[2].F!.Display.Text.Should().Be("6");
+        screen.Rows[2].F!.Text.Should().Be("6");
         screen.Graph.Curves[0].Trace.Pieces[0][^1].Should().Be(new GraphPoint(5.2, 10.4));
     });
 

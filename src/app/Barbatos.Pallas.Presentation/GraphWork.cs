@@ -60,7 +60,8 @@ internal sealed class GraphWork(Action changed)
         T result = default!;
         try
         {
-            result = await Task.Run(() => work(token), token).ConfigureAwait(true);
+            // Back through the context even when the work was done before it was awaited, as SessionWork explains.
+            result = await Task.Run(() => work(token), token).ConfigureAwait(SessionWork.Back);
         }
         catch (OperationCanceledException)
         {

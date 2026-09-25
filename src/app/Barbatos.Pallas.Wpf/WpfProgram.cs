@@ -60,6 +60,9 @@ public static class WpfProgram
         // owns it - a factory that reads it back off the shell asks the container for the shell while it is
         // building the shell, and that is a startup that never finishes (measured 22 Sep 2026).
         builder.Services.AddSingleton(provider => provider.GetRequiredService<PallasEngine>().CreateSession());
+
+        // What the screens calculate runs off the window's thread, one work after another on the one session.
+        builder.Services.AddSingleton(_ => new SessionWork(offThread: true));
         builder.Services.AddSingleton<ISessionStore, PreferencesSessionStore>();
         builder.Services.AddSingleton<CalculatorShellViewModel>();
         builder.Services.AddSingleton(provider => provider.GetRequiredService<CalculatorShellViewModel>().Settings);
@@ -116,7 +119,9 @@ public static class WpfProgram
     /// <summary>Switches the session to the application a route names, and refuses a route this build cannot open.</summary>
     private static bool Opens(CalculatorShellViewModel shell, string path)
     {
-        // Home and the settings are screens of this application, not applications of the calculator.
-        return CalculatorApps.ByRoute(path) is null || shell.OpenRoute(path);
+        // While the session calculates, the screen stays: another one would read the session the work has, and the
+        // settings would change it under the work. Home and the settings are screens of this application, not
+        // applications of the calculator.
+        return !shell.Work.IsBusy && (CalculatorApps.ByRoute(path) is null || shell.OpenRoute(path));
     }
 }

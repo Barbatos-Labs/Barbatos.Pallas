@@ -12,6 +12,39 @@ using CommunityToolkit.Mvvm.Input;
 namespace Barbatos.Pallas.Presentation;
 
 /// <summary>
+/// One value of a row as the screen shows it: what the display shows, or the error its calculation ended in.
+/// </summary>
+/// <param name="Text">What the display shows, or nothing when the calculation failed.</param>
+/// <param name="ErrorKey">The localization key of its error, or <see langword="null"/>.</param>
+/// <remarks>
+/// A value whose calculation failed shows its error where the value would be, as a cell of the sheet does (assumption
+/// U34). Until 25 Sep 2026 it showed nothing, which does not say that anything went wrong.
+/// </remarks>
+public sealed record TableCell(string Text, string? ErrorKey)
+{
+    /// <summary>Shows a calculation.</summary>
+    /// <param name="calculation">The calculation.</param>
+    /// <returns>What the screen shows of it.</returns>
+    internal static TableCell Of(Calculation calculation) =>
+        new(calculation.Display.Text, calculation.Error is null ? null : "error." + calculation.Error.Value.Kind);
+}
+
+/// <summary>
+/// One row of a table as the screen shows it: x, and f(x) and g(x) where the table holds them.
+/// </summary>
+/// <param name="X">The value of x.</param>
+/// <param name="F">f(x), or <see langword="null"/> when the table holds only g(x).</param>
+/// <param name="G">g(x), or <see langword="null"/> when the table holds only f(x).</param>
+public sealed record TableLine(TableCell X, TableCell? F, TableCell? G)
+{
+    /// <summary>Shows a row of a table.</summary>
+    /// <param name="row">The row.</param>
+    /// <returns>What the screen shows of it.</returns>
+    internal static TableLine Of(TableRow row) =>
+        new(TableCell.Of(row.X), row.F is null ? null : TableCell.Of(row.F), row.G is null ? null : TableCell.Of(row.G));
+}
+
+/// <summary>
 /// The Table screen (manual pp. 107-111): f(x) and g(x) over a range of x, row by row.
 /// </summary>
 /// <remarks>
@@ -22,15 +55,18 @@ namespace Barbatos.Pallas.Presentation;
 public sealed partial class TableViewModel : ObservableObject
 {
     private readonly CalculatorSession _session;
+    private readonly SessionWork _work;
     private NumberTable? _table;
 
     /// <summary>Creates the screen over a session.</summary>
     /// <param name="session">The session the table is generated from.</param>
+    /// <param name="work">The session's work, shared by its screens; <see langword="null"/> to calculate where asked.</param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public TableViewModel(CalculatorSession session)
+    public TableViewModel(CalculatorSession session, SessionWork? work = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
+        _work = work ?? SessionWork.Immediate;
         Range = new ValueGridViewModel(session, 1, 3);
         Range[0, 0].Text = "1";
         Range[0, 1].Text = "5";
@@ -66,7 +102,7 @@ public sealed partial class TableViewModel : ObservableObject
 
     /// <summary>Gets the rows of the table.</summary>
     [ObservableProperty]
-    private ImmutableArray<TableRow> _rows = [];
+    private ImmutableArray<TableLine> _rows = [];
 
     /// <summary>Gets the localization key of the error, or <see langword="null"/>.</summary>
     [ObservableProperty]
@@ -76,6 +112,10 @@ public sealed partial class TableViewModel : ObservableObject
     public int RowLimit => NumberTable.RowLimit(Type, _session.Profile);
 
     /// <summary>Defines the functions and generates the table.</summary>
+    /// <remarks>
+    /// A work of the session: every row is two calculations of what the user wrote, and a table of integrals held the
+    /// window for seconds when it was generated on the window's thread.
+    /// </remarks>
     [RelayCommand]
     public void Generate()
     {
@@ -84,35 +124,34 @@ public sealed partial class TableViewModel : ObservableObject
         _table = null;
         Graph.Clear();
 
-        CalcError? fault = Type is TableType.FunctionG ? null : _session.Define(DefinedFunction.F, FunctionF);
-        fault ??= Type is TableType.FunctionF ? null : _session.Define(DefinedFunction.G, FunctionG);
-        if (fault is { } wrong)
-        {
-            ErrorKey = "error." + wrong.Kind;
-            return;
-        }
-
-        NumberTable table = NumberTable.Generate(_session, Type, Range[0, 0].Value, Range[0, 1].Value, Range[0, 2].Value);
-        _table = table;
-        ErrorKey = table.Error is { } error ? "error." + error.Kind : null;
-        Rows = [.. table.Rows];
-        Graph.Show(table);
+        TableType type = Type;
+        string f = FunctionF;
+        string g = FunctionG;
+        Value start = Range[0, 0].Value;
+        Value end = Range[0, 1].Value;
+        Value step = Range[0, 2].Value;
+        _work.Start(token => Generated(type, f, g, start, end, step, token), Show);
     }
 
-    /// <summary>Changes the x of one row and calculates that row again (p. 110).</summary>
+    /// <summary>Changes the x of one row and calculates that row again (p. 110), as a work of the session.</summary>
     /// <param name="row">The row, counted from 0.</param>
     /// <param name="x">What x is now.</param>
     /// <returns><see langword="true"/> when there is such a row.</returns>
     public bool SetX(int row, Value x)
     {
-        if (_table is not { } table || row < 0 || row >= table.Rows.Count)
+        NumberTable? table = _table;
+        if (table is null || row < 0 || row >= table.Rows.Count)
         {
             return false;
         }
 
-        table.SetX(row, x);
-        Rows = [.. table.Rows];
-        Graph.Show(table);
+        _work.Start(
+            token =>
+            {
+                table.SetX(row, x, token);
+                return table;
+            },
+            Refresh);
         return true;
     }
 
@@ -127,8 +166,7 @@ public sealed partial class TableViewModel : ObservableObject
         }
 
         table.RemoveRow(row);
-        Rows = [.. table.Rows];
-        Graph.Show(table);
+        Refresh(table);
         return true;
     }
 
@@ -150,5 +188,43 @@ public sealed partial class TableViewModel : ObservableObject
         Rows = [];
         ErrorKey = null;
         Graph.Clear();
+    }
+
+    /// <summary>Defines the functions and generates the table, on the session: an error of a definition, or the table.</summary>
+    private (CalcError? Fault, NumberTable? Table) Generated(TableType type, string f, string g, Value start, Value end, Value step, CancellationToken token)
+    {
+        CalcError? fault = type is TableType.FunctionG ? null : _session.Define(DefinedFunction.F, f);
+        fault ??= type is TableType.FunctionF ? null : _session.Define(DefinedFunction.G, g);
+        return fault is null ? (null, NumberTable.Generate(_session, type, start, end, step, token)) : (fault, null);
+    }
+
+    private void Show((CalcError? Fault, NumberTable? Table) generated)
+    {
+        NumberTable? table = generated.Table;
+        if (table is null)
+        {
+            ErrorKey = "error." + generated.Fault!.Value.Kind;
+            return;
+        }
+
+        Show(table);
+    }
+
+    private void Show(NumberTable table)
+    {
+        _table = table;
+        ErrorKey = table.Error is { } error ? "error." + error.Kind : null;
+        Rows = [.. table.Rows.Select(TableLine.Of)];
+        Graph.Show(table);
+    }
+
+    private void Refresh(NumberTable table)
+    {
+        // A table cleared or generated again while one of its rows was being calculated is no longer on the screen.
+        if (table == _table)
+        {
+            Rows = [.. table.Rows.Select(TableLine.Of)];
+            Graph.Show(table);
+        }
     }
 }

@@ -42,18 +42,66 @@ public sealed class SpreadsheetGridTests
     }
 
     [Fact]
-    public void AutoCalculateOffLeavesTheFormulasUntilTheSheetIsCalculated()
+    public void AutoCalculateOffCalculatesWhatIsEnteredAndLeavesTheRestUntilTheSheetIsCalculated()
     {
-        // p. 107: with Auto Calc off, a formula keeps its value until Recalculate.
+        // p. 107: with Auto Calc off the sheet is calculated again by Recalculate. What is entered meanwhile is
+        // assumption U33: a formula entered is calculated, and the formulas that refer to what changed wait.
         SpreadsheetGrid grid = Sheet.Example();
         grid.AutoCalculate = false;
 
-        grid.SetFormula(Sheet.At("B2"), "A2+7");
-        grid[Sheet.At("B2")]!.Error!.Value.Kind.Should().Be(CalcErrorKind.SyntaxError, "a formula has no value until the sheet is calculated again");
+        grid.SetFormula(Sheet.At("B2"), "A2+7").Should().BeNull("a formula that calculates has no error");
+        grid.Display("B2").Should().Be("49", "the formula entered is calculated as it is entered");
+
+        grid.SetConstant(Sheet.At("A1"), "100").Should().BeNull();
+        grid.Display("B1").Should().Be("42", "the formulas that refer to a constant entered wait");
+        grid.SetFormula(Sheet.At("C1"), "B1+1").Should().BeNull();
+        grid.Display("C1").Should().Be("43", "a formula entered reads the others as they hold their values");
+        grid.Clear(Sheet.At("A2"));
+        grid.Display("B2").Should().Be("49", "the formulas that refer to a cell cleared wait too");
+        grid.SetFormula(Sheet.At("D1"), "1+")!.Value.Kind.Should().Be(CalcErrorKind.SyntaxError, "what does not read is still its error");
 
         grid.Recalculate();
 
-        grid.Display("B2").Should().Be("49");
+        grid.Display("B1").Should().Be("107");
+        grid.Display("B2").Should().Be("7");
+        grid.Display("C1").Should().Be("108");
+    }
+
+    [Fact]
+    public void AutoCalculateOffReadsACellThatWasCutAsEmpty()
+    {
+        // U33: a formula entered reads every other cell as it holds its value, and a cell cut away holds none.
+        SpreadsheetGrid grid = Sheet.Example();
+        grid.AutoCalculate = false;
+
+        grid.CutPaste(Sheet.At("B1"), Sheet.At("C3")).Should().BeNull();
+        grid.Display("C3").Should().Be("42");
+        grid.SetFormula(Sheet.At("D1"), "B1+1").Should().BeNull();
+
+        grid.Display("D1").Should().Be("1", "B1 is empty since the cut");
+    }
+
+    [Fact]
+    public void TheSessionReadsACellAsTheSheetHoldsIt()
+    {
+        // The engine reads a cell through the session (CalculatorSession.CellValues), outside any change of the sheet
+        // too, and with Auto Calc off what a cell holds is what was last entered or calculated in it (U33).
+        CalculatorSession session = Sheet.Session();
+        SpreadsheetGrid grid = new(session);
+        grid.SetFormula(Sheet.At("A1"), "2+3").Should().BeNull();
+        session.Evaluate("A1").Display.Text.Should().Be("5");
+        grid.AutoCalculate = false;
+
+        grid.SetConstant(Sheet.At("A1"), "7").Should().BeNull();
+        session.Evaluate("A1").Display.Text.Should().Be("7", "a formula replaced by a constant is read as the constant");
+
+        grid.SetFormula(Sheet.At("A1"), "2+3").Should().BeNull();
+        grid.Clear(Sheet.At("A1"));
+        session.Evaluate("A1").Display.Text.Should().Be("0", "a formula cleared is an empty cell");
+
+        grid.SetFormula(Sheet.At("A1"), "2+3").Should().BeNull();
+        grid.ClearAll();
+        session.Evaluate("A1").Display.Text.Should().Be("0", "and so is every cell of a sheet cleared");
     }
 
     [Fact]
@@ -377,10 +425,10 @@ public sealed class SpreadsheetGridTests
 
         wrongApp.Should().Throw<ArgumentException>().WithParameterName("session");
         missing.Should().Throw<ArgumentNullException>();
-        grid.Invoking(sheet => sheet.SetConstant(Sheet.At("A1"), null!)).Should().Throw<ArgumentNullException>();
-        grid.Invoking(sheet => sheet.SetFormula(Sheet.At("A1"), null!)).Should().Throw<ArgumentNullException>();
-        grid.Invoking(sheet => sheet.Fill(null!, Sheet.At("A1"), Sheet.At("A2"))).Should().Throw<ArgumentNullException>();
-        grid.Invoking(sheet => sheet.FillValue(null!, Sheet.At("A1"), Sheet.At("A2"))).Should().Throw<ArgumentNullException>();
+        grid.Invoking(sheet => sheet.SetConstant(Sheet.At("A1"), null!)).Should().Throw<ArgumentNullException>().WithParameterName("input");
+        grid.Invoking(sheet => sheet.SetFormula(Sheet.At("A1"), null!)).Should().Throw<ArgumentNullException>().WithParameterName("formula");
+        grid.Invoking(sheet => sheet.Fill(null!, Sheet.At("A1"), Sheet.At("A2"))).Should().Throw<ArgumentNullException>().WithParameterName("formula");
+        grid.Invoking(sheet => sheet.FillValue(null!, Sheet.At("A1"), Sheet.At("A2"))).Should().Throw<ArgumentNullException>().WithParameterName("input");
     }
 
     [Fact]

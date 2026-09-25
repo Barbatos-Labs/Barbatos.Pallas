@@ -269,8 +269,13 @@ The engine for each domain is designed in its phase. These are the rules it star
 **Arithmetic chains.**
 - `decimal` chains accumulate nothing for + and − on decimal input, and at most one rounding at the 28th decimal
   place per × or ÷. Ten digits are displayed, so that rounding is invisible.
+- An integer power is a product, of an approximate base too: xⁿ is x multiplied out in `decimal` while the product
+  stays one (`Math.Pow` beyond), so x^2, x² and x×x agree to the last digit. Through `Math.Pow`, sin(1)^2−sin(1)×sin(1)
+  was 4.5×10⁻¹⁹ while sin(1)²−sin(1)×sin(1) was 0 (decision of 25 Sep 2026).
 - Chains through transcendental functions accumulate about 10⁻¹⁵ relative per step. The calculator accumulates
-  error at the 10th digit (p. 169).
+  error at the 10th digit (p. 169). A difference that cancels such values shows it: (π+sin(1))−sin(1)−π is
+  3.1×10⁻¹⁵, not 0, because π and sin 1 are each held to 15 digits and their sum is rounded to 15 again. That is the
+  accuracy of §1, not a digit lost silently.
 
 **Matrices and vectors** (Phase 4).
 - Entries are `Value`s: sums and products go through `ValueMath`, so each entry follows the precision rule and keeps

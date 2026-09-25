@@ -509,8 +509,10 @@ internal static class ValueMath
             return n > 0 ? Value.Zero : MathError;
         }
 
-        // Exact bases are multiplied out, so 1.1³ is exactly 1.331; square roots and π keep their forms.
-        if ((power.IsExact || power.Form is not null) && MultiplyOut(power, n, context) is { Succeeded: true, Value.Kind: ValueKind.DecimalReal } product)
+        // An integer power is multiplied out, as x² and x×x are, so 1.1³ is exactly 1.331 and square roots and π keep
+        // their forms. An approximate base too: through Math.Pow its power kept fifteen digits where its product keeps
+        // the decimal's, so sin(1)^2−sin(1)×sin(1) was 4.5×10⁻¹⁹ while sin(1)²−sin(1)×sin(1) was 0 (25 Sep 2026).
+        if (power.Kind == ValueKind.DecimalReal && MultiplyOut(power, n, context) is { Succeeded: true, Value.Kind: ValueKind.DecimalReal } product)
         {
             return product;
         }

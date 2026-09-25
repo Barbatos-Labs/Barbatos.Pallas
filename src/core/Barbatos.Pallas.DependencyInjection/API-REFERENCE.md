@@ -219,7 +219,7 @@ Every value is calculated through the session, so f(x) and g(x) are the session'
   Changes the x of one row and calculates that row again (p. 110).
 - **`RemoveRow(int row)`**
   Deletes one row (p. 110).
-- **`Verify(int row, TableFunction function, string answer)`** → `bool?`
+- **`Verify(int row, TableFunction function, string answer, CancellationToken cancellationToken = default)`** → `bool?`
   Checks an answer against the value the table has, as Verify does in the Table application (p. 112).
 
 ---
@@ -260,6 +260,8 @@ A formula is calculated where it stands: the cells it refers to are calculated f
 
 The grid takes the cell references of the session while it exists: a session has one sheet, as a calculator does.
 
+Every change that calculates takes a `CancellationToken`, and is made whole or not at all: a change that is stopped leaves the sheet as it was before it. With Auto Calc off, a formula entered is calculated as it is entered, reading every other cell as it holds its value, and the formulas that refer to a cell that changed wait for `Recalculate` (assumption U33).
+
 #### Constructors
 
 - **`SpreadsheetGrid(CalculatorSession session)`**
@@ -280,23 +282,23 @@ The grid takes the cell references of the session while it exists: a session has
 
 #### Methods
 
-- **`SetConstant(CellAddress address, string input)`** → `CalcError?`
+- **`SetConstant(CellAddress address, string input, CancellationToken cancellationToken = default)`** → `CalcError?`
   Enters a constant: an expression without a leading `=`, calculated once and then fixed (p. 101).
-- **`SetFormula(CellAddress address, string formula)`** → `CalcError?`
+- **`SetFormula(CellAddress address, string formula, CancellationToken cancellationToken = default)`** → `CalcError?`
   Enters a formula, the text after the `=`, which is calculated again whenever the sheet is (p. 101).
-- **`Clear(CellAddress address)`**
+- **`Clear(CellAddress address, CancellationToken cancellationToken = default)`**
   Clears one cell (p. 104).
 - **`ClearAll()`**
   Clears every cell (p. 104).
-- **`CopyPaste(CellAddress from, CellAddress to)`** → `CalcError?`
+- **`CopyPaste(CellAddress from, CellAddress to, CancellationToken cancellationToken = default)`** → `CalcError?`
   Copies a cell and pastes it, moving the relative references by the distance between the two (p. 103).
-- **`CutPaste(CellAddress from, CellAddress to)`** → `CalcError?`
+- **`CutPaste(CellAddress from, CellAddress to, CancellationToken cancellationToken = default)`** → `CalcError?`
   Cuts a cell and pastes it, leaving every reference where it is (p. 104).
-- **`Fill(string formula, CellAddress start, CellAddress end)`** → `CalcError?`
+- **`Fill(string formula, CellAddress start, CellAddress end, CancellationToken cancellationToken = default)`** → `CalcError?`
   Enters one formula in every cell of a range, its relative references taken from the first cell (p. 106).
-- **`FillValue(string input, CellAddress start, CellAddress end)`** → `CalcError?`
+- **`FillValue(string input, CellAddress start, CellAddress end, CancellationToken cancellationToken = default)`** → `CalcError?`
   Enters one constant in every cell of a range, its relative references taken from the first cell (p. 106).
-- **`Recalculate()`**
+- **`Recalculate(CancellationToken cancellationToken = default)`**
   Calculates every formula of the sheet again, as the Recalculate command does (p. 107).
 
 ---

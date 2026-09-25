@@ -177,6 +177,18 @@ public sealed class NumberTableTests
     }
 
     [Fact]
+    public void AnAnswerThatTakesLongToCalculateCanBeStopped()
+    {
+        // The answer is the user's expression; a sum of 2,048 terms reaches the step at which the engine looks at its
+        // token, and the setting Verify turned on for the check is turned off again.
+        CalculatorSession session = Session();
+        NumberTable table = NumberTable.Generate(session, TableType.FunctionF, Number(1), Number(2), Number(1));
+
+        table.Invoking(t => t.Verify(0, TableFunction.F, "Σ(x,1,2048)", new CancellationToken(canceled: true))).Should().Throw<OperationCanceledException>();
+        session.Settings.Verify.Should().BeFalse();
+    }
+
+    [Fact]
     public void VerifyOfAColumnTheTableHasNot()
     {
         NumberTable table = NumberTable.Generate(Session(), TableType.FunctionF, Number(1), Number(2), Number(1));

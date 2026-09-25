@@ -133,6 +133,16 @@ public sealed class LocalizationTests
 
     [Theory]
     [MemberData(nameof(Languages))]
+    public void TheCoverSaysTheSessionCalculatesAndThatACStopsIt(string language)
+    {
+        Dictionary<string, string> text = Read(language);
+
+        text.Should().ContainKey("busy.calculating");
+        text["busy.stop"].Should().StartWith("AC", "the key that stops a calculation is the calculator's AC, in every language");
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
     public void EveryPointTheGraphNamesHasAName(string language)
     {
         Dictionary<string, string> text = Read(language);

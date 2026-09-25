@@ -71,10 +71,13 @@ internal static class Shortcuts
     /// <param name="router">The router, which says which screen is showing.</param>
     public static void Wire(IInputSystemService input, CalculatorShellViewModel shell, Router router)
     {
+        // While the session calculates, a shortcut waits with every other key (MainWindow): the input system sees keys
+        // before the window does.
         void On(string action, Action<CalculateViewModel> run, bool edits = true) =>
             input.FindAction(action)!.Performed += (_, _) =>
             {
-                if (shell.LineOf(router.CurrentRoute.Value.Path) is not { } line
+                if (shell.Work.IsBusy
+                    || shell.LineOf(router.CurrentRoute.Value.Path) is not { } line
                     || (edits && (Keyboard.FocusedElement is TextBoxBase || line.Menu is not CalculatorMenu.None)))
                 {
                     return;

@@ -24,12 +24,13 @@ public sealed partial class MatrixViewModel : ObservableObject
     /// <summary>Creates the screen over a session.</summary>
     /// <param name="session">The session that holds the matrices.</param>
     /// <param name="history">The session's history, shared by its screens; <see langword="null"/> for this run's alone.</param>
+    /// <param name="work">The session's work, shared by its screens; <see langword="null"/> to calculate where asked.</param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public MatrixViewModel(CalculatorSession session, SessionHistory? history = null)
+    public MatrixViewModel(CalculatorSession session, SessionHistory? history = null, SessionWork? work = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
-        Calculate = new CalculateViewModel(session, history);
+        Calculate = new CalculateViewModel(session, history, work);
         Grid = new ValueGridViewModel(session, 2, 2);
         Load();
     }

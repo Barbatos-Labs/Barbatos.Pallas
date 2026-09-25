@@ -21,14 +21,17 @@ namespace Barbatos.Pallas.Presentation;
 public sealed partial class DistributionViewModel : ObservableObject
 {
     private readonly CalculatorSession _session;
+    private readonly SessionWork _work;
 
     /// <summary>Creates the screen over a session.</summary>
     /// <param name="session">The session that calculates.</param>
+    /// <param name="work">The session's work, shared by its screens; <see langword="null"/> to calculate where asked.</param>
     /// <exception cref="ArgumentNullException"><paramref name="session"/> is <see langword="null"/>.</exception>
-    public DistributionViewModel(CalculatorSession session)
+    public DistributionViewModel(CalculatorSession session, SessionWork? work = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         _session = session;
+        _work = work ?? SessionWork.Immediate;
         Values = new ValueGridViewModel(session, 1, 1);
         Arguments = new ValueGridViewModel(session, 1, 2);
     }
@@ -68,21 +71,20 @@ public sealed partial class DistributionViewModel : ObservableObject
     /// <summary>Calculates the distribution for every x on the screen.</summary>
     /// <remarks>
     /// The normal distributions and the inverse normal take one x - the calculator calls it the Variable input
-    /// method (p. 96) - and the engine refuses a list for them; the others are calculated for every x at once.
+    /// method (p. 96) - and the engine refuses a list for them; the others are calculated for every x at once. A work
+    /// of the session: a binomial is exact on BigInteger, and one of many trials runs until the budget says Time Out.
     /// </remarks>
     [RelayCommand]
     public void Execute()
     {
         ErrorKey = null;
+        DistributionKind kind = Kind;
+        bool single = TakesOneValue;
         DistributionParameters parameters = Read();
-        IReadOnlyList<Calculation> calculations = TakesOneValue
-            ? [_session.CalculateDistribution(Kind, parameters with { X = Values[0, 0].Value })]
-            : _session.CalculateDistribution(Kind, parameters, [.. Values.Column(0)]);
-
-        Results = [.. calculations.Select((calculation, index) => new SolutionLine(
-            Values[index, 0].Display,
-            calculation.Succeeded ? calculation.Display.Text : string.Empty))];
-        ErrorKey = calculations.FirstOrDefault(calculation => !calculation.Succeeded)?.Error is { } error ? "error." + error.Kind : null;
+        // A distribution that takes one x has one row of them (SetValueCount), so the column is that x.
+        ImmutableArray<Value> values = Values.Column(0);
+        ImmutableArray<string> shown = [.. Enumerable.Range(0, values.Length).Select(row => Values[row, 0].Display)];
+        _work.Start(token => Calculated(kind, single, parameters, values, token), calculations => Show(calculations, shown));
     }
 
     /// <summary>Gets whether this distribution is calculated for one x rather than for a list of them.</summary>
@@ -113,6 +115,18 @@ public sealed partial class DistributionViewModel : ObservableObject
         Results = [];
         ErrorKey = null;
         OnPropertyChanged(nameof(TakesOneValue));
+    }
+
+    private IReadOnlyList<Calculation> Calculated(DistributionKind kind, bool single, DistributionParameters parameters, ImmutableArray<Value> values, CancellationToken token) =>
+        single
+            ? [_session.CalculateDistribution(kind, parameters with { X = values[0] }, token)]
+            : _session.CalculateDistribution(kind, parameters, values, token);
+
+    private void Show(IReadOnlyList<Calculation> calculations, ImmutableArray<string> shown)
+    {
+        // A calculation in error displays no text, which is what its line shows.
+        Results = [.. calculations.Select((calculation, index) => new SolutionLine(shown[index], calculation.Display.Text))];
+        ErrorKey = calculations.FirstOrDefault(calculation => !calculation.Succeeded)?.Error is { } error ? "error." + error.Kind : null;
     }
 
     private DistributionParameters Read()

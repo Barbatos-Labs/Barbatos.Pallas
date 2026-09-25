@@ -153,11 +153,87 @@ public sealed class ScreenResourceTests
     }
 
     [Fact]
+    public void AValueWhoseCalculationFailedIsShownAsItsError()
+    {
+        // U34: a value of a table or a cell of the sheet whose calculation failed shows its error where its value would
+        // be; every other value shows no error.
+        OnUiThread(() =>
+        {
+            CalculatorShellViewModel shell = Shell();
+            shell.Open(CalculatorApps.Of(CalculatorApp.Table));
+            TableView table = new(shell);
+            shell.Table.FunctionF = "1÷x";
+            shell.Table.Range[0, 0].Text = "-1";
+            shell.Table.Range[0, 1].Text = "1";
+            shell.Table.Generate();
+            Draw(table).Should().BeGreaterThan(0);
+            ErrorsShown(table).Should().Equal(["error.MathError"], "f(0) is 1÷0, and nothing else of the three rows fails");
+
+            shell.Open(CalculatorApps.Of(CalculatorApp.Spreadsheet));
+            SpreadsheetView sheet = new(shell);
+            shell.Spreadsheet.Selected = new CellAddress(0, 0);
+            shell.Spreadsheet.Input = "=1÷0";
+            shell.Spreadsheet.Commit();
+            shell.Spreadsheet.Selected = new CellAddress(1, 0);
+            shell.Spreadsheet.Input = "=2";
+            shell.Spreadsheet.Commit();
+            Draw(sheet).Should().BeGreaterThan(0);
+            ErrorsShown(sheet).Should().Equal(["error.MathError"], "A1 is 1÷0, and B1 is 2");
+        });
+    }
+
+    [Fact]
+    public void TheCoverIsOverTheScreenOnlyWhileTheSessionCalculates()
+    {
+        // The cover takes the clicks from the moment a work starts; what it says is hidden until the work has run for
+        // BusyDelay, so a calculation that is over in a moment shows nothing.
+        OnUiThread(() =>
+        {
+            using SessionWork work = new(offThread: true);
+            CalculatorShellViewModel shell = new(PallasEngineBuilder.CreateDefault().Build().CreateSession(), new InMemorySessionStore(), work);
+            BusyView cover = new() { DataContext = work };
+            Border panel = (Border)cover.Content;
+
+            // The bindings of a view are applied by the dispatcher once it is built, as the window's are; from then on
+            // the cover follows the work at once, before the next key or click is taken.
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Background);
+            cover.Visibility.Should().Be(Visibility.Collapsed);
+
+            shell.Calculate.Input.Set(MathDocumentReader.Read("Σ(x,1,10^7)"));
+            shell.Calculate.Execute();
+            cover.Visibility.Should().Be(Visibility.Visible, "the screen takes no click while the session is lent");
+            cover.IsHitTestVisible.Should().BeTrue();
+            panel.Visibility.Should().Be(Visibility.Hidden, "nothing is said before the calculation has run a while");
+            Draw(cover).Should().Be(0, "the cover is not seen");
+
+            work.Cancel();
+            Settle(work.Completion);
+            cover.Visibility.Should().Be(Visibility.Collapsed);
+            shell.Calculate.Calculation.Should().BeNull("AC stopped the calculation");
+        });
+    }
+
+    [Fact]
     public void TheKeypadTakesKeysAndNotText()
     {
         // Windows' Vietnamese input method takes keys of the digit row, and WPF then reports them as ImeProcessed:
         // with it on, digits typed on a Vietnamese keyboard never reached the line (measured 23 Sep 2026).
         OnUiThread(() => InputMethod.GetIsInputMethodEnabled(new KeypadView()).Should().BeFalse());
+    }
+
+    [Fact]
+    public void EveryBoxAnExpressionIsTypedIntoTakesKeysAndNotText()
+    {
+        // The same input method held the digits typed into a box in a composition, and a click on a button, which takes
+        // no focus, did not end it: Enter or Solve took what the box held before (measured 25 Sep 2026).
+        OnUiThread(() =>
+        {
+            foreach (string style in (string[])["CellBox", "ValueCellBox"])
+            {
+                TextBox box = new() { Style = (Style)Application.Current.FindResource(style) };
+                InputMethod.GetIsInputMethodEnabled(box).Should().BeFalse("{0} is a box an expression is typed into", style);
+            }
+        });
     }
 
     [Fact]
@@ -189,6 +265,7 @@ public sealed class ScreenResourceTests
         (null, _ => new KeypadView()),
         (null, _ => new CalculatorMenuView()),
         (null, _ => new ValueGridView()),
+        (null, _ => new BusyView()),
         (CalculatorApp.BaseN, shell => new BaseNView(shell)),
         (CalculatorApp.Matrix, shell => new MatrixView(shell)),
         (CalculatorApp.Vector, shell => new VectorView(shell)),
@@ -202,8 +279,7 @@ public sealed class ScreenResourceTests
         (CalculatorApp.MathBox, shell => new MathBoxView(shell)),
     ];
 
-    /// <summary>Lays a screen out at the window's size, draws it, and counts the pixels that are not blank.</summary>
-    // Runs the window's thread until a work of a screen has come back to it, as the application does between frames.
+    /// <summary>Runs the window's thread until a work of a screen has come back to it, as the application does between frames.</summary>
     private static void Settle(Task work)
     {
         DispatcherFrame frame = new();
@@ -211,6 +287,7 @@ public sealed class ScreenResourceTests
         Dispatcher.PushFrame(frame);
     }
 
+    /// <summary>Lays a screen out at the window's size, draws it, and counts the pixels that are not blank.</summary>
     private static int Draw(UserControl screen)
     {
         Size size = new(760, 900);
@@ -224,6 +301,26 @@ public sealed class ScreenResourceTests
         int[] pixels = new int[(int)size.Width * (int)size.Height];
         bitmap.CopyPixels(pixels, (int)size.Width * 4, 0);
         return pixels.Count(pixel => pixel != 0);
+    }
+
+    /// <summary>The errors a screen laid out shows in the place of a value, as the keys of their text.</summary>
+    /// <remarks>These tests load no language, so the text of a key is the key itself.</remarks>
+    private static List<string> ErrorsShown(DependencyObject screen)
+    {
+        Style error = (Style)Application.Current.FindResource("CellError");
+        List<string> shown = [];
+        for (int index = 0; index < VisualTreeHelper.GetChildrenCount(screen); index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(screen, index);
+            if (child is TextBlock { Text.Length: > 0 } block && block.Style == error)
+            {
+                shown.Add(block.Text);
+            }
+
+            shown.AddRange(ErrorsShown(child));
+        }
+
+        return shown;
     }
 
     /// <summary>One shell over one engine, as the application has.</summary>

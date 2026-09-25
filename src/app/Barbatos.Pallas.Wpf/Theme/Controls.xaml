@@ -386,7 +386,11 @@
 
     <!-- ── Input ────────────────────────────────────────────────────────────────────────────────────────────── -->
 
+    <!-- A box an expression is typed into. The input method is off, as it is on the keypad: Windows' Vietnamese one holds
+         typed digits in a composition that WPF writes back only once it ends, and clicking a button - which takes no
+         focus - does not end it, so Enter or Solve took what the box held before the last keys (25 Sep 2026). -->
     <Style x:Key="CellBox" TargetType="TextBox">
+        <Setter Property="InputMethod.IsInputMethodEnabled" Value="False" />
         <Setter Property="Background" Value="{StaticResource SurfaceRaised}" />
         <Setter Property="Foreground" Value="{StaticResource Ink}" />
         <Setter Property="CaretBrush" Value="{StaticResource Ink}" />
@@ -429,6 +433,14 @@
                 <Setter Property="Foreground" Value="{StaticResource Danger}" />
             </DataTrigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- The error a value of a table or a cell of the sheet ended in, where its value would be (assumption U34).
+         The value of a calculation that failed is empty, so the two share a place and only one ever shows. -->
+    <Style x:Key="CellError" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="Foreground" Value="{StaticResource Danger}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
 
     <Style x:Key="ChoiceItem" TargetType="ComboBoxItem">
@@ -621,5 +633,43 @@
         <Setter Property="Faint" Value="{StaticResource LcdInkMuted}" />
         <Setter Property="Width" Value="180" />
         <Setter Property="Height" Value="180" />
+    </Style>
+
+    <!-- ── The session at work ──────────────────────────────────────────────────────────────────────────────── -->
+
+    <!-- Over the screen while the session calculates: it takes every click at once, and is not seen, so a
+         calculation that is over in a moment shows nothing. Its data context is the session's work. -->
+    <Style x:Key="BusyCover" TargetType="UserControl">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- What the cover says once the calculation has run a while, as the display would, with the key that stops it. -->
+    <Style x:Key="BusyPanel" TargetType="Border" BasedOn="{StaticResource LcdPanel}">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Padding" Value="18,12" />
+        <Setter Property="Visibility" Value="Hidden" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard x:Name="ShowBusyPanel">
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="{StaticResource BusyDelay}" Value="{x:Static Visibility.Visible}" />
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <RemoveStoryboard BeginStoryboardName="ShowBusyPanel" />
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>

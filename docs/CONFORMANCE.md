@@ -204,9 +204,13 @@ Each has an explicit working assumption; cases depending on one are omitted or m
 | U29 | The View-Window the Number Line application sets by itself (p. 156 shows one example, not the rule) | The smallest scale of 1, 2 or 5 times a power of ten whose eight ticks on each side span the bounds of every expression, and the center the middle of the bounds rounded to a tick: the example of p. 156 (x≤-1.5, x>-1.0, -2.0<x≤-0.5) gives Scale 0.2 and Center -1.2, as the manual shows. A single bound spans the larger of its distance from 0 and 1; no expression is the view of 0 with Scale 1 | The manufacturer's official emulator, with other expressions |
 | U30 | A trigonometric value of the Circle application that does not exist (tan 90°) | That value is its Math ERROR, and the angle is still drawn with its sine and cosine | The manufacturer's official emulator |
 | U31 | The Clock at 12:00 and at 6:00 (pp. 158, 161 show 3:00) | At 12:00, θ1 = 0 and θ2 is a full turn; at 6:00 both are half a turn | The manufacturer's official emulator |
+| U32 | The keys while a calculation runs, and a way to stop it (pp. 162-166 name Time Out as a calculation's only end short of its result) | Every key waits, as the application's window takes none; AC - Escape on the keyboard - stops the calculation. What was typed stays on the line, nothing is shown or stored, and Ans is what it was; a sheet is left as it was before the change | The manufacturer's official emulator |
+| U33 | What is entered in the sheet while Auto Calc is off (p. 107 says only that the sheet is then calculated again by Recalculate) | A formula entered is calculated as it is entered, reading every other cell as it holds its value; the formulas that refer to a cell that changed - a formula or a constant entered, a cell cleared - keep their values until Recalculate. A formula entered is thus never shown without its value or its error | The manufacturer's official emulator |
+| U34 | What a value of a table or a cell of the sheet shows where its calculation failed (pp. 102-112 show no such screen) | The error, named as the line names it (Math ERROR, Time Out, …), in the place of the value; the rest of the row or the sheet is shown as it is. A cell that reads a cell in error ends in that error too (U26), and shows it | The manufacturer's official emulator |
 
 Assumption U2 (`^` left to right) is implemented by the parser (docs/LINEAR-SYNTAX.md §3), U1, U4, U11-U13, U18, U20, U22,
-U24-U31 by the engine and the applications, U14-U17, U21 and U23 by the formatter.
+U24-U31 and U33 by the engine and the applications, U14-U17, U21 and U23 by the formatter, U32 and U34 by the application
+(`SessionWork`, the window's cover; `TableCell` and `SheetCell`, which carry the error of a value).
 
 ## 7. Deliberate deviations from the calculator
 

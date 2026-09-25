@@ -144,10 +144,12 @@ public sealed class NumberTable
     /// <param name="row">The row, counted from 0.</param>
     /// <param name="function">Which column the answer belongs to.</param>
     /// <param name="answer">The answer as it was entered, in Canonical Linear Syntax.</param>
+    /// <param name="cancellationToken">Cancels a long calculation of the answer.</param>
     /// <returns><see langword="true"/> when the answer is the value, or <see langword="null"/> when the column has no value.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="answer"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">There is no such row.</exception>
-    public bool? Verify(int row, TableFunction function, string answer)
+    /// <exception cref="OperationCanceledException">The calculation was cancelled.</exception>
+    public bool? Verify(int row, TableFunction function, string answer, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(answer);
         if (_rows[row].Value(function) is not { Succeeded: true })
@@ -161,7 +163,7 @@ public sealed class NumberTable
         _session.Settings = settings with { Verify = true };
         try
         {
-            Calculation verified = _session.Evaluate((function == TableFunction.F ? "f(x)=" : "g(x)=") + answer);
+            Calculation verified = _session.Evaluate((function == TableFunction.F ? "f(x)=" : "g(x)=") + answer, cancellationToken);
             return verified.IsTrue;
         }
         finally

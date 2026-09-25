@@ -154,18 +154,30 @@ public sealed class GraphPropertyTests
     }
 
     /// <summary>
-    /// Whether the function is zero at x, or has values of opposite signs a few fifteen-digit steps either side: a root
-    /// is placed to the fifteen digits a value holds, and no nearer.
+    /// Whether a function is 0 at x, or has another sign at a number next to x as the engine tells numbers apart: to
+    /// fifteen significant digits, the resolution a root is placed to (the analysis halves a crossing down to two
+    /// neighbouring numbers and names the one of them nearer zero).
     /// </summary>
+    /// <remarks>
+    /// A step of 10⁻¹³ relative - ten such numbers - was taken before. A curve that is zero but for the engine's last
+    /// digits, ((π+x)−x)−π, changes sign several times within it, so a root placed exactly where its sign changes
+    /// failed the property in two runs of the suite (25 Sep 2026), and a root misplaced by a few numbers passed it.
+    /// </remarks>
     private static bool ChangesSign(Func<double, double?> function, double x)
     {
-        if (function(x) is 0d)
+        if (function(x) is not { } at)
+        {
+            return false;
+        }
+
+        if (at == 0d)
         {
             return true;
         }
 
-        double step = Math.Max(Math.Abs(x) * 1e-13, 1e-99);
-        return function(x - step) is { } before && function(x + step) is { } after && Math.Sign(before) * Math.Sign(after) <= 0;
+        double step = Math.Pow(10d, Math.Floor(Math.Log10(Math.Abs(x))) - 14d);
+        return (function(x - step) is { } before && Math.Sign(before) != Math.Sign(at))
+            || (function(x + step) is { } after && Math.Sign(after) != Math.Sign(at));
     }
 
     private static Gen<string> Curves()

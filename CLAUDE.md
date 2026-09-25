@@ -27,18 +27,18 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `tests/Barbatos.Pallas.LinearAlgebra.Tests` | Exact determinants, inverses and linear systems against the Leibniz formula and multiplication back |
 | `tests/Barbatos.Pallas.Statistics.Tests` | Exact sums, variances and fits against the manual's fractions, two-pass definitions and normal equations; quartile ranks |
 | `tests/Barbatos.Pallas.Solvers.Tests` | Integer polynomials against polynomials built from known roots (sign, square-free part, Sturm count, division); iterated roots against those roots |
-| `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, and number tables with their row limits and Verify |
+| `tests/Barbatos.Pallas.Spreadsheet.Tests` | The sheet's constants, formulas, references, ranges, fills and capacity, a sheet whose calculation is stopped (`SpreadsheetCancellationTests`), and number tables with their row limits and Verify |
 | `tests/Barbatos.Pallas.Graphing.Tests` | Curves whose shape is known: pieces clipped to the viewport, chords within half a pixel, asymptotes, jumps and domain edges; roots, extrema and intersections against their closed forms and the engine's values there; CsCheck properties over generated curves and viewports: every point inside the viewport and at the engine's value, every root and intersection a change of sign, the work bounded by the columns |
 | `tests/Barbatos.Pallas.Data.Tests` | CODATA, NIST and CIAAW data against their defining relations and the vocabulary |
 | `tests/Barbatos.Pallas.DependencyInjection.Tests` | `AddPallas()` through a real service provider |
-| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, the graph of the Table screen fitted to its rows, zoomed and read at the pointer, worked out off the thread with a superseded result never shown (`TableGraphViewModelTests`, under `OneThread`), every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
-| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool and the graph of a table laid out and drawn (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
+| `tests/Barbatos.Pallas.Presentation.Tests` | The shell without a window: the application registry against the engine, every setting, the stored session written, read back and restored, the keypad table, the math input with its two writers and its reader, the Calculate screen, the ten application screens over one grid of values, the four tools of Math Box with the manual's examples, the graph of the Table screen fitted to its rows, zoomed and read at the pointer, worked out off the thread with a superseded result never shown (`TableGraphViewModelTests`, under `OneThread`), what a screen calculates run off the thread one work after another on the one session, AC stopping it, and the shell neither switching nor saving a session it has lent (`SessionWorkTests`, `OffThreadScreenTests`), every key of every application typed and read by that application's parser (`ApplicationKeypadTests`), every CATALOG entry of every application likewise with where the manual puts it (`CatalogTests`), STO, RCL and FORMAT, the history kept between runs, what the window's shortcuts reach, and properties over random sequences of keys in a random application |
+| `tests/Barbatos.Pallas.Wpf.Tests` | The only test project that needs Windows: every LaTeX the printers and the math input emit is drawn by WpfMath - every key and every CATALOG entry of every application included -, every screen is built with the theme loaded and every Math Box tool and the graph of a table laid out and drawn, the cover over the screen while the session calculates and a value whose calculation failed shown as its error included (`ScreenResourceTests`), the session, the window's place and the language in the preferences, the crash reports and their message in both languages, and the csproj against the packaging profile (`PackagingProfileTests`) |
 | `benchmarks/Barbatos.Pallas.Benchmarks` | BenchmarkDotNet, net10.0, in process: keypad expressions, the Table application at its largest, a graph of 2,000 columns and its named points, and every other application at its slowest, each with its target (`[Target]`); `--gate` fails one whose p99 is beyond its target × `Gate.Margin` |
 | `build/BannedSymbols.FloatingPoint.txt` | Banned single-precision types: `float`, `Half`, `MathF` |
 | `docs/ARCHITECTURE.md` | Packages, graph, pipeline, plugin API, roadmap and **decision log** |
 | `docs/PRECISION.md` | The precision contract |
 | `docs/CALCULATOR-CATALOG.md` | Everything the calculator does, with manual pages |
-| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors and working assumptions (U1-U31), deliberate deviations (D1-D8) |
+| `docs/CONFORMANCE.md` | Conformance data format, unverified behaviors and working assumptions (U1-U34), deliberate deviations (D1-D8) |
 | `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
 | `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
@@ -57,9 +57,10 @@ be walked). Phase 4 is complete.
 **Phase 7 - Hardening and 1.0.0 - in progress** (plan approved 24 Sep 2026): M1 the public API frozen and tracked ✅
 (`PublicAPI.*.txt` per core library), M2 `API-REFERENCE.md` per package, hand-written and checked complete by a
 test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate ✅ (every benchmark six
-times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread, M5 the release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with
-Barbatos.i18n and Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the
-maintainer.
+times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread
+✅ (`SessionWork`, AC stops a calculation, the sheet takes a token; walked in the app), M5 the
+release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with Barbatos.i18n and
+Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the maintainer.
 
 **Phase 6 - Graph and Math Box - complete ✅** (plan approved 24 Sep 2026): M1 Math Box in Engine, M2 its screens, M3
 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for screen coordinates, on a
@@ -229,11 +230,22 @@ Things that will save time:
   - a mutant that cannot change a result (a guard `System.Math` already applies, a branch no input reaches) is a
     reason to simplify the code, not to write a test that pins an implementation detail. The Engine went from 75% to
     92.5% on 18 Sep 2026 that way and by edge tests, and three real bugs surfaced (docs/ARCHITECTURE.md §12).
-- **A screen that works off the window's thread** (the Table graph, through `GraphWork`) applies each result where the
-  work was started from, and a session is used from one thread at a time, so each work gets a session of its own,
-  restored from a snapshot (`Capture`, `Restore`). Its tests run under `OneThread` (Presentation.Tests), which runs
-  what the work posts back on the test's own thread between its steps, as the window does: without it, whether a
-  superseded result shows up is a race. `ScreenResourceTests` pumps the dispatcher until the work is back (`Settle`).
+- **What a screen calculates runs off the window's thread** and applies its result where it was started from. A
+  session is used from one thread at a time, so there are two ways:
+  - the one session is lent to one work at a time (`SessionWork`, the shell's `Work`): the line, a table, a
+    distribution, a change of the sheet. While it is busy the window takes no input but AC (the cover, `BusyView`,
+    and `MainWindow`'s keys), the router opens no screen and a save writes the session as it was before the work.
+    A screen made without a work (tests, mostly) calculates where it is asked (`SessionWork.Immediate`);
+  - a work that may be superseded gets a session of its own, restored from a snapshot (`Capture`, `Restore`): the
+    Table graph, through `GraphWork`.
+
+  A cell of a form is calculated where it is typed, on the window's thread: the command a click away reads its value.
+  What a form calculates from its values is bounded by the form (M3 measured the slowest at 1.5 ms) and stays there
+  too. Their tests run under `OneThread` (Presentation.Tests), which runs what a work posts back on the test's own
+  thread between its steps, as the window does: without it, whether a superseded or stopped result shows up is a race.
+  `ScreenResourceTests` pumps the dispatcher until a work is back (`Settle`). A test that stops a work starts one of
+  seconds (`Σ(x,1,10^7)`) and cancels it before awaiting it: what the test asserts must not depend on how far the work
+  got, only on what was applied.
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
 
@@ -294,7 +306,7 @@ Things that will save time:
   reaches the caller with the span the calculator would put the cursor at.
 - **Every long loop counts against the budget** (`EvaluationContext.TryIterate`): Σ, Π, ∫ and the integrator. A
   budget that runs out is Time Out, never a hang.
-- **A behavior the manual does not state is an assumption**, listed as U12-U31 in docs/CONFORMANCE.md, not a quiet
+- **A behavior the manual does not state is an assumption**, listed as U12-U34 in docs/CONFORMANCE.md, not a quiet
   choice in the code.
 
 ### Expressions
@@ -335,11 +347,15 @@ Things that will save time:
 - **Derived expected values are computed exactly** (rationals, integer square roots), never with `double`.
   Transcendental values (`expectationSource: reference`) come from PeterO.Numbers series at 60 digits, cross-checked
   against a known constant (docs/CONFORMANCE.md §5), never from `System.Math` or the code under test.
-- **An assumption is a `note`,** listed under U1-U31 in docs/CONFORMANCE.md. A deliberate difference from the
+- **An assumption is a `note`,** listed under U1-U34 in docs/CONFORMANCE.md. A deliberate difference from the
   calculator is a D-entry there, never a silent engine change.
 
 ### The window
 
+- **A box an expression is typed into is a `CellBox` or a `ValueCellBox`,** whose input method is off, as the keypad's
+  is. Windows' Vietnamese input method holds typed digits in a composition that WPF writes back only when it ends,
+  and a click on a button - which takes no focus - does not end it: Enter and Solve took what the box held before the
+  last keys (25 Sep 2026). `ScreenResourceTests` checks both styles.
 - **A screen is a `Grid` with explicit rows, never a `DockPanel`.** A `DockPanel` gives a docked child the height it
   asks for and squeezes the rest out: at the default window size that cost the Base-N screen its number-base row and
   cut a fraction on the line in half (23 Sep 2026). Auto for the header, the controls and the calculation panel; `*`

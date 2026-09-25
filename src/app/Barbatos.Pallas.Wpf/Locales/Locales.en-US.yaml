@@ -26,6 +26,9 @@ settings.language: Language
 crash.title: Barbatos Pallas
 crash.message: Something went wrong in the calculator. Your session has been saved, and you can carry on. A report of the error was written to {0}
 
+busy.calculating: Calculating…
+busy.stop: AC  Stop
+
 setting.inputOutput: Input and output
 setting.angleUnit: Angle unit
 setting.numberFormat: Number format

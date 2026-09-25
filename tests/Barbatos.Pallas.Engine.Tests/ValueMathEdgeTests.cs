@@ -168,13 +168,19 @@ public sealed class ValueMathEdgeTests
     }
 
     [Fact]
-    public void APowerOfAnApproximateValue_IsComputedInDouble()
+    public void AnIntegerPowerOfAnApproximateValue_IsItsProduct()
     {
-        // Multiplying the 15 digits of sin 1 out in decimal would invent 13 more.
-        Value value = Calculator.Evaluate("sin(1)^3", settings: Radians);
+        // An integer power is a product (PRECISION.md §3 sends only other powers to double), so x^n, x² and x×x agree
+        // to the last digit: through Math.Pow, sin(1)^2−sin(1)×sin(1) was 4.5×10⁻¹⁹ (25 Sep 2026). The digits the
+        // decimal keeps beyond the fifteen of sin 1 do not make it exact.
+        Value cube = Calculator.Evaluate("sin(1)^3", settings: Radians);
 
-        value.IsExact.Should().BeFalse();
-        value.ToDecimal().Scale.Should().BeLessThanOrEqualTo(15);
+        cube.IsExact.Should().BeFalse();
+        cube.Should().Be(Calculator.Evaluate("sin(1)×sin(1)×sin(1)", settings: Radians));
+        Calculator.Evaluate("sin(1)^2−sin(1)×sin(1)", settings: Radians).ToDecimal().Should().Be(0m);
+        Calculator.Evaluate("sin(1)^2−sin(1)²", settings: Radians).ToDecimal().Should().Be(0m);
+        Calculator.Evaluate("ln(7)^3−ln(7)×ln(7)×ln(7)").ToDecimal().Should().Be(0m);
+        Calculator.Evaluate("ln(7)^-2−1÷(ln(7)×ln(7))").ToDecimal().Should().Be(0m, "a negative power is the reciprocal of the product");
     }
 
     [Fact]

@@ -217,7 +217,8 @@ public sealed class ScreenBehaviorTests
     [Fact]
     public void ASheetThatIsNotCalculatingByItselfShowsTheOldValueUntilItIs()
     {
-        // A1 = 1, and with Auto Calc off a formula typed after it waits to be calculated (p. 104).
+        // With Auto Calc off (p. 107) a formula typed is calculated, and the formulas that refer to a cell that changes
+        // afterwards wait for Recalculate (assumption U33).
         SpreadsheetViewModel screen = new(Shell.Session(CalculatorApp.Spreadsheet));
         screen.Selected = new CellAddress(0, 0);
         screen.Input = "1";
@@ -227,12 +228,16 @@ public sealed class ScreenBehaviorTests
         screen.Selected = new CellAddress(0, 1);
         screen.Input = "=A1+100";
         screen.Commit();
+        screen.ErrorKey.Should().BeNull("a formula that calculates has no error, whether the sheet calculates by itself or not");
+        screen.Editing.Text.Should().Be("101");
 
-        screen.Editing.Input.Should().Be("=A1+100", "the formula is in the cell");
-        screen.Editing.Text.Should().BeEmpty("but nothing has been calculated");
+        screen.Selected = new CellAddress(0, 0);
+        screen.Input = "5";
+        screen.Commit();
+        screen.Cells.Single(cell => cell.Address == new CellAddress(0, 1)).Text.Should().Be("101", "the formula waits");
 
         screen.Recalculate();
 
-        screen.Editing.Text.Should().Be("101", "and now it has");
+        screen.Cells.Single(cell => cell.Address == new CellAddress(0, 1)).Text.Should().Be("105", "and now it has been calculated again");
     }
 }

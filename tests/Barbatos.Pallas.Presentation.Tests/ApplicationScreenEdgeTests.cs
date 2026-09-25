@@ -226,9 +226,9 @@ public sealed class ApplicationScreenEdgeTests
         CalculatorSession session = Shell.Session(CalculatorApp.Spreadsheet);
         SpreadsheetViewModel screen = new(session);
 
-        screen.Copy(new CellAddress(0, 0), new CellAddress(1, 1)).Should().BeTrue("copying an empty cell copies nothing");
-        screen.ErrorKey.Should().BeNull();
-        screen.Fill("=1+", new CellAddress(0, 0), new CellAddress(0, 1)).Should().BeFalse();
+        screen.Copy(new CellAddress(0, 0), new CellAddress(1, 1));
+        screen.ErrorKey.Should().BeNull("copying an empty cell copies nothing");
+        screen.Fill("=1+", new CellAddress(0, 0), new CellAddress(0, 1));
         screen.ErrorKey.Should().Be("error.SyntaxError");
     }
 
@@ -245,8 +245,25 @@ public sealed class ApplicationScreenEdgeTests
         screen.Generate();
 
         screen.Rows.Should().HaveCount(5);
-        screen.Rows[0].G!.Display.Text.Should().Be("2");
+        screen.Rows[0].G!.Text.Should().Be("2");
         screen.Types.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public void AValueOfATableThatFailsShowsItsErrorInItsPlace()
+    {
+        // U34: where f(x) has no value, the error its calculation ended in is shown where the value would be, and the
+        // rest of the row as it is.
+        TableViewModel screen = new(Shell.Session(CalculatorApp.Table)) { FunctionF = "1÷x", FunctionG = "x+1" };
+        screen.Range[0, 0].Text = "-1";
+        screen.Range[0, 1].Text = "1";
+
+        screen.Generate();
+
+        screen.ErrorKey.Should().BeNull("the table is generated all the same");
+        screen.Rows.Should().HaveCount(3);
+        screen.Rows[0].F.Should().Be(new TableCell("-1", null));
+        screen.Rows[1].Should().Be(new TableLine(new TableCell("0", null), new TableCell(string.Empty, "error.MathError"), new TableCell("1", null)));
     }
 
     [Fact]
@@ -280,6 +297,59 @@ public sealed class ApplicationScreenEdgeTests
         screen.SetX(0, Value.One).Should().BeFalse("there is no table to change");
         screen.RemoveRow(0).Should().BeFalse();
         screen.Verify(0, TableFunction.F, "1").Should().BeNull();
+    }
+
+    [Fact]
+    public void ARowOutsideTheTableIsNeitherChangedNorRemovedNorVerified()
+    {
+        TableViewModel screen = new(Shell.Session(CalculatorApp.Table)) { Type = TableType.FunctionF };
+        screen.Generate();
+        int rows = screen.Rows.Length;
+
+        foreach (int row in (int[])[-1, rows])
+        {
+            screen.SetX(row, Value.One).Should().BeFalse("row {0} is not in the table", row);
+            screen.RemoveRow(row).Should().BeFalse("row {0} is not in the table", row);
+            screen.Verify(row, TableFunction.F, "1").Should().BeNull("row {0} is not in the table", row);
+        }
+
+        screen.Rows.Should().HaveCount(rows);
+        screen.SetX(rows - 1, Value.One).Should().BeTrue("the last row is one");
+        screen.Verify(rows - 1, TableFunction.F, "1").Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(TableType.FunctionF)]
+    [InlineData(TableType.FunctionG)]
+    public void OnlyTheFunctionsOfTheTableAreDefined(TableType type)
+    {
+        // What is typed for the function the table leaves out is not read, so it cannot be an error of the table.
+        TableViewModel screen = new(Shell.Session(CalculatorApp.Table))
+        {
+            Type = type,
+            FunctionF = type is TableType.FunctionF ? "x²" : "1+",
+            FunctionG = type is TableType.FunctionG ? "x²" : "1+",
+        };
+
+        screen.Generate();
+
+        screen.ErrorKey.Should().BeNull();
+        (type is TableType.FunctionF ? screen.Rows[1].F : screen.Rows[1].G)!.Text.Should().Be("4");
+        (type is TableType.FunctionF ? screen.Rows[1].G : screen.Rows[1].F).Should().BeNull("the table holds one function");
+    }
+
+    [Fact]
+    public void AFillWithALeadingEqualsSignIsAFormula()
+    {
+        SpreadsheetViewModel screen = new(Shell.Session(CalculatorApp.Spreadsheet)) { Input = "5" };
+        screen.Commit();
+
+        screen.Fill("=A1+1", new CellAddress(1, 0), new CellAddress(1, 1));
+
+        screen.ErrorKey.Should().BeNull();
+        screen.Cells.Single(cell => cell.Address == new CellAddress(1, 0)).Should().Be(new SheetCell(new CellAddress(1, 0), "=A1+1", "6", null));
+        screen.Cells.Single(cell => cell.Address == new CellAddress(1, 1)).Input.Should().Be("=A2+1", "a filled formula's references move with it");
+        screen.Invoking(sheet => sheet.Fill(null!, new CellAddress(0, 0), new CellAddress(0, 0))).Should().Throw<ArgumentNullException>().WithParameterName("text");
     }
 
     [Fact]

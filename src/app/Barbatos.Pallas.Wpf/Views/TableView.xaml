@@ -100,21 +100,30 @@
                 <ScrollViewer Style="{StaticResource WhenRows}" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Rows}">
                         <ItemsControl.ItemTemplate>
+                            <!-- Each value, or the error its calculation ended in in its place (U34). -->
                             <DataTemplate>
                                 <DockPanel Margin="0,3">
-                                    <TextBlock DockPanel.Dock="Left"
-                                               MinWidth="80"
-                                               FontFamily="{StaticResource MonoFont}"
-                                               Foreground="{StaticResource InkMuted}"
-                                               Text="{Binding X.Display.Text}" />
-                                    <TextBlock DockPanel.Dock="Left"
-                                               MinWidth="110"
-                                               FontFamily="{StaticResource MonoFont}"
-                                               Foreground="{StaticResource Ink}"
-                                               Text="{Binding F.Display.Text}" />
-                                    <TextBlock FontFamily="{StaticResource MonoFont}"
-                                               Foreground="{StaticResource Ink}"
-                                               Text="{Binding G.Display.Text}" />
+                                    <Grid DockPanel.Dock="Left" MinWidth="80">
+                                        <TextBlock FontFamily="{StaticResource MonoFont}"
+                                                   Foreground="{StaticResource InkMuted}"
+                                                   Text="{Binding X.Text}" />
+                                        <TextBlock Style="{StaticResource CellError}"
+                                                   Text="{i18n:StringLocalizer BindText={Binding X.ErrorKey}}" />
+                                    </Grid>
+                                    <Grid DockPanel.Dock="Left" MinWidth="110">
+                                        <TextBlock FontFamily="{StaticResource MonoFont}"
+                                                   Foreground="{StaticResource Ink}"
+                                                   Text="{Binding F.Text}" />
+                                        <TextBlock Style="{StaticResource CellError}"
+                                                   Text="{i18n:StringLocalizer BindText={Binding F.ErrorKey}}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock FontFamily="{StaticResource MonoFont}"
+                                                   Foreground="{StaticResource Ink}"
+                                                   Text="{Binding G.Text}" />
+                                        <TextBlock Style="{StaticResource CellError}"
+                                                   Text="{i18n:StringLocalizer BindText={Binding G.ErrorKey}}" />
+                                    </Grid>
                                 </DockPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

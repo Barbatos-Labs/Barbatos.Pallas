@@ -135,7 +135,7 @@ public sealed class SpreadsheetEdgeTests
     [Fact]
     public void AFormulaIsCalculatedAgainWhenTheSheetIs()
     {
-        // With Auto Calc off the values wait; the next Calculate brings every formula up to date at once.
+        // With Auto Calc off the values wait; the next Calculate brings every formula up to date at once (U33).
         SpreadsheetGrid grid = Sheet.Grid();
         grid.SetConstant(Sheet.At("A1"), "1");
         grid.SetFormula(Sheet.At("B1"), "A1+1");
@@ -143,10 +143,13 @@ public sealed class SpreadsheetEdgeTests
         grid.AutoCalculate = false;
 
         grid.SetFormula(Sheet.At("D1"), "C1+1");
+        grid.SetConstant(Sheet.At("A1"), "10");
 
         grid.Display("C1").Should().Be("3");
-        grid.Recalculate();
         grid.Display("D1").Should().Be("4");
+        grid.Recalculate();
+        grid.Display("B1").Should().Be("11");
+        grid.Display("D1").Should().Be("13");
     }
 
     [Fact]
