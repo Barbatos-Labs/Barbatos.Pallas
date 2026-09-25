@@ -20,6 +20,10 @@ jobs:
     name: Build, test and pack (Windows, x64)
     # The only job: the application ships on Windows alone (maintainer, 23 Sep 2026). The packages stay platform-neutral -
     # net8.0, net9.0 and net10.0 with no Windows API (CA1416 and Architecture.Tests) - but are only run here.
+    #
+    # The benchmark gate and the mutation gates are not run here (maintainer, 25 Sep 2026): on the runner the benchmarks
+    # took 10.5 minutes and one package of ten had not finished its mutation run after 5.5, against 2.5 for the build and
+    # 1 for the tests. They are run on the maintainer's machine before every release (docs/RELEASING.md).
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,67 +57,6 @@ jobs:
           $trx = @(Get-ChildItem -Path TestResults -Filter *.trx -Recurse)
           if ($trx.Count -lt $expected) { throw "Expected $expected test result files, found $($trx.Count)." }
           Write-Host "$($trx.Count) test result files."
-
-      # Roadmap gate: the performance targets of docs/ARCHITECTURE.md §9. Every benchmark runs a fixed number of
-      # iterations on the Release build above and fails the step when its 99th percentile is beyond its target by more
-      # than the margin a shared runner needs (Gate.Margin); the table goes to the run's summary.
-      - name: Benchmarks against their targets
-        run: dotnet run --project benchmarks/Barbatos.Pallas.Benchmarks --configuration Release --no-build -- --gate
-
-      # Roadmap gate: a mutation score of at least 90% per package. Each stryker-config.json sets break = 90, so a lower
-      # score fails the step. Stryker builds its own Debug output and does not touch the Release build packed below.
-      - name: Restore tools
-        run: dotnet tool restore
-
-      - name: Mutation testing (Numerics)
-        working-directory: tests/Barbatos.Pallas.Numerics.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Numerics
-
-      - name: Mutation testing (Expressions)
-        working-directory: tests/Barbatos.Pallas.Expressions.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Expressions
-
-      - name: Mutation testing (Engine)
-        working-directory: tests/Barbatos.Pallas.Engine.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Engine
-
-      - name: Mutation testing (LinearAlgebra)
-        working-directory: tests/Barbatos.Pallas.LinearAlgebra.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/LinearAlgebra
-
-      - name: Mutation testing (Statistics)
-        working-directory: tests/Barbatos.Pallas.Statistics.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Statistics
-
-      - name: Mutation testing (Solvers)
-        working-directory: tests/Barbatos.Pallas.Solvers.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Solvers
-
-      - name: Mutation testing (Spreadsheet)
-        working-directory: tests/Barbatos.Pallas.Spreadsheet.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Spreadsheet
-
-      - name: Mutation testing (Graphing)
-        working-directory: tests/Barbatos.Pallas.Graphing.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Graphing
-
-      # Data is only static initialization, whose mutants the MTP runner cannot switch; its tests check every value
-      # against its defining relation instead.
-      - name: Mutation testing (DependencyInjection)
-        working-directory: tests/Barbatos.Pallas.DependencyInjection.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/DependencyInjection
-
-      - name: Mutation testing (Presentation)
-        working-directory: tests/Barbatos.Pallas.Presentation.Tests
-        run: dotnet stryker --skip-version-check --output ../../StrykerOutput/Presentation
-
-      - name: Upload mutation reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mutation-reports
-          path: StrykerOutput/*/reports/*
-          if-no-files-found: ignore
 
       # Packing is by solution: IsPackable decides what comes out, and only Engine and DependencyInjection set it. It is
       # not --no-build: a package finds the libraries it carries by resolving its references, which builds them - up to

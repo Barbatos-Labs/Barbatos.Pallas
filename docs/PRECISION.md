@@ -477,8 +477,8 @@ Every long operation takes a `CancellationToken` and an `EngineBudget { MaxItera
   worked examples through the conformance suite; integrals against 50-digit PeterO.Numbers references; and CsCheck
   properties over generated syntax trees, where evaluating any tree in any application gives a value or a
   `CalcError`, never an exception and never a run past its budget.
-- **Mutation testing.** Stryker.NET gives a mutation score of 96.55% (17 Sep 2026; gate 90%, enforced in CI). The
-  4 undetected mutants change no observable result:
+- **Mutation testing.** Stryker.NET gives a mutation score of 96.55% (17 Sep 2026; gate 90%, enforced in CI until 25 Sep
+  2026 and before every release since). The 4 undetected mutants change no observable result:
   - `checked` removed, twice, where the continued fraction fails either way after an overflow;
   - the sign of a zero numerator;
   - the defensive exit above.

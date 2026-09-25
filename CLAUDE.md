@@ -59,7 +59,7 @@ be walked). Phase 4 is complete.
 
 **Phase 7 - Hardening and 1.0.0 - in progress** (plan approved 24 Sep 2026): M1 the public API frozen and tracked ✅
 (`PublicAPI.*.txt` per core library), M2 `API-REFERENCE.md` per package, hand-written and checked complete by a
-test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate ✅ (every benchmark six
+test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a gate ✅ (every benchmark six
 times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread
 ✅ (`SessionWork`, AC stops a calculation, the sheet takes a token; walked in the app), M5 the
 release pipeline ✅ (a GitHub Release, NuGet trusted publishing, strong naming with `barbatos.snk`, the key of
@@ -177,7 +177,8 @@ Things that will save time:
   its references, which builds them, so `--no-build` fails with NETSDK1085, and switching that build off drops the
   carried libraries' XML documentation and symbols (25 Sep 2026).
 - **Benchmarks** run in Release, in process (a project BenchmarkDotNet generated inside the repository would be built
-  with its analyzers). The gate, as CI runs it after the tests:
+  with its analyzers). The gate, run on the maintainer's machine before every release - CI stopped running it and the
+  mutation gates on 25 Sep 2026, when the two took most of an hour on the runner (docs/RELEASING.md):
 
   ```bash
   dotnet run --project benchmarks/Barbatos.Pallas.Benchmarks -c Release -- --gate
@@ -198,7 +199,8 @@ Things that will save time:
   (the engine refuses a prerelease label for an app), so a release changes `<Version>` in the Wpf csproj and
   `Identity.Version` in the profile together; `PackagingProfileTests` fails otherwise. Close the running app first:
   the publish writes over files it holds.
-- **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package):
+- **Mutation testing** (Stryker.NET, pinned in `dotnet-tools.json`; gate ≥ 90% per package, run on the maintainer's machine
+  before every release, as the benchmark gate is):
 
   ```bash
   dotnet tool restore

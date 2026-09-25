@@ -69,8 +69,8 @@ jobs:
           if ($env:GITHUB_EVENT_NAME -eq 'push') {
             if ($env:GITHUB_REF_NAME -cne "app-v$version") { throw "The tag is '$env:GITHUB_REF_NAME', but the app is ${version}: tag it app-v${version}." }
 
-            # The mutation and benchmark gates are CI's, and take most of an hour: the release relies on CI having
-            # passed on this very commit rather than running them again.
+            # What is released has passed CI - the build, the tests and the package test - on this very commit. The
+            # benchmark and mutation gates are run on the maintainer's machine before a release (docs/RELEASING.md).
             $runs = @(gh run list --workflow barbatos-pallas-ci.yml --commit $env:GITHUB_SHA --status success --json databaseId | ConvertFrom-Json)
             if ($LASTEXITCODE -ne 0) { throw 'The runs of barbatos-pallas-ci could not be read.' }
             if ($runs.Count -eq 0) { throw "barbatos-pallas-ci has not passed on $env:GITHUB_SHA. Run it on the commit, then push the tag again." }

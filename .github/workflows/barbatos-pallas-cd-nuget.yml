@@ -58,8 +58,8 @@ jobs:
           if ($env:TAG -cne "v$version") { throw "The release is tagged '$env:TAG', but the packages are ${version}: tag it v${version}." }
           Write-Host "Releasing $version."
 
-      # The mutation and benchmark gates run in CI and take most of an hour; they do not depend on the key, so the
-      # release relies on CI having passed on this very commit rather than running them again.
+      # What is released has passed CI - the build, the 40 test assemblies and the package test - on this very commit.
+      # The benchmark and mutation gates are run on the maintainer's machine before a release (docs/RELEASING.md).
       - name: CI passed on the commit
         if: github.event_name == 'release'
         shell: pwsh

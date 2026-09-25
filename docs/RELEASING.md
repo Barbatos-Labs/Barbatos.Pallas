@@ -57,6 +57,26 @@ tab either workflow is a rehearsal that publishes nothing.
    environment `production`. The workflow logs in as `phamhung`, the nuget.org account that owns the policy and the
    packages; if they belong to another account, the `user` of the login step changes with them.
 
+## Before either release: the gates
+
+CI on GitHub builds, runs the 40 test assemblies, packs and tests the packages, in about five minutes. The benchmark
+gate and the mutation gates are not run there (maintainer, 25 Sep 2026: on the runner they took most of an hour), so
+they are run on the maintainer's machine, on the commit that is released, before its tag:
+
+```bash
+dotnet run --project benchmarks/Barbatos.Pallas.Benchmarks -c Release -- --gate
+```
+
+Every benchmark within its target. Then, once `dotnet tool restore` has installed Stryker.NET, from each of the ten
+folders `tests/Barbatos.Pallas.<Package>.Tests` - Numerics, Expressions, Engine, LinearAlgebra, Statistics, Solvers,
+Spreadsheet, Graphing, DependencyInjection and Presentation:
+
+```bash
+dotnet stryker --skip-version-check
+```
+
+Every score at 90% or more; each `stryker-config.json` fails its run below that.
+
 ## Releasing the packages
 
 1. **CI is green on the commit** on `main` that becomes the release.
