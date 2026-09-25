@@ -61,10 +61,11 @@ be walked). Phase 4 is complete.
 test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate ✅ (every benchmark six
 times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread
 ✅ (`SessionWork`, AC stops a calculation, the sheet takes a token; walked in the app), M5 the
-release pipeline ✅ (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with Barbatos.i18n and
-Barbatos.Wpf; checked locally with a key made for the purpose - its first run on GitHub needs the remote, the secret
-and the nuget.org policy, docs/RELEASING.md), M6 the release candidate, walked installed, and 1.0.0 - the app too -
-published by the maintainer.
+release pipeline ✅ (a GitHub Release, NuGet trusted publishing, strong naming with `barbatos.snk`, the key of
+Barbatos.Pallas alone - token `1c94c30b213a8345`, maintainer, 25 Sep 2026: each Barbatos library has its own), M6 the
+release candidate, walked installed, and 1.0.0 - the app too - published by the maintainer (in progress: the public
+API shipped, the app at 1.0.0, the remote, the secret and the nuget.org policy set up; the rehearsal on GitHub and the
+installed walk remain).
 
 **Phase 6 - Graph and Math Box - complete ✅** (plan approved 24 Sep 2026): M1 Math Box in Engine, M2 its screens, M3
 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for screen coordinates, on a
@@ -255,10 +256,11 @@ Things that will save time:
 - **Releasing** is the maintainer's: a GitHub Release tagged `v<version>` runs `barbatos-pallas-cd-nuget.yml`, which
   signs, tests, packs and pushes the packages (docs/RELEASING.md); run by hand it rehearses and publishes nothing. The
   commit it releases has had `./build/Move-PublicApiToShipped.ps1` run, or the workflow refuses it. Strong naming
-  needs `src/barbatos.snk`, which only the workflow writes, from the `STRONG_NAME_KEY` secret: it is gitignored and is
-  never committed, copied or asked for. A signed build is checked with a key made for the purpose
-  (`RSACryptoServiceProvider.ExportCspBlob`), deleted afterwards and followed by a `--no-incremental` build, so that
-  nothing signed with it is left in `bin/`.
+  needs `src/barbatos.snk`: the workflow writes it from the `STRONG_NAME_KEY` secret, and the maintainer's machine
+  keeps it there (25 Sep 2026), so every build on it - tests and installer included - is signed. It is gitignored and
+  is never committed, copied, read or moved. Every assembly of the packages carries its token, `1c94c30b213a8345`
+  (`Test-Packages.ps1 -PublicKeyToken`); a key made for testing elsewhere is deleted afterwards and followed by a
+  `--no-incremental` build, so that nothing signed with it is left in `bin/`.
 
 ## Hard rules
 
@@ -337,7 +339,8 @@ Things that will save time:
 - **`ArchitectureMap` is the dependency graph.** A new `ProjectReference` means updating the map *and* the diagram
   in docs/ARCHITECTURE.md §2, or the tests fail.
 - **Every public member of `src/core` is declared** in the `PublicAPI.Unshipped.txt` beside its csproj until a release
-  moves it to `PublicAPI.Shipped.txt` (`Microsoft.CodeAnalysis.PublicApiAnalyzers`; RS0016 and RS0017 are errors). The
+  moves it to `PublicAPI.Shipped.txt` (`Microsoft.CodeAnalysis.PublicApiAnalyzers`; RS0016 and RS0017 are errors); the
+  1.0.0 release candidate shipped all 1,177, so a new member is the first line of an Unshipped file. The
   analyzer's code fix writes the line, and so does
   `dotnet format analyzers src/core/<Library>/<Library>.csproj --diagnostics RS0016 --severity info`. A line in
   `PublicAPI.Shipped.txt` is a promise until 2.0.0: removing or changing it is an incompatible change.
@@ -415,5 +418,6 @@ Things that will save time:
 
 ## Repository state
 
-- Local git repository, **no remote yet**. The planned remote is `Barbatos-Labs/Barbatos.Pallas`.
+- `origin` is `Barbatos-Labs/Barbatos.Pallas` on GitHub (set up by the maintainer, 25 Sep 2026), where CI runs on every
+  push to `main` and a published release runs the release workflow.
 - Commit or push only when the maintainer asks.

@@ -40,7 +40,8 @@ the Barbatos Labs root fails the verify step; that is the machine's trust, not a
 
 ## Versions
 
-The app's version is its own and numeric - `0.1.0` - because the engine refuses a prerelease label for an application
-(`BPE1011`). The packages carry the repository's, `1.0.0`. The profile's `Identity.Version` and the
-`.csproj`'s `<Version>` say the same number, and `PackagingProfileTests` in Barbatos.Pallas.Wpf.Tests fails when they
-do not, or when the AppId, the uninstall key or the product name drift from the profile.
+The app's version is its own and numeric - `1.0.0` - because the engine refuses a prerelease label for an application
+(`BPE1011`). The packages carry the repository's, and the first release is 1.0.0 for both. The profile's
+`Identity.Version` and the `.csproj`'s `<Version>` say the same number, and `PackagingProfileTests` in
+Barbatos.Pallas.Wpf.Tests fails when they do not, or when the AppId, the uninstall key or the product name drift from
+the profile.

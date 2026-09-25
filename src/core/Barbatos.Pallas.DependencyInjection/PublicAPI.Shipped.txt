@@ -1,1 +1,21 @@
 #nullable enable
+Barbatos.Pallas.DependencyInjection.IPallasBuilder
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.AddAtomicWeights(Barbatos.Pallas.Engine.AtomicWeightTable! atomicWeights) -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.AddConstantSet(Barbatos.Pallas.Engine.ConstantSet! constants) -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.AddFunction(Barbatos.Pallas.Engine.IMathFunction! mathFunction) -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.AddFunction<TFunction>() -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.AddUnitSet(Barbatos.Pallas.Engine.UnitSet! units) -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!
+Barbatos.Pallas.DependencyInjection.IPallasBuilder.Services.get -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Barbatos.Pallas.DependencyInjection.PallasOptions
+Barbatos.Pallas.DependencyInjection.PallasOptions.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.DependencyInjection.PallasOptions.App.set -> void
+Barbatos.Pallas.DependencyInjection.PallasOptions.Budget.get -> Barbatos.Pallas.Engine.EngineBudget!
+Barbatos.Pallas.DependencyInjection.PallasOptions.Budget.set -> void
+Barbatos.Pallas.DependencyInjection.PallasOptions.IncludeReferenceData.get -> bool
+Barbatos.Pallas.DependencyInjection.PallasOptions.IncludeReferenceData.set -> void
+Barbatos.Pallas.DependencyInjection.PallasOptions.PallasOptions() -> void
+Barbatos.Pallas.DependencyInjection.PallasOptions.Profile.get -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.DependencyInjection.PallasOptions.Profile.set -> void
+Barbatos.Pallas.DependencyInjection.PallasOptions.Validate() -> void
+Barbatos.Pallas.DependencyInjection.ServiceCollectionExtensions
+static Barbatos.Pallas.DependencyInjection.ServiceCollectionExtensions.AddPallas(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Barbatos.Pallas.DependencyInjection.PallasOptions!>? configure = null) -> Barbatos.Pallas.DependencyInjection.IPallasBuilder!

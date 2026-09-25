@@ -1,11 +1,1 @@
 #nullable enable
-Barbatos.Pallas.Solvers.IntegerPolynomial
-Barbatos.Pallas.Solvers.PolynomialRoots
-static Barbatos.Pallas.Solvers.IntegerPolynomial.CountRealRoots(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients) -> int
-static Barbatos.Pallas.Solvers.IntegerPolynomial.Deflate(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients, System.Numerics.BigInteger numerator, System.Numerics.BigInteger denominator) -> System.Numerics.BigInteger[]!
-static Barbatos.Pallas.Solvers.IntegerPolynomial.Degree(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients) -> int
-static Barbatos.Pallas.Solvers.IntegerPolynomial.Derivative(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients) -> System.Numerics.BigInteger[]!
-static Barbatos.Pallas.Solvers.IntegerPolynomial.SignAt(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients, System.Numerics.BigInteger numerator, System.Numerics.BigInteger denominator) -> int
-static Barbatos.Pallas.Solvers.IntegerPolynomial.SquareFree(System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients) -> System.Numerics.BigInteger[]!
-static Barbatos.Pallas.Solvers.PolynomialRoots.Find(System.Collections.Generic.IReadOnlyList<double>! coefficients) -> System.Numerics.Complex[]!
-static Barbatos.Pallas.Solvers.PolynomialRoots.TryGetRational(double approximation, System.Collections.Generic.IReadOnlyList<System.Numerics.BigInteger>! coefficients, out System.Numerics.BigInteger numerator, out System.Numerics.BigInteger denominator) -> bool

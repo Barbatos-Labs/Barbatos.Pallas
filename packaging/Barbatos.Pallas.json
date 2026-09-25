@@ -14,10 +14,10 @@
     "AppGuid": "{5E50D3E6-0148-428F-88C9-F824709C75C4}",
     // The .csproj's <Product>. It is also {Slug} in the installer's file name.
     "AppName": "Barbatos Pallas",
-    // The application's own version, numeric (the engine refuses a prerelease label here, BPE1011): the app is 0.1.0
-    // while the packages are 1.0.0 (Directory.Build.props). barbatos-pack passes it to the build; the .csproj's
+    // The application's own version, numeric (the engine refuses a prerelease label here, BPE1011): 1.0.0, the first
+    // release, with the packages (Directory.Build.props). barbatos-pack passes it to the build; the .csproj's
     // <Version> says the same for a build outside it, and Wpf.Tests fails when the two differ.
-    "Version": "0.1.0",
+    "Version": "1.0.0",
     "Copyright": "(c) 2026 Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors. All rights reserved."
   },
 
@@ -77,7 +77,7 @@
       // Program Files, for every user of the machine. AppId comes from Identity.AppGuid - never set it here.
       "PrivilegesRequired": "admin",
       "SignedUninstaller": true,
-      // barbatos-pallas-v0.1.0-setup.exe.
+      // barbatos-pallas-v1.0.0-setup.exe.
       "OutputBaseName": "{Slug}-v{Version}-setup",
       "AllowUserToChooseInstallLocation": true,
       "AllowUserToChooseStartMenuFolder": true,

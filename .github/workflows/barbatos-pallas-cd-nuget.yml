@@ -13,9 +13,10 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  # The public key token of barbatos.snk, the key Barbatos.i18n and Barbatos.Wpf are signed with (read from their
-  # published assemblies). A package whose assemblies carry any other, or none, is not published.
-  BARBATOS_PUBLIC_KEY_TOKEN: 0aed45c810bf67e6
+  # The public key token of barbatos.snk, the key of Barbatos.Pallas and of nothing else (maintainer, 25 Sep 2026): it
+  # is part of every assembly's identity from 1.0.0 on. A package whose assemblies carry any other, or none, is not
+  # published.
+  PALLAS_PUBLIC_KEY_TOKEN: 1c94c30b213a8345
 
 jobs:
   release:
@@ -116,10 +117,10 @@ jobs:
         run: dotnet pack Barbatos.Pallas.slnx --configuration Release --output artifacts/packages
 
       # Installed outside the repository and calculated with on every runtime, as in CI - and every assembly the two
-      # packages hold, the carried ones included, strong-named with the Barbatos key.
+      # packages hold, the carried ones included, strong-named with the key of Barbatos.Pallas.
       - name: Test the packages as a user installs them
         shell: pwsh
-        run: ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken $env:BARBATOS_PUBLIC_KEY_TOKEN
+        run: ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken $env:PALLAS_PUBLIC_KEY_TOKEN
 
       - name: Remove the strong-name key
         if: always()

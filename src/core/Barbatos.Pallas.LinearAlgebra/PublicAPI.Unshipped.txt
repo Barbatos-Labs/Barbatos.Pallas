@@ -1,7 +1,1 @@
 #nullable enable
-Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra
-static Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra.Determinant(decimal[,]! matrix) -> (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator)
-static Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra.Rank(System.Numerics.BigInteger[,]! matrix) -> int
-static Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra.TryInvert(decimal[,]! matrix, out System.Numerics.BigInteger[,]! numerators, out System.Numerics.BigInteger denominator) -> bool
-static Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra.TrySolve(decimal[,]! coefficients, decimal[]! constants, out System.Numerics.BigInteger[]! numerators, out System.Numerics.BigInteger denominator) -> bool
-static Barbatos.Pallas.LinearAlgebra.ExactLinearAlgebra.TrySolve(System.Numerics.BigInteger[,]! augmented, out System.Numerics.BigInteger[]! numerators, out System.Numerics.BigInteger denominator) -> bool

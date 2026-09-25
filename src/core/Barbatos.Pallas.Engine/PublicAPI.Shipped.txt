@@ -1,1 +1,702 @@
 #nullable enable
+Barbatos.Pallas.Engine.AtomicWeight
+Barbatos.Pallas.Engine.AtomicWeight.<Clone>$() -> Barbatos.Pallas.Engine.AtomicWeight!
+Barbatos.Pallas.Engine.AtomicWeight.AtomicNumber.get -> int
+Barbatos.Pallas.Engine.AtomicWeight.AtomicNumber.init -> void
+Barbatos.Pallas.Engine.AtomicWeight.AtomicWeight(int AtomicNumber, string! Symbol, decimal Weight, bool IsMassNumber) -> void
+Barbatos.Pallas.Engine.AtomicWeight.Deconstruct(out int AtomicNumber, out string! Symbol, out decimal Weight, out bool IsMassNumber) -> void
+Barbatos.Pallas.Engine.AtomicWeight.Equals(Barbatos.Pallas.Engine.AtomicWeight? other) -> bool
+Barbatos.Pallas.Engine.AtomicWeight.IsMassNumber.get -> bool
+Barbatos.Pallas.Engine.AtomicWeight.IsMassNumber.init -> void
+Barbatos.Pallas.Engine.AtomicWeight.Symbol.get -> string!
+Barbatos.Pallas.Engine.AtomicWeight.Symbol.init -> void
+Barbatos.Pallas.Engine.AtomicWeight.Weight.get -> decimal
+Barbatos.Pallas.Engine.AtomicWeight.Weight.init -> void
+Barbatos.Pallas.Engine.AtomicWeightTable
+Barbatos.Pallas.Engine.AtomicWeightTable.AtomicWeightTable(string! name, System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.AtomicWeight!>! elements) -> void
+Barbatos.Pallas.Engine.AtomicWeightTable.Elements.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.AtomicWeight!>
+Barbatos.Pallas.Engine.AtomicWeightTable.Name.get -> string!
+Barbatos.Pallas.Engine.CalcError
+Barbatos.Pallas.Engine.CalcError.CalcError() -> void
+Barbatos.Pallas.Engine.CalcError.CalcError(Barbatos.Pallas.Engine.CalcErrorKind Kind, Barbatos.Pallas.Expressions.SourceSpan Span, Barbatos.Pallas.Expressions.SyntaxErrorCode? SyntaxCode = null) -> void
+Barbatos.Pallas.Engine.CalcError.Deconstruct(out Barbatos.Pallas.Engine.CalcErrorKind Kind, out Barbatos.Pallas.Expressions.SourceSpan Span, out Barbatos.Pallas.Expressions.SyntaxErrorCode? SyntaxCode) -> void
+Barbatos.Pallas.Engine.CalcError.Equals(Barbatos.Pallas.Engine.CalcError other) -> bool
+Barbatos.Pallas.Engine.CalcError.Kind.get -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcError.Kind.init -> void
+Barbatos.Pallas.Engine.CalcError.Span.get -> Barbatos.Pallas.Expressions.SourceSpan
+Barbatos.Pallas.Engine.CalcError.Span.init -> void
+Barbatos.Pallas.Engine.CalcError.SyntaxCode.get -> Barbatos.Pallas.Expressions.SyntaxErrorCode?
+Barbatos.Pallas.Engine.CalcError.SyntaxCode.init -> void
+Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.ArgumentError = 3 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.CannotSolve = 6 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.CircularError = 9 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.DimensionError = 4 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.MathError = 1 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.MemoryError = 10 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.NoOperator = 11 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.NotDefined = 12 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.RangeError = 7 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.StackError = 2 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.SyntaxError = 0 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.TimeOut = 8 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.CalcErrorKind.VariableError = 5 -> Barbatos.Pallas.Engine.CalcErrorKind
+Barbatos.Pallas.Engine.Calculation
+Barbatos.Pallas.Engine.Calculation.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.Engine.Calculation.Display.get -> Barbatos.Pallas.Engine.FormattedResult!
+Barbatos.Pallas.Engine.Calculation.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.Calculation.Input.get -> string!
+Barbatos.Pallas.Engine.Calculation.Integrals.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.IntegralEstimate>
+Barbatos.Pallas.Engine.Calculation.IsTrue.get -> bool?
+Barbatos.Pallas.Engine.Calculation.Kind.get -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.Calculation.Profile.get -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.Calculation.Result.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.Calculation.Second.get -> Barbatos.Pallas.Engine.Value?
+Barbatos.Pallas.Engine.Calculation.Settings.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.Calculation.Succeeded.get -> bool
+Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Polar = 3 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Rectangular = 4 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Remainder = 2 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Solution = 5 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Value = 0 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculationKind.Verify = 1 -> Barbatos.Pallas.Engine.CalculationKind
+Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.CalculatorProfile.Extended = 1 -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.CalculatorProfile.Standard = 0 -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.CalculatorSession
+Barbatos.Pallas.Engine.CalculatorSession.Ans.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.CalculatorSession.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.Engine.CalculatorSession.Budget.get -> Barbatos.Pallas.Engine.EngineBudget!
+Barbatos.Pallas.Engine.CalculatorSession.Budget.set -> void
+Barbatos.Pallas.Engine.CalculatorSession.Calculate(string! input, System.Collections.Generic.IReadOnlyDictionary<Barbatos.Pallas.Engine.MemoryVariable, Barbatos.Pallas.Engine.Value>! values, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.Calculate(string! input, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.CalculateDistribution(Barbatos.Pallas.Engine.DistributionKind kind, Barbatos.Pallas.Engine.DistributionParameters! parameters, System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.Value>! list, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.Calculation!>!
+Barbatos.Pallas.Engine.CalculatorSession.CalculateDistribution(Barbatos.Pallas.Engine.DistributionKind kind, Barbatos.Pallas.Engine.DistributionParameters! parameters, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.Capture() -> Barbatos.Pallas.Engine.SessionSnapshot!
+Barbatos.Pallas.Engine.CalculatorSession.CellValues.get -> System.Func<Barbatos.Pallas.Engine.CellAddress, Barbatos.Pallas.Engine.EvalResult>?
+Barbatos.Pallas.Engine.CalculatorSession.CellValues.set -> void
+Barbatos.Pallas.Engine.CalculatorSession.CircleAngle(Barbatos.Pallas.Engine.CircleKind kind, Barbatos.Pallas.Engine.Value angle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.CircleAngle!
+Barbatos.Pallas.Engine.CalculatorSession.ClearHistory() -> void
+Barbatos.Pallas.Engine.CalculatorSession.Clock(int hour) -> Barbatos.Pallas.Engine.ClockAngles!
+Barbatos.Pallas.Engine.CalculatorSession.Compile(string! input) -> Barbatos.Pallas.Engine.CompiledExpression!
+Barbatos.Pallas.Engine.CalculatorSession.Define(Barbatos.Pallas.Engine.DefinedFunction function, string! expression) -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.CalculatorSession.Engine.get -> Barbatos.Pallas.Engine.PallasEngine!
+Barbatos.Pallas.Engine.CalculatorSession.Evaluate(string! input, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.Format(Barbatos.Pallas.Engine.Calculation! calculation, Barbatos.Pallas.Engine.FormatTarget? target = null) -> Barbatos.Pallas.Engine.FormattedResult?
+Barbatos.Pallas.Engine.CalculatorSession.FormatEngineering(Barbatos.Pallas.Engine.Calculation! calculation, int shift) -> string?
+Barbatos.Pallas.Engine.CalculatorSession.GetMatrix(Barbatos.Pallas.Engine.MatrixVariable variable) -> Barbatos.Pallas.Engine.MatrixValue?
+Barbatos.Pallas.Engine.CalculatorSession.GetVariable(Barbatos.Pallas.Engine.MemoryVariable variable) -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.CalculatorSession.GetVector(Barbatos.Pallas.Engine.VectorVariable variable) -> Barbatos.Pallas.Engine.VectorValue?
+Barbatos.Pallas.Engine.CalculatorSession.History.get -> System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.Calculation!>!
+Barbatos.Pallas.Engine.CalculatorSession.MatAns.get -> Barbatos.Pallas.Engine.MatrixValue?
+Barbatos.Pallas.Engine.CalculatorSession.PreAns.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.CalculatorSession.Profile.get -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.CalculatorSession.Regression.get -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.CalculatorSession.Regression.set -> void
+Barbatos.Pallas.Engine.CalculatorSession.Restore(Barbatos.Pallas.Engine.SessionSnapshot! snapshot) -> void
+Barbatos.Pallas.Engine.CalculatorSession.SetMatrix(Barbatos.Pallas.Engine.MatrixVariable variable, Barbatos.Pallas.Engine.MatrixValue? matrix) -> void
+Barbatos.Pallas.Engine.CalculatorSession.SetStatisticsData(Barbatos.Pallas.Engine.StatisticsData! data) -> void
+Barbatos.Pallas.Engine.CalculatorSession.SetVariable(Barbatos.Pallas.Engine.MemoryVariable variable, Barbatos.Pallas.Engine.Value value) -> void
+Barbatos.Pallas.Engine.CalculatorSession.SetVector(Barbatos.Pallas.Engine.VectorVariable variable, Barbatos.Pallas.Engine.VectorValue? vector) -> void
+Barbatos.Pallas.Engine.CalculatorSession.Settings.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.CalculatorSession.Settings.set -> void
+Barbatos.Pallas.Engine.CalculatorSession.Simulate(Barbatos.Pallas.Engine.SimulationKind kind, int count, Barbatos.Pallas.Engine.Value attempts, Barbatos.Pallas.Engine.SameResult sameResult = Barbatos.Pallas.Engine.SameResult.Off) -> Barbatos.Pallas.Engine.Simulation!
+Barbatos.Pallas.Engine.CalculatorSession.SolveEquation(string! input, Barbatos.Pallas.Engine.MemoryVariable variable, Barbatos.Pallas.Engine.Value initialValue, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.SolveInequality(System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.Value>! coefficients, Barbatos.Pallas.Expressions.RelationOperator relation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.InequalitySolution!
+Barbatos.Pallas.Engine.CalculatorSession.SolvePolynomial(System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.Value>! coefficients, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.PolynomialSolution!
+Barbatos.Pallas.Engine.CalculatorSession.SolveRatio(Barbatos.Pallas.Engine.RatioForm form, Barbatos.Pallas.Engine.Value a, Barbatos.Pallas.Engine.Value b, Barbatos.Pallas.Engine.Value other) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CalculatorSession.SolveSimultaneous(Barbatos.Pallas.Engine.Value[,]! augmented, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.SimultaneousSolution!
+Barbatos.Pallas.Engine.CalculatorSession.StatisticsData.get -> Barbatos.Pallas.Engine.StatisticsData!
+Barbatos.Pallas.Engine.CalculatorSession.Store(Barbatos.Pallas.Engine.MemoryVariable variable) -> void
+Barbatos.Pallas.Engine.CalculatorSession.SwitchApp(Barbatos.Pallas.Expressions.CalculatorApp app) -> void
+Barbatos.Pallas.Engine.CalculatorSession.Undefine(Barbatos.Pallas.Engine.DefinedFunction function) -> void
+Barbatos.Pallas.Engine.CalculatorSession.VctAns.get -> Barbatos.Pallas.Engine.VectorValue?
+Barbatos.Pallas.Engine.CalculatorSettings
+Barbatos.Pallas.Engine.CalculatorSettings.<Clone>$() -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.CalculatorSettings.AngleUnit.get -> Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Engine.CalculatorSettings.AngleUnit.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.BaseMode.get -> Barbatos.Pallas.Expressions.NumberBase
+Barbatos.Pallas.Engine.CalculatorSettings.BaseMode.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.CalculatorSettings() -> void
+Barbatos.Pallas.Engine.CalculatorSettings.ComplexResult.get -> Barbatos.Pallas.Engine.ComplexResult
+Barbatos.Pallas.Engine.CalculatorSettings.ComplexResult.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.ComplexRoots.get -> bool
+Barbatos.Pallas.Engine.CalculatorSettings.ComplexRoots.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.DecimalMark.get -> Barbatos.Pallas.Engine.DecimalMark
+Barbatos.Pallas.Engine.CalculatorSettings.DecimalMark.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.DigitSeparator.get -> bool
+Barbatos.Pallas.Engine.CalculatorSettings.DigitSeparator.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.EngineerSymbol.get -> bool
+Barbatos.Pallas.Engine.CalculatorSettings.EngineerSymbol.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.Equals(Barbatos.Pallas.Engine.CalculatorSettings? other) -> bool
+Barbatos.Pallas.Engine.CalculatorSettings.FractionResult.get -> Barbatos.Pallas.Engine.FractionResult
+Barbatos.Pallas.Engine.CalculatorSettings.FractionResult.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.InputOutput.get -> Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.CalculatorSettings.InputOutput.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.NumberFormat.get -> Barbatos.Pallas.Engine.NumberFormat
+Barbatos.Pallas.Engine.CalculatorSettings.NumberFormat.init -> void
+Barbatos.Pallas.Engine.CalculatorSettings.Verify.get -> bool
+Barbatos.Pallas.Engine.CalculatorSettings.Verify.init -> void
+Barbatos.Pallas.Engine.CellAddress
+Barbatos.Pallas.Engine.CellAddress.CellAddress() -> void
+Barbatos.Pallas.Engine.CellAddress.CellAddress(int Column, int Row) -> void
+Barbatos.Pallas.Engine.CellAddress.Column.get -> int
+Barbatos.Pallas.Engine.CellAddress.Column.init -> void
+Barbatos.Pallas.Engine.CellAddress.Deconstruct(out int Column, out int Row) -> void
+Barbatos.Pallas.Engine.CellAddress.Equals(Barbatos.Pallas.Engine.CellAddress other) -> bool
+Barbatos.Pallas.Engine.CellAddress.IsInside(int columns, int rows) -> bool
+Barbatos.Pallas.Engine.CellAddress.Offset(int columns, int rows) -> Barbatos.Pallas.Engine.CellAddress
+Barbatos.Pallas.Engine.CellAddress.Row.get -> int
+Barbatos.Pallas.Engine.CellAddress.Row.init -> void
+Barbatos.Pallas.Engine.CircleAngle
+Barbatos.Pallas.Engine.CircleAngle.Angle.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.CircleAngle.Cosine.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.CircleAngle.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.CircleAngle.Kind.get -> Barbatos.Pallas.Engine.CircleKind
+Barbatos.Pallas.Engine.CircleAngle.Sine.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.CircleAngle.Succeeded.get -> bool
+Barbatos.Pallas.Engine.CircleAngle.Tangent.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.CircleKind
+Barbatos.Pallas.Engine.CircleKind.HalfCircle = 1 -> Barbatos.Pallas.Engine.CircleKind
+Barbatos.Pallas.Engine.CircleKind.UnitCircle = 0 -> Barbatos.Pallas.Engine.CircleKind
+Barbatos.Pallas.Engine.ClockAngles
+Barbatos.Pallas.Engine.ClockAngles.<Clone>$() -> Barbatos.Pallas.Engine.ClockAngles!
+Barbatos.Pallas.Engine.ClockAngles.ClockAngles(int Hour, Barbatos.Pallas.Engine.Calculation! Smaller, Barbatos.Pallas.Engine.Calculation! Larger) -> void
+Barbatos.Pallas.Engine.ClockAngles.Deconstruct(out int Hour, out Barbatos.Pallas.Engine.Calculation! Smaller, out Barbatos.Pallas.Engine.Calculation! Larger) -> void
+Barbatos.Pallas.Engine.ClockAngles.Equals(Barbatos.Pallas.Engine.ClockAngles? other) -> bool
+Barbatos.Pallas.Engine.ClockAngles.Hour.get -> int
+Barbatos.Pallas.Engine.ClockAngles.Hour.init -> void
+Barbatos.Pallas.Engine.ClockAngles.Larger.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.ClockAngles.Larger.init -> void
+Barbatos.Pallas.Engine.ClockAngles.Smaller.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.ClockAngles.Smaller.init -> void
+Barbatos.Pallas.Engine.CompiledExpression
+Barbatos.Pallas.Engine.CompiledExpression.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.Engine.CompiledExpression.Derivative() -> Barbatos.Pallas.Engine.CompiledExpression!
+Barbatos.Pallas.Engine.CompiledExpression.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.CompiledExpression.Evaluate(Barbatos.Pallas.Engine.Value x, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.CompiledExpression.Input.get -> string!
+Barbatos.Pallas.Engine.CompiledExpression.Settings.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.CompiledExpression.Succeeded.get -> bool
+Barbatos.Pallas.Engine.CompiledExpression.TryEvaluate(double x, out double y) -> bool
+Barbatos.Pallas.Engine.CompiledExpression.ValueOf(double x) -> Barbatos.Pallas.Engine.Value?
+Barbatos.Pallas.Engine.ComplexResult
+Barbatos.Pallas.Engine.ComplexResult.Polar = 1 -> Barbatos.Pallas.Engine.ComplexResult
+Barbatos.Pallas.Engine.ComplexResult.Rectangular = 0 -> Barbatos.Pallas.Engine.ComplexResult
+Barbatos.Pallas.Engine.ConstantSet
+Barbatos.Pallas.Engine.ConstantSet.ConstantSet(string! name, System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.ScientificConstant!>! constants) -> void
+Barbatos.Pallas.Engine.ConstantSet.Constants.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.ScientificConstant!>
+Barbatos.Pallas.Engine.ConstantSet.Name.get -> string!
+Barbatos.Pallas.Engine.DecimalMark
+Barbatos.Pallas.Engine.DecimalMark.Comma = 1 -> Barbatos.Pallas.Engine.DecimalMark
+Barbatos.Pallas.Engine.DecimalMark.Dot = 0 -> Barbatos.Pallas.Engine.DecimalMark
+Barbatos.Pallas.Engine.DefinedFunction
+Barbatos.Pallas.Engine.DefinedFunction.F = 0 -> Barbatos.Pallas.Engine.DefinedFunction
+Barbatos.Pallas.Engine.DefinedFunction.G = 1 -> Barbatos.Pallas.Engine.DefinedFunction
+Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.BinomialCD = 1 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.BinomialPD = 0 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.InverseNormal = 4 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.NormalCD = 3 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.NormalPD = 2 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.PoissonCD = 6 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionKind.PoissonPD = 5 -> Barbatos.Pallas.Engine.DistributionKind
+Barbatos.Pallas.Engine.DistributionParameters
+Barbatos.Pallas.Engine.DistributionParameters.<Clone>$() -> Barbatos.Pallas.Engine.DistributionParameters!
+Barbatos.Pallas.Engine.DistributionParameters.Area.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Area.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.DistributionParameters() -> void
+Barbatos.Pallas.Engine.DistributionParameters.Equals(Barbatos.Pallas.Engine.DistributionParameters? other) -> bool
+Barbatos.Pallas.Engine.DistributionParameters.Lambda.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Lambda.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.Lower.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Lower.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.Mean.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Mean.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.Probability.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Probability.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.StandardDeviation.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.StandardDeviation.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.Trials.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Trials.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.Upper.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.Upper.init -> void
+Barbatos.Pallas.Engine.DistributionParameters.X.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.DistributionParameters.X.init -> void
+Barbatos.Pallas.Engine.EngineBudget
+Barbatos.Pallas.Engine.EngineBudget.<Clone>$() -> Barbatos.Pallas.Engine.EngineBudget!
+Barbatos.Pallas.Engine.EngineBudget.Deconstruct(out long MaxIterations, out System.TimeSpan Timeout) -> void
+Barbatos.Pallas.Engine.EngineBudget.EngineBudget(long MaxIterations, System.TimeSpan Timeout) -> void
+Barbatos.Pallas.Engine.EngineBudget.Equals(Barbatos.Pallas.Engine.EngineBudget? other) -> bool
+Barbatos.Pallas.Engine.EngineBudget.MaxIterations.get -> long
+Barbatos.Pallas.Engine.EngineBudget.MaxIterations.init -> void
+Barbatos.Pallas.Engine.EngineBudget.Timeout.get -> System.TimeSpan
+Barbatos.Pallas.Engine.EngineBudget.Timeout.init -> void
+Barbatos.Pallas.Engine.EvalResult
+Barbatos.Pallas.Engine.EvalResult.Equals(Barbatos.Pallas.Engine.EvalResult other) -> bool
+Barbatos.Pallas.Engine.EvalResult.Error.get -> Barbatos.Pallas.Engine.CalcErrorKind?
+Barbatos.Pallas.Engine.EvalResult.EvalResult() -> void
+Barbatos.Pallas.Engine.EvalResult.Succeeded.get -> bool
+Barbatos.Pallas.Engine.EvalResult.Value.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.EvaluationContext
+Barbatos.Pallas.Engine.EvaluationContext.AngleUnit.get -> Barbatos.Pallas.Numerics.AngleUnit
+Barbatos.Pallas.Engine.EvaluationContext.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.Engine.EvaluationContext.CancellationToken.get -> System.Threading.CancellationToken
+Barbatos.Pallas.Engine.EvaluationContext.Profile.get -> Barbatos.Pallas.Engine.CalculatorProfile
+Barbatos.Pallas.Engine.EvaluationContext.Settings.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.ExtremumKind
+Barbatos.Pallas.Engine.ExtremumKind.Maximum = 1 -> Barbatos.Pallas.Engine.ExtremumKind
+Barbatos.Pallas.Engine.ExtremumKind.Minimum = 0 -> Barbatos.Pallas.Engine.ExtremumKind
+Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.DecimalValue = 1 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.Engineering = 8 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.ImproperFraction = 6 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.MixedFraction = 7 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.Polar = 5 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.PrimeFactor = 2 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.Rectangular = 4 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.RecurringDecimal = 3 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.Sexagesimal = 9 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormatTarget.Standard = 0 -> Barbatos.Pallas.Engine.FormatTarget
+Barbatos.Pallas.Engine.FormattedResult
+Barbatos.Pallas.Engine.FormattedResult.<Clone>$() -> Barbatos.Pallas.Engine.FormattedResult!
+Barbatos.Pallas.Engine.FormattedResult.Deconstruct(out string! Text, out string! Latex) -> void
+Barbatos.Pallas.Engine.FormattedResult.Equals(Barbatos.Pallas.Engine.FormattedResult? other) -> bool
+Barbatos.Pallas.Engine.FormattedResult.FormattedResult(string! Text, string! Latex) -> void
+Barbatos.Pallas.Engine.FormattedResult.Latex.get -> string!
+Barbatos.Pallas.Engine.FormattedResult.Latex.init -> void
+Barbatos.Pallas.Engine.FormattedResult.Text.get -> string!
+Barbatos.Pallas.Engine.FormattedResult.Text.init -> void
+Barbatos.Pallas.Engine.FractionResult
+Barbatos.Pallas.Engine.FractionResult.Improper = 0 -> Barbatos.Pallas.Engine.FractionResult
+Barbatos.Pallas.Engine.FractionResult.Mixed = 1 -> Barbatos.Pallas.Engine.FractionResult
+Barbatos.Pallas.Engine.FunctionSignature
+Barbatos.Pallas.Engine.FunctionSignature.Applications.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Expressions.CalculatorApp>
+Barbatos.Pallas.Engine.FunctionSignature.FunctionSignature(string! name, int minimumArity, int maximumArity, params System.ReadOnlySpan<Barbatos.Pallas.Expressions.CalculatorApp> applications) -> void
+Barbatos.Pallas.Engine.FunctionSignature.MaximumArity.get -> int
+Barbatos.Pallas.Engine.FunctionSignature.MinimumArity.get -> int
+Barbatos.Pallas.Engine.FunctionSignature.Name.get -> string!
+Barbatos.Pallas.Engine.IMathFunction
+Barbatos.Pallas.Engine.IMathFunction.Invoke(System.ReadOnlySpan<Barbatos.Pallas.Engine.Value> arguments, Barbatos.Pallas.Engine.EvaluationContext! context) -> Barbatos.Pallas.Engine.EvalResult
+Barbatos.Pallas.Engine.IMathFunction.Signature.get -> Barbatos.Pallas.Engine.FunctionSignature!
+Barbatos.Pallas.Engine.InequalitySolution
+Barbatos.Pallas.Engine.InequalitySolution.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.InequalitySolution.Intervals.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.SolutionInterval!>
+Barbatos.Pallas.Engine.InequalitySolution.Outcome.get -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.InequalitySolution.Succeeded.get -> bool
+Barbatos.Pallas.Engine.InequalitySolution.Text.get -> string!
+Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.InputOutput.LineIDecimalO = 3 -> Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.InputOutput.LineILineO = 2 -> Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.InputOutput.MathIDecimalO = 1 -> Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.InputOutput.MathIMathO = 0 -> Barbatos.Pallas.Engine.InputOutput
+Barbatos.Pallas.Engine.IntegralEstimate
+Barbatos.Pallas.Engine.IntegralEstimate.Deconstruct(out Barbatos.Pallas.Expressions.SourceSpan Span, out double Result, out double ErrorEstimate) -> void
+Barbatos.Pallas.Engine.IntegralEstimate.Equals(Barbatos.Pallas.Engine.IntegralEstimate other) -> bool
+Barbatos.Pallas.Engine.IntegralEstimate.ErrorEstimate.get -> double
+Barbatos.Pallas.Engine.IntegralEstimate.ErrorEstimate.init -> void
+Barbatos.Pallas.Engine.IntegralEstimate.IntegralEstimate() -> void
+Barbatos.Pallas.Engine.IntegralEstimate.IntegralEstimate(Barbatos.Pallas.Expressions.SourceSpan Span, double Result, double ErrorEstimate) -> void
+Barbatos.Pallas.Engine.IntegralEstimate.Result.get -> double
+Barbatos.Pallas.Engine.IntegralEstimate.Result.init -> void
+Barbatos.Pallas.Engine.IntegralEstimate.Span.get -> Barbatos.Pallas.Expressions.SourceSpan
+Barbatos.Pallas.Engine.IntegralEstimate.Span.init -> void
+Barbatos.Pallas.Engine.MatrixSnapshot
+Barbatos.Pallas.Engine.MatrixSnapshot.<Clone>$() -> Barbatos.Pallas.Engine.MatrixSnapshot!
+Barbatos.Pallas.Engine.MatrixSnapshot.Columns.get -> int
+Barbatos.Pallas.Engine.MatrixSnapshot.Columns.init -> void
+Barbatos.Pallas.Engine.MatrixSnapshot.Deconstruct(out int Rows, out int Columns, out System.Collections.Immutable.ImmutableArray<string!> Entries) -> void
+Barbatos.Pallas.Engine.MatrixSnapshot.Entries.get -> System.Collections.Immutable.ImmutableArray<string!>
+Barbatos.Pallas.Engine.MatrixSnapshot.Entries.init -> void
+Barbatos.Pallas.Engine.MatrixSnapshot.Equals(Barbatos.Pallas.Engine.MatrixSnapshot? other) -> bool
+Barbatos.Pallas.Engine.MatrixSnapshot.MatrixSnapshot(int Rows, int Columns, System.Collections.Immutable.ImmutableArray<string!> Entries) -> void
+Barbatos.Pallas.Engine.MatrixSnapshot.Rows.get -> int
+Barbatos.Pallas.Engine.MatrixSnapshot.Rows.init -> void
+Barbatos.Pallas.Engine.MatrixValue
+Barbatos.Pallas.Engine.MatrixValue.Columns.get -> int
+Barbatos.Pallas.Engine.MatrixValue.Equals(Barbatos.Pallas.Engine.MatrixValue? other) -> bool
+Barbatos.Pallas.Engine.MatrixValue.IsSquare.get -> bool
+Barbatos.Pallas.Engine.MatrixValue.MatrixValue(Barbatos.Pallas.Engine.Value[,]! entries) -> void
+Barbatos.Pallas.Engine.MatrixValue.Rows.get -> int
+Barbatos.Pallas.Engine.MatrixValue.ToArray() -> Barbatos.Pallas.Engine.Value[,]!
+Barbatos.Pallas.Engine.MatrixValue.this[int row, int column].get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.MatrixVariable
+Barbatos.Pallas.Engine.MatrixVariable.MatA = 0 -> Barbatos.Pallas.Engine.MatrixVariable
+Barbatos.Pallas.Engine.MatrixVariable.MatB = 1 -> Barbatos.Pallas.Engine.MatrixVariable
+Barbatos.Pallas.Engine.MatrixVariable.MatC = 2 -> Barbatos.Pallas.Engine.MatrixVariable
+Barbatos.Pallas.Engine.MatrixVariable.MatD = 3 -> Barbatos.Pallas.Engine.MatrixVariable
+Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.A = 0 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.B = 1 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.C = 2 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.D = 3 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.E = 4 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.F = 5 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.X = 6 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.Y = 7 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.MemoryVariable.Z = 8 -> Barbatos.Pallas.Engine.MemoryVariable
+Barbatos.Pallas.Engine.NumberFormat
+Barbatos.Pallas.Engine.NumberFormat.Digits.get -> int
+Barbatos.Pallas.Engine.NumberFormat.Equals(Barbatos.Pallas.Engine.NumberFormat other) -> bool
+Barbatos.Pallas.Engine.NumberFormat.Kind.get -> Barbatos.Pallas.Engine.NumberFormatKind
+Barbatos.Pallas.Engine.NumberFormat.NumberFormat() -> void
+Barbatos.Pallas.Engine.NumberFormatKind
+Barbatos.Pallas.Engine.NumberFormatKind.Fix = 1 -> Barbatos.Pallas.Engine.NumberFormatKind
+Barbatos.Pallas.Engine.NumberFormatKind.Norm = 0 -> Barbatos.Pallas.Engine.NumberFormatKind
+Barbatos.Pallas.Engine.NumberFormatKind.Sci = 2 -> Barbatos.Pallas.Engine.NumberFormatKind
+Barbatos.Pallas.Engine.NumberLine
+Barbatos.Pallas.Engine.NumberLineAxis
+Barbatos.Pallas.Engine.NumberLineAxis.A.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.NumberLineAxis.B.get -> Barbatos.Pallas.Engine.Value?
+Barbatos.Pallas.Engine.NumberLineAxis.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.NumberLineAxis.Form.get -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineAxis.Lower.get -> Barbatos.Pallas.Engine.Value?
+Barbatos.Pallas.Engine.NumberLineAxis.LowerIncluded.get -> bool
+Barbatos.Pallas.Engine.NumberLineAxis.Succeeded.get -> bool
+Barbatos.Pallas.Engine.NumberLineAxis.Upper.get -> Barbatos.Pallas.Engine.Value?
+Barbatos.Pallas.Engine.NumberLineAxis.UpperIncluded.get -> bool
+Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.Between = 5 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.BetweenIncluded = 8 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.Equal = 2 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.FromIncluded = 6 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.Greater = 3 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.GreaterOrEqual = 4 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.Less = 0 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.LessOrEqual = 1 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineForm.ToIncluded = 7 -> Barbatos.Pallas.Engine.NumberLineForm
+Barbatos.Pallas.Engine.NumberLineView
+Barbatos.Pallas.Engine.NumberLineView.<Clone>$() -> Barbatos.Pallas.Engine.NumberLineView!
+Barbatos.Pallas.Engine.NumberLineView.Center.get -> decimal
+Barbatos.Pallas.Engine.NumberLineView.Center.init -> void
+Barbatos.Pallas.Engine.NumberLineView.Deconstruct(out decimal Center, out decimal Scale, out Barbatos.Pallas.Engine.CalcError? Error) -> void
+Barbatos.Pallas.Engine.NumberLineView.Equals(Barbatos.Pallas.Engine.NumberLineView? other) -> bool
+Barbatos.Pallas.Engine.NumberLineView.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.NumberLineView.Error.init -> void
+Barbatos.Pallas.Engine.NumberLineView.Maximum.get -> decimal
+Barbatos.Pallas.Engine.NumberLineView.Minimum.get -> decimal
+Barbatos.Pallas.Engine.NumberLineView.NumberLineView(decimal Center, decimal Scale, Barbatos.Pallas.Engine.CalcError? Error = null) -> void
+Barbatos.Pallas.Engine.NumberLineView.Scale.get -> decimal
+Barbatos.Pallas.Engine.NumberLineView.Scale.init -> void
+Barbatos.Pallas.Engine.NumberLineView.Succeeded.get -> bool
+Barbatos.Pallas.Engine.PallasEngine
+Barbatos.Pallas.Engine.PallasEngine.Budget.get -> Barbatos.Pallas.Engine.EngineBudget!
+Barbatos.Pallas.Engine.PallasEngine.CreateSession(Barbatos.Pallas.Expressions.CalculatorApp app = Barbatos.Pallas.Expressions.CalculatorApp.Calculate, Barbatos.Pallas.Engine.CalculatorProfile profile = Barbatos.Pallas.Engine.CalculatorProfile.Standard, int? randomSeed = null) -> Barbatos.Pallas.Engine.CalculatorSession!
+Barbatos.Pallas.Engine.PallasEngine.Vocabulary.get -> Barbatos.Pallas.Expressions.SyntaxVocabulary!
+Barbatos.Pallas.Engine.PallasEngineBuilder
+Barbatos.Pallas.Engine.PallasEngineBuilder.AddAtomicWeights(Barbatos.Pallas.Engine.AtomicWeightTable! atomicWeights) -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+Barbatos.Pallas.Engine.PallasEngineBuilder.AddConstantSet(Barbatos.Pallas.Engine.ConstantSet! constants) -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+Barbatos.Pallas.Engine.PallasEngineBuilder.AddFunction(Barbatos.Pallas.Engine.IMathFunction! function) -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+Barbatos.Pallas.Engine.PallasEngineBuilder.AddUnitSet(Barbatos.Pallas.Engine.UnitSet! units) -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+Barbatos.Pallas.Engine.PallasEngineBuilder.Build() -> Barbatos.Pallas.Engine.PallasEngine!
+Barbatos.Pallas.Engine.PallasEngineBuilder.WithBudget(Barbatos.Pallas.Engine.EngineBudget! budget) -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+Barbatos.Pallas.Engine.PolynomialExtremum
+Barbatos.Pallas.Engine.PolynomialExtremum.Kind.get -> Barbatos.Pallas.Engine.ExtremumKind
+Barbatos.Pallas.Engine.PolynomialExtremum.X.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.PolynomialExtremum.Y.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.PolynomialRoot
+Barbatos.Pallas.Engine.PolynomialRoot.Imaginary.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.PolynomialRoot.IsReal.get -> bool
+Barbatos.Pallas.Engine.PolynomialRoot.Real.get -> Barbatos.Pallas.Engine.Calculation!
+Barbatos.Pallas.Engine.PolynomialSolution
+Barbatos.Pallas.Engine.PolynomialSolution.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.PolynomialSolution.Extrema.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.PolynomialExtremum!>
+Barbatos.Pallas.Engine.PolynomialSolution.Outcome.get -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.PolynomialSolution.Roots.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.PolynomialRoot!>
+Barbatos.Pallas.Engine.PolynomialSolution.Succeeded.get -> bool
+Barbatos.Pallas.Engine.RatioForm
+Barbatos.Pallas.Engine.RatioForm.XInSecondRatio = 0 -> Barbatos.Pallas.Engine.RatioForm
+Barbatos.Pallas.Engine.RatioForm.XLastInSecondRatio = 1 -> Barbatos.Pallas.Engine.RatioForm
+Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.ExponentialAB = 4 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.ExponentialE = 3 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.Inverse = 6 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.Linear = 0 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.Logarithmic = 2 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.Power = 5 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.RegressionModel.Quadratic = 1 -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.SameResult
+Barbatos.Pallas.Engine.SameResult.First = 1 -> Barbatos.Pallas.Engine.SameResult
+Barbatos.Pallas.Engine.SameResult.Off = 0 -> Barbatos.Pallas.Engine.SameResult
+Barbatos.Pallas.Engine.SameResult.Second = 2 -> Barbatos.Pallas.Engine.SameResult
+Barbatos.Pallas.Engine.SameResult.Third = 3 -> Barbatos.Pallas.Engine.SameResult
+Barbatos.Pallas.Engine.ScaledDecimal
+Barbatos.Pallas.Engine.ScaledDecimal.Deconstruct(out decimal Mantissa, out int Exponent) -> void
+Barbatos.Pallas.Engine.ScaledDecimal.Equals(Barbatos.Pallas.Engine.ScaledDecimal other) -> bool
+Barbatos.Pallas.Engine.ScaledDecimal.Exponent.get -> int
+Barbatos.Pallas.Engine.ScaledDecimal.Exponent.init -> void
+Barbatos.Pallas.Engine.ScaledDecimal.Mantissa.get -> decimal
+Barbatos.Pallas.Engine.ScaledDecimal.Mantissa.init -> void
+Barbatos.Pallas.Engine.ScaledDecimal.ScaledDecimal() -> void
+Barbatos.Pallas.Engine.ScaledDecimal.ScaledDecimal(decimal Mantissa, int Exponent) -> void
+Barbatos.Pallas.Engine.ScientificConstant
+Barbatos.Pallas.Engine.ScientificConstant.IsExact.get -> bool
+Barbatos.Pallas.Engine.ScientificConstant.ScientificConstant(string! symbol, Barbatos.Pallas.Engine.ScaledDecimal value, Barbatos.Pallas.Engine.ScaledDecimal standardUncertainty, string! unit) -> void
+Barbatos.Pallas.Engine.ScientificConstant.StandardUncertainty.get -> Barbatos.Pallas.Engine.ScaledDecimal
+Barbatos.Pallas.Engine.ScientificConstant.Symbol.get -> string!
+Barbatos.Pallas.Engine.ScientificConstant.Unit.get -> string!
+Barbatos.Pallas.Engine.ScientificConstant.Value.get -> Barbatos.Pallas.Engine.ScaledDecimal
+Barbatos.Pallas.Engine.SessionSnapshot
+Barbatos.Pallas.Engine.SessionSnapshot.<Clone>$() -> Barbatos.Pallas.Engine.SessionSnapshot!
+Barbatos.Pallas.Engine.SessionSnapshot.Ans.get -> string!
+Barbatos.Pallas.Engine.SessionSnapshot.Ans.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.App.get -> Barbatos.Pallas.Expressions.CalculatorApp
+Barbatos.Pallas.Engine.SessionSnapshot.App.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Equals(Barbatos.Pallas.Engine.SessionSnapshot? other) -> bool
+Barbatos.Pallas.Engine.SessionSnapshot.FunctionF.get -> string?
+Barbatos.Pallas.Engine.SessionSnapshot.FunctionF.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.FunctionG.get -> string?
+Barbatos.Pallas.Engine.SessionSnapshot.FunctionG.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Matrices.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.MatrixSnapshot?>
+Barbatos.Pallas.Engine.SessionSnapshot.Matrices.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.PreAns.get -> string!
+Barbatos.Pallas.Engine.SessionSnapshot.PreAns.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Regression.get -> Barbatos.Pallas.Engine.RegressionModel
+Barbatos.Pallas.Engine.SessionSnapshot.Regression.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.SessionSnapshot() -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Settings.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+Barbatos.Pallas.Engine.SessionSnapshot.Settings.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsFrequencies.get -> System.Collections.Immutable.ImmutableArray<string!>
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsFrequencies.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsX.get -> System.Collections.Immutable.ImmutableArray<string!>
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsX.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsY.get -> System.Collections.Immutable.ImmutableArray<string!>
+Barbatos.Pallas.Engine.SessionSnapshot.StatisticsY.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Variables.get -> System.Collections.Immutable.ImmutableArray<string!>
+Barbatos.Pallas.Engine.SessionSnapshot.Variables.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Vectors.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.MatrixSnapshot?>
+Barbatos.Pallas.Engine.SessionSnapshot.Vectors.init -> void
+Barbatos.Pallas.Engine.SessionSnapshot.Version.get -> int
+Barbatos.Pallas.Engine.SessionSnapshot.Version.init -> void
+Barbatos.Pallas.Engine.Simulation
+Barbatos.Pallas.Engine.Simulation.Attempts.get -> System.Collections.Immutable.ImmutableArray<System.Collections.Immutable.ImmutableArray<int>>
+Barbatos.Pallas.Engine.Simulation.Count.get -> int
+Barbatos.Pallas.Engine.Simulation.Difference(int attempt) -> int
+Barbatos.Pallas.Engine.Simulation.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.Simulation.Frequencies(Barbatos.Pallas.Engine.SimulationTally tally) -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.SimulationFrequency!>
+Barbatos.Pallas.Engine.Simulation.Kind.get -> Barbatos.Pallas.Engine.SimulationKind
+Barbatos.Pallas.Engine.Simulation.Succeeded.get -> bool
+Barbatos.Pallas.Engine.Simulation.Sum(int attempt) -> int
+Barbatos.Pallas.Engine.SimulationFrequency
+Barbatos.Pallas.Engine.SimulationFrequency.<Clone>$() -> Barbatos.Pallas.Engine.SimulationFrequency!
+Barbatos.Pallas.Engine.SimulationFrequency.Deconstruct(out int Outcome, out int Frequency, out Barbatos.Pallas.Engine.Value RelativeFrequency) -> void
+Barbatos.Pallas.Engine.SimulationFrequency.Equals(Barbatos.Pallas.Engine.SimulationFrequency? other) -> bool
+Barbatos.Pallas.Engine.SimulationFrequency.Frequency.get -> int
+Barbatos.Pallas.Engine.SimulationFrequency.Frequency.init -> void
+Barbatos.Pallas.Engine.SimulationFrequency.Outcome.get -> int
+Barbatos.Pallas.Engine.SimulationFrequency.Outcome.init -> void
+Barbatos.Pallas.Engine.SimulationFrequency.RelativeFrequency.get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.SimulationFrequency.RelativeFrequency.init -> void
+Barbatos.Pallas.Engine.SimulationFrequency.SimulationFrequency(int Outcome, int Frequency, Barbatos.Pallas.Engine.Value RelativeFrequency) -> void
+Barbatos.Pallas.Engine.SimulationKind
+Barbatos.Pallas.Engine.SimulationKind.CoinToss = 1 -> Barbatos.Pallas.Engine.SimulationKind
+Barbatos.Pallas.Engine.SimulationKind.DiceRoll = 0 -> Barbatos.Pallas.Engine.SimulationKind
+Barbatos.Pallas.Engine.SimulationTally
+Barbatos.Pallas.Engine.SimulationTally.Difference = 1 -> Barbatos.Pallas.Engine.SimulationTally
+Barbatos.Pallas.Engine.SimulationTally.Heads = 2 -> Barbatos.Pallas.Engine.SimulationTally
+Barbatos.Pallas.Engine.SimulationTally.Sum = 0 -> Barbatos.Pallas.Engine.SimulationTally
+Barbatos.Pallas.Engine.SimultaneousSolution
+Barbatos.Pallas.Engine.SimultaneousSolution.Error.get -> Barbatos.Pallas.Engine.CalcError?
+Barbatos.Pallas.Engine.SimultaneousSolution.Outcome.get -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SimultaneousSolution.Succeeded.get -> bool
+Barbatos.Pallas.Engine.SimultaneousSolution.Unknowns.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.Calculation!>
+Barbatos.Pallas.Engine.SolutionInterval
+Barbatos.Pallas.Engine.SolutionInterval.Lower.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.SolutionInterval.LowerIncluded.get -> bool
+Barbatos.Pallas.Engine.SolutionInterval.Text.get -> string!
+Barbatos.Pallas.Engine.SolutionInterval.Upper.get -> Barbatos.Pallas.Engine.Calculation?
+Barbatos.Pallas.Engine.SolutionInterval.UpperIncluded.get -> bool
+Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SolutionOutcome.AllRealNumbers = 4 -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SolutionOutcome.InfiniteSolutions = 2 -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SolutionOutcome.NoRealRoots = 3 -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SolutionOutcome.NoSolution = 1 -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.SolutionOutcome.Solved = 0 -> Barbatos.Pallas.Engine.SolutionOutcome
+Barbatos.Pallas.Engine.StatisticsColumn
+Barbatos.Pallas.Engine.StatisticsColumn.Frequency = 2 -> Barbatos.Pallas.Engine.StatisticsColumn
+Barbatos.Pallas.Engine.StatisticsColumn.X = 0 -> Barbatos.Pallas.Engine.StatisticsColumn
+Barbatos.Pallas.Engine.StatisticsColumn.Y = 1 -> Barbatos.Pallas.Engine.StatisticsColumn
+Barbatos.Pallas.Engine.StatisticsData
+Barbatos.Pallas.Engine.StatisticsData.Columns.get -> int
+Barbatos.Pallas.Engine.StatisticsData.Equals(Barbatos.Pallas.Engine.StatisticsData? other) -> bool
+Barbatos.Pallas.Engine.StatisticsData.Frequencies.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.Value>
+Barbatos.Pallas.Engine.StatisticsData.HasFrequencies.get -> bool
+Barbatos.Pallas.Engine.StatisticsData.IsTwoVariable.get -> bool
+Barbatos.Pallas.Engine.StatisticsData.Rows.get -> int
+Barbatos.Pallas.Engine.StatisticsData.Sort(Barbatos.Pallas.Engine.StatisticsColumn column, bool descending = false) -> Barbatos.Pallas.Engine.StatisticsData!
+Barbatos.Pallas.Engine.StatisticsData.StatisticsData(System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.Value>! x, System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.Value>? y = null, System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.Value>? frequencies = null) -> void
+Barbatos.Pallas.Engine.StatisticsData.X.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.Value>
+Barbatos.Pallas.Engine.StatisticsData.Y.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.Value>
+Barbatos.Pallas.Engine.UnitConversion
+Barbatos.Pallas.Engine.UnitConversion.Command.get -> string!
+Barbatos.Pallas.Engine.UnitConversion.Divisor.get -> decimal
+Barbatos.Pallas.Engine.UnitConversion.Multiplier.get -> decimal
+Barbatos.Pallas.Engine.UnitConversion.OffsetAfter.get -> decimal
+Barbatos.Pallas.Engine.UnitConversion.OffsetBefore.get -> decimal
+Barbatos.Pallas.Engine.UnitConversion.UnitConversion(string! command, decimal multiplier, decimal divisor = 1, decimal offsetBefore = 0, decimal offsetAfter = 0) -> void
+Barbatos.Pallas.Engine.UnitSet
+Barbatos.Pallas.Engine.UnitSet.Conversions.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.UnitConversion!>
+Barbatos.Pallas.Engine.UnitSet.Name.get -> string!
+Barbatos.Pallas.Engine.UnitSet.UnitSet(string! name, System.Collections.Generic.IEnumerable<Barbatos.Pallas.Engine.UnitConversion!>! conversions) -> void
+Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.Value.Equals(Barbatos.Pallas.Engine.Value other) -> bool
+Barbatos.Pallas.Engine.Value.IsExact.get -> bool
+Barbatos.Pallas.Engine.Value.IsReal.get -> bool
+Barbatos.Pallas.Engine.Value.Kind.get -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.Value.ToComplex() -> System.Numerics.Complex
+Barbatos.Pallas.Engine.Value.ToDecimal() -> decimal
+Barbatos.Pallas.Engine.Value.ToDouble() -> double
+Barbatos.Pallas.Engine.Value.ToInt32() -> int
+Barbatos.Pallas.Engine.Value.ToMatrix() -> Barbatos.Pallas.Engine.MatrixValue!
+Barbatos.Pallas.Engine.Value.ToVector() -> Barbatos.Pallas.Engine.VectorValue!
+Barbatos.Pallas.Engine.Value.Value() -> void
+Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.BaseN = 3 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.Complex = 2 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.DecimalReal = 0 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.DoubleReal = 1 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.Matrix = 4 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.ValueKind.Vector = 5 -> Barbatos.Pallas.Engine.ValueKind
+Barbatos.Pallas.Engine.VectorValue
+Barbatos.Pallas.Engine.VectorValue.Dimension.get -> int
+Barbatos.Pallas.Engine.VectorValue.Elements.get -> System.Collections.Immutable.ImmutableArray<Barbatos.Pallas.Engine.Value>
+Barbatos.Pallas.Engine.VectorValue.Equals(Barbatos.Pallas.Engine.VectorValue? other) -> bool
+Barbatos.Pallas.Engine.VectorValue.VectorValue(params System.ReadOnlySpan<Barbatos.Pallas.Engine.Value> elements) -> void
+Barbatos.Pallas.Engine.VectorValue.this[int index].get -> Barbatos.Pallas.Engine.Value
+Barbatos.Pallas.Engine.VectorVariable
+Barbatos.Pallas.Engine.VectorVariable.VctA = 0 -> Barbatos.Pallas.Engine.VectorVariable
+Barbatos.Pallas.Engine.VectorVariable.VctB = 1 -> Barbatos.Pallas.Engine.VectorVariable
+Barbatos.Pallas.Engine.VectorVariable.VctC = 2 -> Barbatos.Pallas.Engine.VectorVariable
+Barbatos.Pallas.Engine.VectorVariable.VctD = 3 -> Barbatos.Pallas.Engine.VectorVariable
+const Barbatos.Pallas.Engine.NumberLine.MaximumAxes = 3 -> int
+const Barbatos.Pallas.Engine.NumberLineView.Ticks = 8 -> int
+const Barbatos.Pallas.Engine.SessionSnapshot.CurrentVersion = 1 -> int
+const Barbatos.Pallas.Engine.Simulation.MaximumAttempts = 250 -> int
+const Barbatos.Pallas.Engine.Simulation.MaximumCount = 3 -> int
+const Barbatos.Pallas.Engine.Simulation.MinimumCount = 1 -> int
+override Barbatos.Pallas.Engine.AtomicWeight.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.AtomicWeight.GetHashCode() -> int
+override Barbatos.Pallas.Engine.AtomicWeight.ToString() -> string!
+override Barbatos.Pallas.Engine.CalcError.GetHashCode() -> int
+override Barbatos.Pallas.Engine.Calculation.ToString() -> string!
+override Barbatos.Pallas.Engine.CalculatorSettings.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.CalculatorSettings.GetHashCode() -> int
+override Barbatos.Pallas.Engine.CalculatorSettings.ToString() -> string!
+override Barbatos.Pallas.Engine.CellAddress.GetHashCode() -> int
+override Barbatos.Pallas.Engine.CellAddress.ToString() -> string!
+override Barbatos.Pallas.Engine.ClockAngles.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.ClockAngles.GetHashCode() -> int
+override Barbatos.Pallas.Engine.ClockAngles.ToString() -> string!
+override Barbatos.Pallas.Engine.DistributionParameters.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.DistributionParameters.GetHashCode() -> int
+override Barbatos.Pallas.Engine.DistributionParameters.ToString() -> string!
+override Barbatos.Pallas.Engine.EngineBudget.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.EngineBudget.GetHashCode() -> int
+override Barbatos.Pallas.Engine.EngineBudget.ToString() -> string!
+override Barbatos.Pallas.Engine.EvalResult.GetHashCode() -> int
+override Barbatos.Pallas.Engine.FormattedResult.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.FormattedResult.GetHashCode() -> int
+override Barbatos.Pallas.Engine.FormattedResult.ToString() -> string!
+override Barbatos.Pallas.Engine.IntegralEstimate.GetHashCode() -> int
+override Barbatos.Pallas.Engine.MatrixSnapshot.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.MatrixSnapshot.GetHashCode() -> int
+override Barbatos.Pallas.Engine.MatrixSnapshot.ToString() -> string!
+override Barbatos.Pallas.Engine.MatrixValue.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.MatrixValue.GetHashCode() -> int
+override Barbatos.Pallas.Engine.MatrixValue.ToString() -> string!
+override Barbatos.Pallas.Engine.NumberFormat.GetHashCode() -> int
+override Barbatos.Pallas.Engine.NumberFormat.ToString() -> string!
+override Barbatos.Pallas.Engine.NumberLineView.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.NumberLineView.GetHashCode() -> int
+override Barbatos.Pallas.Engine.NumberLineView.ToString() -> string!
+override Barbatos.Pallas.Engine.ScaledDecimal.GetHashCode() -> int
+override Barbatos.Pallas.Engine.SessionSnapshot.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.SessionSnapshot.GetHashCode() -> int
+override Barbatos.Pallas.Engine.SessionSnapshot.ToString() -> string!
+override Barbatos.Pallas.Engine.SimulationFrequency.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.SimulationFrequency.GetHashCode() -> int
+override Barbatos.Pallas.Engine.SimulationFrequency.ToString() -> string!
+override Barbatos.Pallas.Engine.SolutionInterval.ToString() -> string!
+override Barbatos.Pallas.Engine.StatisticsData.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.StatisticsData.GetHashCode() -> int
+override Barbatos.Pallas.Engine.StatisticsData.ToString() -> string!
+override Barbatos.Pallas.Engine.Value.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.Value.GetHashCode() -> int
+override Barbatos.Pallas.Engine.Value.ToString() -> string!
+override Barbatos.Pallas.Engine.VectorValue.Equals(object? obj) -> bool
+override Barbatos.Pallas.Engine.VectorValue.GetHashCode() -> int
+override Barbatos.Pallas.Engine.VectorValue.ToString() -> string!
+static Barbatos.Pallas.Engine.AtomicWeight.operator !=(Barbatos.Pallas.Engine.AtomicWeight? left, Barbatos.Pallas.Engine.AtomicWeight? right) -> bool
+static Barbatos.Pallas.Engine.AtomicWeight.operator ==(Barbatos.Pallas.Engine.AtomicWeight? left, Barbatos.Pallas.Engine.AtomicWeight? right) -> bool
+static Barbatos.Pallas.Engine.CalcError.operator !=(Barbatos.Pallas.Engine.CalcError left, Barbatos.Pallas.Engine.CalcError right) -> bool
+static Barbatos.Pallas.Engine.CalcError.operator ==(Barbatos.Pallas.Engine.CalcError left, Barbatos.Pallas.Engine.CalcError right) -> bool
+static Barbatos.Pallas.Engine.CalculatorSettings.Initial.get -> Barbatos.Pallas.Engine.CalculatorSettings!
+static Barbatos.Pallas.Engine.CalculatorSettings.operator !=(Barbatos.Pallas.Engine.CalculatorSettings? left, Barbatos.Pallas.Engine.CalculatorSettings? right) -> bool
+static Barbatos.Pallas.Engine.CalculatorSettings.operator ==(Barbatos.Pallas.Engine.CalculatorSettings? left, Barbatos.Pallas.Engine.CalculatorSettings? right) -> bool
+static Barbatos.Pallas.Engine.CellAddress.TryParse(string? text, out Barbatos.Pallas.Engine.CellAddress address) -> bool
+static Barbatos.Pallas.Engine.CellAddress.operator !=(Barbatos.Pallas.Engine.CellAddress left, Barbatos.Pallas.Engine.CellAddress right) -> bool
+static Barbatos.Pallas.Engine.CellAddress.operator ==(Barbatos.Pallas.Engine.CellAddress left, Barbatos.Pallas.Engine.CellAddress right) -> bool
+static Barbatos.Pallas.Engine.ClockAngles.operator !=(Barbatos.Pallas.Engine.ClockAngles? left, Barbatos.Pallas.Engine.ClockAngles? right) -> bool
+static Barbatos.Pallas.Engine.ClockAngles.operator ==(Barbatos.Pallas.Engine.ClockAngles? left, Barbatos.Pallas.Engine.ClockAngles? right) -> bool
+static Barbatos.Pallas.Engine.DistributionParameters.operator !=(Barbatos.Pallas.Engine.DistributionParameters? left, Barbatos.Pallas.Engine.DistributionParameters? right) -> bool
+static Barbatos.Pallas.Engine.DistributionParameters.operator ==(Barbatos.Pallas.Engine.DistributionParameters? left, Barbatos.Pallas.Engine.DistributionParameters? right) -> bool
+static Barbatos.Pallas.Engine.EngineBudget.Default.get -> Barbatos.Pallas.Engine.EngineBudget!
+static Barbatos.Pallas.Engine.EngineBudget.operator !=(Barbatos.Pallas.Engine.EngineBudget? left, Barbatos.Pallas.Engine.EngineBudget? right) -> bool
+static Barbatos.Pallas.Engine.EngineBudget.operator ==(Barbatos.Pallas.Engine.EngineBudget? left, Barbatos.Pallas.Engine.EngineBudget? right) -> bool
+static Barbatos.Pallas.Engine.EvalResult.Failure(Barbatos.Pallas.Engine.CalcErrorKind error) -> Barbatos.Pallas.Engine.EvalResult
+static Barbatos.Pallas.Engine.EvalResult.FromValue(Barbatos.Pallas.Engine.Value value) -> Barbatos.Pallas.Engine.EvalResult
+static Barbatos.Pallas.Engine.EvalResult.Success(Barbatos.Pallas.Engine.Value value) -> Barbatos.Pallas.Engine.EvalResult
+static Barbatos.Pallas.Engine.EvalResult.implicit operator Barbatos.Pallas.Engine.EvalResult(Barbatos.Pallas.Engine.Value value) -> Barbatos.Pallas.Engine.EvalResult
+static Barbatos.Pallas.Engine.EvalResult.operator !=(Barbatos.Pallas.Engine.EvalResult left, Barbatos.Pallas.Engine.EvalResult right) -> bool
+static Barbatos.Pallas.Engine.EvalResult.operator ==(Barbatos.Pallas.Engine.EvalResult left, Barbatos.Pallas.Engine.EvalResult right) -> bool
+static Barbatos.Pallas.Engine.FormattedResult.operator !=(Barbatos.Pallas.Engine.FormattedResult? left, Barbatos.Pallas.Engine.FormattedResult? right) -> bool
+static Barbatos.Pallas.Engine.FormattedResult.operator ==(Barbatos.Pallas.Engine.FormattedResult? left, Barbatos.Pallas.Engine.FormattedResult? right) -> bool
+static Barbatos.Pallas.Engine.IntegralEstimate.operator !=(Barbatos.Pallas.Engine.IntegralEstimate left, Barbatos.Pallas.Engine.IntegralEstimate right) -> bool
+static Barbatos.Pallas.Engine.IntegralEstimate.operator ==(Barbatos.Pallas.Engine.IntegralEstimate left, Barbatos.Pallas.Engine.IntegralEstimate right) -> bool
+static Barbatos.Pallas.Engine.MatrixSnapshot.operator !=(Barbatos.Pallas.Engine.MatrixSnapshot? left, Barbatos.Pallas.Engine.MatrixSnapshot? right) -> bool
+static Barbatos.Pallas.Engine.MatrixSnapshot.operator ==(Barbatos.Pallas.Engine.MatrixSnapshot? left, Barbatos.Pallas.Engine.MatrixSnapshot? right) -> bool
+static Barbatos.Pallas.Engine.NumberFormat.Fix(int decimalPlaces) -> Barbatos.Pallas.Engine.NumberFormat
+static Barbatos.Pallas.Engine.NumberFormat.Norm1.get -> Barbatos.Pallas.Engine.NumberFormat
+static Barbatos.Pallas.Engine.NumberFormat.Norm2.get -> Barbatos.Pallas.Engine.NumberFormat
+static Barbatos.Pallas.Engine.NumberFormat.Sci(int significantDigits) -> Barbatos.Pallas.Engine.NumberFormat
+static Barbatos.Pallas.Engine.NumberFormat.operator !=(Barbatos.Pallas.Engine.NumberFormat left, Barbatos.Pallas.Engine.NumberFormat right) -> bool
+static Barbatos.Pallas.Engine.NumberFormat.operator ==(Barbatos.Pallas.Engine.NumberFormat left, Barbatos.Pallas.Engine.NumberFormat right) -> bool
+static Barbatos.Pallas.Engine.NumberLine.Define(Barbatos.Pallas.Engine.NumberLineForm form, Barbatos.Pallas.Engine.Value a, Barbatos.Pallas.Engine.Value? b = null) -> Barbatos.Pallas.Engine.NumberLineAxis!
+static Barbatos.Pallas.Engine.NumberLine.Fit(System.Collections.Generic.IReadOnlyList<Barbatos.Pallas.Engine.NumberLineAxis!>! axes) -> Barbatos.Pallas.Engine.NumberLineView!
+static Barbatos.Pallas.Engine.NumberLine.View(Barbatos.Pallas.Engine.Value center, Barbatos.Pallas.Engine.Value scale) -> Barbatos.Pallas.Engine.NumberLineView!
+static Barbatos.Pallas.Engine.NumberLineView.operator !=(Barbatos.Pallas.Engine.NumberLineView? left, Barbatos.Pallas.Engine.NumberLineView? right) -> bool
+static Barbatos.Pallas.Engine.NumberLineView.operator ==(Barbatos.Pallas.Engine.NumberLineView? left, Barbatos.Pallas.Engine.NumberLineView? right) -> bool
+static Barbatos.Pallas.Engine.PallasEngine.Format(Barbatos.Pallas.Engine.Value value, Barbatos.Pallas.Engine.CalculatorSettings! settings, Barbatos.Pallas.Engine.CalculatorProfile profile = Barbatos.Pallas.Engine.CalculatorProfile.Standard, Barbatos.Pallas.Engine.FormatTarget? target = null) -> Barbatos.Pallas.Engine.FormattedResult?
+static Barbatos.Pallas.Engine.PallasEngineBuilder.CreateDefault() -> Barbatos.Pallas.Engine.PallasEngineBuilder!
+static Barbatos.Pallas.Engine.ScaledDecimal.FromDecimal(decimal value) -> Barbatos.Pallas.Engine.ScaledDecimal
+static Barbatos.Pallas.Engine.ScaledDecimal.implicit operator Barbatos.Pallas.Engine.ScaledDecimal(decimal value) -> Barbatos.Pallas.Engine.ScaledDecimal
+static Barbatos.Pallas.Engine.ScaledDecimal.operator !=(Barbatos.Pallas.Engine.ScaledDecimal left, Barbatos.Pallas.Engine.ScaledDecimal right) -> bool
+static Barbatos.Pallas.Engine.ScaledDecimal.operator ==(Barbatos.Pallas.Engine.ScaledDecimal left, Barbatos.Pallas.Engine.ScaledDecimal right) -> bool
+static Barbatos.Pallas.Engine.SessionSnapshot.operator !=(Barbatos.Pallas.Engine.SessionSnapshot? left, Barbatos.Pallas.Engine.SessionSnapshot? right) -> bool
+static Barbatos.Pallas.Engine.SessionSnapshot.operator ==(Barbatos.Pallas.Engine.SessionSnapshot? left, Barbatos.Pallas.Engine.SessionSnapshot? right) -> bool
+static Barbatos.Pallas.Engine.SimulationFrequency.operator !=(Barbatos.Pallas.Engine.SimulationFrequency? left, Barbatos.Pallas.Engine.SimulationFrequency? right) -> bool
+static Barbatos.Pallas.Engine.SimulationFrequency.operator ==(Barbatos.Pallas.Engine.SimulationFrequency? left, Barbatos.Pallas.Engine.SimulationFrequency? right) -> bool
+static Barbatos.Pallas.Engine.StatisticsData.Empty.get -> Barbatos.Pallas.Engine.StatisticsData!
+static Barbatos.Pallas.Engine.Value.E.get -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromBaseN(int value) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromComplex(System.Numerics.Complex value) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromDecimal(decimal value) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromDouble(double value) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromMatrix(Barbatos.Pallas.Engine.MatrixValue! matrix) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.FromVector(Barbatos.Pallas.Engine.VectorValue! vector) -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.One.get -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.Pi.get -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.Zero.get -> Barbatos.Pallas.Engine.Value
+static Barbatos.Pallas.Engine.Value.operator !=(Barbatos.Pallas.Engine.Value left, Barbatos.Pallas.Engine.Value right) -> bool
+static Barbatos.Pallas.Engine.Value.operator ==(Barbatos.Pallas.Engine.Value left, Barbatos.Pallas.Engine.Value right) -> bool
+~override Barbatos.Pallas.Engine.CalcError.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.CalcError.ToString() -> string
+~override Barbatos.Pallas.Engine.CellAddress.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.EvalResult.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.EvalResult.ToString() -> string
+~override Barbatos.Pallas.Engine.IntegralEstimate.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.IntegralEstimate.ToString() -> string
+~override Barbatos.Pallas.Engine.NumberFormat.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.ScaledDecimal.Equals(object obj) -> bool
+~override Barbatos.Pallas.Engine.ScaledDecimal.ToString() -> string

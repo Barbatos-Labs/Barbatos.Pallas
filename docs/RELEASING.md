@@ -11,9 +11,9 @@ packs and pushes the packages; the installer is built and signed on the maintain
    to `main`; a release is refused on a commit it has not passed.
 2. **The `production` environment** (Settings → Environments). The release job runs in it, so its protection rules -
    a required reviewer, say - hold every release until they are met.
-3. **The `STRONG_NAME_KEY` secret**, in that environment: the base64 of `barbatos.snk`, the key Barbatos.i18n and
-   Barbatos.Wpf are signed with, so that all three carry the public key token `0aed45c810bf67e6`. On the machine that
-   holds the key:
+3. **The `STRONG_NAME_KEY` secret**, in that environment: the base64 of `barbatos.snk`, the key of Barbatos.Pallas
+   and of nothing else (maintainer, 25 Sep 2026), public key token `1c94c30b213a8345`, which is part of the identity of
+   every assembly from 1.0.0 on: changing the key later is an incompatible change. On the machine that holds it:
 
    ```powershell
    [Convert]::ToBase64String([IO.File]::ReadAllBytes('barbatos.snk')) | Set-Clipboard
@@ -21,7 +21,8 @@ packs and pushes the packages; the installer is built and signed on the maintain
 
    The key is never committed: `*.snk` is gitignored, and the workflow deletes the file it writes once the packages
    are built. `src/core/Directory.Build.props` signs every core library whenever `src/barbatos.snk` exists, so a
-   build with the key on a developer's machine signs too; nothing else needs it.
+   build with the key on a developer's machine signs too - the maintainer's keeps it there, so the installer's engine
+   carries the same token as the packages; nothing else needs it.
 4. **A trusted publishing policy on nuget.org** (the account menu → Trusted Publishing), so that no API key is ever
    stored: repository owner `Barbatos-Labs`, repository `Barbatos.Pallas`, workflow file `barbatos-pallas-cd-nuget.yml`,
    environment `production`. The workflow logs in as `phamhung`, the nuget.org account that owns the policy and the
@@ -46,7 +47,7 @@ packs and pushes the packages; the installer is built and signed on the maintain
    1. refuses a tag that is not `v` and the packages' version, a commit CI has not passed, and an API not shipped;
    2. writes the key, builds in Release, and runs the 40 test assemblies on the signed build;
    3. packs, installs both packages into programs outside the repository, calculates with them on net8.0, net9.0 and
-      net10.0, and checks that every assembly the packages hold carries the Barbatos token;
+      net10.0, and checks that every assembly the packages hold carries the token of its key;
    4. pushes the packages and their symbols to nuget.org through trusted publishing, and attaches them to the release.
 6. **The installer**, when the app ships: built from the same commit with `barbatos-pack release`
    (packaging/README.md), then attached to the release:

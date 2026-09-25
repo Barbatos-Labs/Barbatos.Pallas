@@ -22,10 +22,11 @@
     <Product>Barbatos Pallas</Product>
     <Company>Barbatos Labs</Company>
     <!-- The application's version, which is the installer's: numeric, because Barbatos.PackagingEngine refuses a
-         prerelease label for an app (BPE1011), while the packages carry the repository's version (1.0.0).
+         prerelease label for an app (BPE1011). It is its own - the packages carry the repository's - and at 1.0.0 the
+         two are one (decision of 24 Sep 2026).
          packaging/Barbatos.Pallas.json names the same number and barbatos-pack passes it to the build; this line is
          what makes a build outside it agree. AssemblyVersion and FileVersion follow Version. -->
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>

@@ -24,14 +24,14 @@
 
 .PARAMETER PublicKeyToken
     The public key token every assembly in the two packages must be strong-named with, as sixteen hexadecimal digits.
-    The release workflow passes the Barbatos key's, so a package built without the key, or with another, is never
-    published. Left out, as in CI, which builds without the key, nothing is checked.
+    The release workflow passes the token of the key of Barbatos.Pallas, so a package built without it, or with another
+    key, is never published. Left out, as in CI, which builds without the key, nothing is checked.
 
 .EXAMPLE
     ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages
 
 .EXAMPLE
-    ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken 0aed45c810bf67e6
+    ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken 1c94c30b213a8345
 #>
 [CmdletBinding()]
 param(

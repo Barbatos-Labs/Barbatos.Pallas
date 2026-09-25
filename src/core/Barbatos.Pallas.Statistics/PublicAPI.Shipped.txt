@@ -1,1 +1,22 @@
 #nullable enable
+Barbatos.Pallas.Statistics.ExactSample
+Barbatos.Pallas.Statistics.ExactSample.Count.get -> (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator)
+Barbatos.Pallas.Statistics.ExactSample.HasY.get -> bool
+Barbatos.Pallas.Statistics.ExactSample.Sum(int xPower, int yPower) -> (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator)
+Barbatos.Pallas.Statistics.ExactSample.TryGetCorrelationSquared(out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) square, out int sign) -> bool
+Barbatos.Pallas.Statistics.ExactSample.TryGetLinearFit(out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) intercept, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) slope) -> bool
+Barbatos.Pallas.Statistics.ExactSample.TryGetMean(Barbatos.Pallas.Statistics.SampleVariable variable, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) mean) -> bool
+Barbatos.Pallas.Statistics.ExactSample.TryGetPopulationVariance(Barbatos.Pallas.Statistics.SampleVariable variable, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) variance) -> bool
+Barbatos.Pallas.Statistics.ExactSample.TryGetQuadraticFit(out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) a, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) b, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) c) -> bool
+Barbatos.Pallas.Statistics.ExactSample.TryGetSampleVariance(Barbatos.Pallas.Statistics.SampleVariable variable, out (System.Numerics.BigInteger Numerator, System.Numerics.BigInteger Denominator) variance) -> bool
+Barbatos.Pallas.Statistics.Quartile
+Barbatos.Pallas.Statistics.Quartile.First = 0 -> Barbatos.Pallas.Statistics.Quartile
+Barbatos.Pallas.Statistics.Quartile.Median = 1 -> Barbatos.Pallas.Statistics.Quartile
+Barbatos.Pallas.Statistics.Quartile.Third = 2 -> Barbatos.Pallas.Statistics.Quartile
+Barbatos.Pallas.Statistics.Quartiles
+Barbatos.Pallas.Statistics.SampleVariable
+Barbatos.Pallas.Statistics.SampleVariable.X = 0 -> Barbatos.Pallas.Statistics.SampleVariable
+Barbatos.Pallas.Statistics.SampleVariable.Y = 1 -> Barbatos.Pallas.Statistics.SampleVariable
+static Barbatos.Pallas.Statistics.ExactSample.FromDecimals(System.ReadOnlySpan<decimal> x, System.ReadOnlySpan<decimal> y, System.ReadOnlySpan<decimal> frequencies) -> Barbatos.Pallas.Statistics.ExactSample!
+static Barbatos.Pallas.Statistics.ExactSample.FromScaledIntegers(System.ReadOnlySpan<System.Numerics.BigInteger> x, int xScale, System.ReadOnlySpan<System.Numerics.BigInteger> y, int yScale, System.ReadOnlySpan<System.Numerics.BigInteger> frequencies, int frequencyScale) -> Barbatos.Pallas.Statistics.ExactSample!
+static Barbatos.Pallas.Statistics.Quartiles.Ranks(System.Numerics.BigInteger count, Barbatos.Pallas.Statistics.Quartile quartile) -> (System.Numerics.BigInteger Lower, System.Numerics.BigInteger Upper)

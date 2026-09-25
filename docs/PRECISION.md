@@ -207,8 +207,8 @@ removed on 17 Sep 2026 (decision log).
 - combined with the 15-digit conversion (§4), a transcendental result carries about 14-15 correct significant digits.
 
 **Cross-platform.** Different C runtimes may return results that differ in the last ulp. The accuracy tests run on
-Windows x64 in CI (I5). The workflow also had Linux x64 and Linux ARM64 jobs, which never ran - the repository has
-no remote yet - and the maintainer dropped them on 23 Sep 2026, because the application ships on Windows alone.
+Windows x64 in CI (I5). The workflow also had Linux x64 and Linux ARM64 jobs, which never ran - the repository had
+no remote then - and the maintainer dropped them on 23 Sep 2026, because the application ships on Windows alone.
 The packages still build for any platform - net8.0,
 net9.0 and net10.0, with CA1416 an error on a Windows-only call - but a `double` result on another OS is the C
 runtime's there, and nobody measures it.
