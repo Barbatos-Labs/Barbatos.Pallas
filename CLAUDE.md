@@ -44,6 +44,7 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
 | `build/Test-Packages.ps1` | Installs the two packed packages into programs outside the repository and calculates with them on net8.0, net9.0 and net10.0; with `-PublicKeyToken`, also checks every assembly they hold is strong-named with it |
 | `build/Move-PublicApiToShipped.ps1` | Moves every core library's `PublicAPI.Unshipped.txt` into its `PublicAPI.Shipped.txt`, as a release does |
+| `build/Copy-SecretToClipboard.ps1` | Puts the base64 of a `.snk` or `.pfx` on the clipboard for a release secret, never on the screen, and says which key it is (the token, the certificate) |
 | `docs/RELEASING.md` | How a release is published: the one-time setup (the `production` environment, `STRONG_NAME_KEY`, the nuget.org trusted publishing policy) and the steps of each release |
 | `build/New-AppIcon.ps1` | Draws the app icon (`Assets/Pallas.ico`) from the mark in `build/nuget.svg` |
 | `packaging/` | The installer: the barbatos-pack profile, the AppGuid ledger, the Vietnamese wizard text; in `certificates/` the key and its password are gitignored and the two public `.cer` committed (packaging/README.md) |

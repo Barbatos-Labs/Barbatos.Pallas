@@ -27,11 +27,25 @@ tab either workflow is a rehearsal that publishes nothing.
    | `SIGNING_CERTIFICATE_PFX` | The base64 of `packaging/certificates/barbatos-codesign.pfx`, the leaf of the Barbatos Labs chain | the app |
    | `SIGNING_CERTIFICATE_PASSWORD` | Its password | the app |
 
-   On the machine that holds a file, its base64 goes to the clipboard, never to the screen:
+   `build/Copy-SecretToClipboard.ps1` puts the base64 of a key file on the clipboard, never on the screen, and keeps it
+   out of Windows' clipboard history and cloud clipboard. It says what it took, to check before pasting: for a `.snk`
+   the public key token - `1c94c30b213a8345` is Barbatos.Pallas's - and for a `.pfx` the certificate, opened with the
+   `.password.txt` beside it. Paste the value into the secret, then empty the clipboard:
 
-   ```powershell
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes('barbatos.snk')) | Set-Clipboard
+   ```bash
+   powershell -STA -NoProfile -ExecutionPolicy Bypass -File build/Copy-SecretToClipboard.ps1 -Path src/barbatos.snk
    ```
+
+   ```bash
+   powershell -STA -NoProfile -ExecutionPolicy Bypass -File build/Copy-SecretToClipboard.ps1 -Path packaging/certificates/barbatos-codesign.pfx
+   ```
+
+   ```bash
+   powershell -STA -NoProfile -ExecutionPolicy Bypass -File build/Copy-SecretToClipboard.ps1 -Clear
+   ```
+
+   `SIGNING_CERTIFICATE_PASSWORD` is the content of `packaging/certificates/barbatos-codesign.password.txt`, typed or
+   copied by hand.
 
    No key is ever committed: `*.snk` and the `.pfx` are gitignored, and each workflow deletes what it writes once it
    has built. `src/core/Directory.Build.props` signs every core library whenever `src/barbatos.snk` exists, so a build
