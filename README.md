@@ -15,8 +15,9 @@ A precise scientific calculation engine for .NET 8, 9 and 10, and the desktop ca
 > Spreadsheet, Table and Math Box - and every one of their conformance cases passes. The Windows app runs all of them,
 > with the calculator's keypad per application, its menus, the graph of a table, and the session, history, window and
 > language kept between runs, and it calculates off the window's thread, so a long calculation can be stopped with AC.
-> The public API is tracked and described member by member, and the calculations are measured against their targets;
-> what remains before 1.0.0 is on nuget.org is the release pipeline. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+> The public API is tracked and described member by member, the calculations are measured against their targets, and
+> a GitHub Release publishes the signed packages ([releasing](docs/RELEASING.md)); what remains before 1.0.0 is on
+> nuget.org is the release candidate, walked installed. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ```csharp
 CalculatorSession session = PallasEngineBuilder.CreateDefault().Build().CreateSession();

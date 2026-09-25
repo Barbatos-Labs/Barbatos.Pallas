@@ -42,7 +42,9 @@ Conversation with the maintainer is in Vietnamese. Code, comments, XML docs and 
 | `docs/LINEAR-SYNTAX.md` | Canonical Linear Syntax: tokens, priority levels, contexts, the text-vs-keys decisions |
 | `docs/reference-manual_VI.pdf` | The reference calculator's manual, kept locally. The manufacturer's copyright: gitignored (`docs/*.pdf`), never commit or redistribute it |
 | `build/Render-ManualPages.ps1` | Renders pages of the manual to PNG with Windows' own PDF API, to read pages whose content is only an image |
-| `build/Test-Packages.ps1` | Installs the two packed packages into programs outside the repository and calculates with them on net8.0, net9.0 and net10.0 |
+| `build/Test-Packages.ps1` | Installs the two packed packages into programs outside the repository and calculates with them on net8.0, net9.0 and net10.0; with `-PublicKeyToken`, also checks every assembly they hold is strong-named with it |
+| `build/Move-PublicApiToShipped.ps1` | Moves every core library's `PublicAPI.Unshipped.txt` into its `PublicAPI.Shipped.txt`, as a release does |
+| `docs/RELEASING.md` | How a release is published: the one-time setup (the `production` environment, `STRONG_NAME_KEY`, the nuget.org trusted publishing policy) and the steps of each release |
 | `build/New-AppIcon.ps1` | Draws the app icon (`Assets/Pallas.ico`) from the mark in `build/nuget.svg` |
 | `packaging/` | The installer: the barbatos-pack profile, the AppGuid ledger, the Vietnamese wizard text; `certificates/` is gitignored (packaging/README.md) |
 
@@ -59,8 +61,10 @@ be walked). Phase 4 is complete.
 test ✅, M3 BenchmarkDotNet against the targets of docs/ARCHITECTURE.md §9 with a CI gate ✅ (every benchmark six
 times inside its target or more, on one thread: no parallelism or SIMD), M4 calculations off the window's thread
 ✅ (`SessionWork`, AC stops a calculation, the sheet takes a token; walked in the app), M5 the
-release pipeline (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with Barbatos.i18n and
-Barbatos.Wpf), M6 the release candidate, walked installed, and 1.0.0 - the app too - published by the maintainer.
+release pipeline ✅ (a GitHub Release, NuGet trusted publishing, `barbatos.snk` shared with Barbatos.i18n and
+Barbatos.Wpf; checked locally with a key made for the purpose - its first run on GitHub needs the remote, the secret
+and the nuget.org policy, docs/RELEASING.md), M6 the release candidate, walked installed, and 1.0.0 - the app too -
+published by the maintainer.
 
 **Phase 6 - Graph and Math Box - complete ✅** (plan approved 24 Sep 2026): M1 Math Box in Engine, M2 its screens, M3
 Graphing (a library carried by the DependencyInjection package, with an `AllowList` entry for screen coordinates, on a
@@ -248,6 +252,13 @@ Things that will save time:
   got, only on what was applied.
 - **SourceLink** is referenced only in CI or with `-p:SourceLinkEnabled=true`. A local repository without a remote
   would otherwise warn three times per project per framework.
+- **Releasing** is the maintainer's: a GitHub Release tagged `v<version>` runs `barbatos-pallas-cd-nuget.yml`, which
+  signs, tests, packs and pushes the packages (docs/RELEASING.md); run by hand it rehearses and publishes nothing. The
+  commit it releases has had `./build/Move-PublicApiToShipped.ps1` run, or the workflow refuses it. Strong naming
+  needs `src/barbatos.snk`, which only the workflow writes, from the `STRONG_NAME_KEY` secret: it is gitignored and is
+  never committed, copied or asked for. A signed build is checked with a key made for the purpose
+  (`RSACryptoServiceProvider.ExportCspBlob`), deleted afterwards and followed by a `--no-incremental` build, so that
+  nothing signed with it is left in `bin/`.
 
 ## Hard rules
 

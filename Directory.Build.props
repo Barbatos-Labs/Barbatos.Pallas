@@ -24,8 +24,10 @@
     <Company>Barbatos Labs</Company>
     <Product>Barbatos.Pallas</Product>
     <Copyright>(c) 2026 Barbatos Labs | Pham The Hung and Barbatos.Pallas Contributors. All rights reserved.</Copyright>
-    <Description>Part of Barbatos.Pallas - an exact and arbitrary-precision scientific calculation engine for .NET.</Description>
-    <CommonTags>dotnet;math;calculator;scientific;arbitrary-precision;exact-arithmetic;rational;bigdecimal</CommonTags>
+    <!-- What the engine is, and no more: decimal, double and BigInteger (docs/PRECISION.md). The number tower these tags
+         once named - rational, big decimal, arbitrary precision - was deleted on 17 Sep 2026. -->
+    <Description>Part of Barbatos.Pallas - a precise scientific calculation engine for .NET, built on decimal, double and BigInteger.</Description>
+    <CommonTags>dotnet;math;calculator;scientific;decimal;precision</CommonTags>
     <PackageProjectUrl>https://github.com/Barbatos-Labs/Barbatos.Pallas</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Barbatos-Labs/Barbatos.Pallas</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

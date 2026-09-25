@@ -22,12 +22,22 @@
 .PARAMETER PackageDirectory
     The folder dotnet pack wrote the packages to.
 
+.PARAMETER PublicKeyToken
+    The public key token every assembly in the two packages must be strong-named with, as sixteen hexadecimal digits.
+    The release workflow passes the Barbatos key's, so a package built without the key, or with another, is never
+    published. Left out, as in CI, which builds without the key, nothing is checked.
+
 .EXAMPLE
     ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages
+
+.EXAMPLE
+    ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages -PublicKeyToken 0aed45c810bf67e6
 #>
 [CmdletBinding()]
 param(
-    [string] $PackageDirectory = (Join-Path $PSScriptRoot '..\artifacts\packages')
+    [string] $PackageDirectory = (Join-Path $PSScriptRoot '..\artifacts\packages'),
+    [ValidatePattern('^([0-9A-Fa-f]{16})?$')]
+    [string] $PublicKeyToken = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,6 +55,40 @@ if (($ids -join ',') -ne (($published | Sort-Object) -join ',')) {
 
 $engine = $packages | Where-Object { $_.Name -like 'Barbatos.Pallas.Engine.*' }
 $version = $engine.Name -replace '^Barbatos\.Pallas\.Engine\.', '' -replace '\.nupkg$', ''
+
+# Every assembly of both packages, the carried ones included, read from the package itself: a signed assembly cannot
+# reference an unsigned one, and a package is what a user gets.
+if ($PublicKeyToken) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $expected = $PublicKeyToken.ToLowerInvariant()
+    $unpacked = Join-Path ([IO.Path]::GetTempPath()) ('pallas-signatures-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $unpacked | Out-Null
+    $checked = 0
+    try {
+        foreach ($package in $packages) {
+            $archive = [IO.Compression.ZipFile]::OpenRead($package.FullName)
+            try {
+                foreach ($entry in @($archive.Entries | Where-Object { $_.FullName -like 'lib/*.dll' })) {
+                    $path = Join-Path $unpacked ([guid]::NewGuid().ToString('N') + '.dll')
+                    [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $path)
+                    $token = (([Reflection.AssemblyName]::GetAssemblyName($path).GetPublicKeyToken()) | ForEach-Object { $_.ToString('x2') }) -join ''
+                    if (-not $token) { throw "$($package.Name): $($entry.FullName) is not strong-named." }
+                    if ($token -ne $expected) { throw "$($package.Name): $($entry.FullName) is signed with $token, not $expected." }
+                    $checked++
+                }
+            }
+            finally {
+                $archive.Dispose()
+            }
+        }
+    }
+    finally {
+        Remove-Item -Path $unpacked -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    if ($checked -eq 0) { throw 'The packages hold no assembly to check.' }
+    Write-Host "$checked assemblies strong-named with $expected."
+}
 
 # The consumer takes the same Microsoft.Extensions.DependencyInjection the repository pins.
 $pins = Get-Content (Join-Path $PSScriptRoot '..\Directory.Packages.props') -Raw
