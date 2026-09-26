@@ -46,7 +46,7 @@ jobs:
 
       # Runs every test project on net8.0, net9.0 and net10.0 (Microsoft.Testing.Platform, see global.json).
       - name: Test
-        run: dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build --report-xunit-trx --results-directory TestResults
+        run: dotnet test --solution Barbatos.Pallas.slnx --configuration Release --no-build
 
       # Packing is by solution: IsPackable decides what comes out, and only Engine and DependencyInjection set it. It is
       # not --no-build: a package finds the libraries it carries by resolving its references, which builds them - up to
@@ -61,13 +61,6 @@ jobs:
       - name: Test the packages as a user installs them
         shell: pwsh
         run: ./build/Test-Packages.ps1 -PackageDirectory artifacts/packages
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-windows
-          path: TestResults/**/*.trx
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
