@@ -8,7 +8,7 @@ validate → build → sign → verify → package, in that order, so nothing un
 |---|---|
 | `Barbatos.Pallas.json` | The profile: the app's identity, how it is built, how it is signed, the Inno Setup installer. JSONC - the comments are documentation of the values |
 | `identity.lock.json` | The ledger that pins `Identity.AppGuid`. **Committed**, written by `validate`. A different AppGuid fails validation, because it names the folder every user's session lives in |
-| `languages/Vietnamese.isl` | Inno Setup's Vietnamese wizard text, which Inno does not bundle. **Committed** - unofficial, by memecoder, from [issrc](https://github.com/jrsoftware/issrc/blob/main/Files/Languages/Unofficial/Vietnamese.isl), written for Inno 6.5; under 6.4 a few download messages fall back to English |
+| `languages/Vietnamese.isl` | Inno Setup's Vietnamese wizard text, which Inno does not bundle. **Committed** - unofficial, by memecoder, from [issrc](https://github.com/jrsoftware/issrc/blob/main/Files/Languages/Unofficial/Vietnamese.isl), written for Inno 6.5 and later; Inno Setup 7.1.0 compiles it without a warning (26 Sep 2026) |
 | `certificates/` | The code-signing leaf of the Barbatos Labs chain and its password - **gitignored, never committed** - and the two public certificates, which are committed |
 
 ## Cutting an installer
@@ -26,7 +26,8 @@ dotnet run --project ../Barbatos.PackagingEngine/src/Barbatos.PackagingEngine.Cl
 
 It publishes the app self-contained for win-x64 into `artifacts/installer/<version>/`, signs the Barbatos binaries
 with a timestamp, verifies every signature, and writes `artifacts/installer/barbatos-pallas-v<version>-setup.exe`,
-itself signed. It needs Inno Setup 6 and the Windows SDK's `signtool`; `barbatos-pack doctor` says whether they were
+itself signed. It needs Inno Setup - 7.1.0 on the maintainer's machine; barbatos-pack 1.1.0 finds 7, 6 or 5 - and the
+Windows SDK's `signtool`; `barbatos-pack doctor` says whether they were
 found.
 
 ## Signing

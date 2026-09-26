@@ -193,7 +193,8 @@ Things that will save time:
   platform-neutral all the same: no Windows TFM in `src/core`, CA1416 is an error, and Architecture.Tests bans the
   UI and GDI assemblies. Nothing measures a `double` result on another OS (docs/PRECISION.md I5).
 - **The installer** is `barbatos-pack release --profile packaging/Barbatos.Pallas.json --strict`, run from a checkout of
-  Barbatos.PackagingEngine beside this one (packaging/README.md). It needs Inno Setup 6, the Windows SDK's signtool and
+  Barbatos.PackagingEngine beside this one (packaging/README.md). It needs Inno Setup (7.1.0 since 26 Sep 2026; the engine
+  finds 7, 6 or 5), the Windows SDK's signtool and
   the signing leaf's `.pfx` in `packaging/certificates/`, which is gitignored and must stay so (only the two public `.cer`
   are committed); in CI it is `barbatos-pallas-release-app.yml`, on a tag `app-v<version>`. The app's version is numeric
   (the engine refuses a prerelease label for an app), so a release changes `<Version>` in the Wpf csproj and
